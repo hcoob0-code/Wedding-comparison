@@ -366,6 +366,20 @@ td.fav{text-align:center;}
   </div>
 </div>
 
+<!-- JSON Template Modal -->
+<div class="overlay" id="jsonTemplateOverlay">
+  <div class="modal">
+    <div class="closebtn"><button id="closeJsonTemplate">✕</button></div>
+    <h2 id="jsonTemplateTitle">JSON 형식</h2>
+    <div class="sub" style="margin-bottom:10px;">아래 내용을 길게 눌러 전체 선택하거나, "복사하기" 버튼을 눌러주세요.</div>
+    <textarea class="jsonarea" id="jsonTemplateText" readonly></textarea>
+    <div class="modal-actions">
+      <button class="btn ghost" id="closeJsonTemplate2">닫기</button>
+      <button class="btn primary" id="copyTemplateBtn">복사하기</button>
+    </div>
+  </div>
+</div>
+
 <!-- Lightbox -->
 <div class="overlay" id="lightboxOverlay">
   <div class="modal lightbox"><img id="lightboxImg" src=""></div>
@@ -435,7 +449,7 @@ function getSchema(category){ return CATEGORY_SCHEMA[category] || DEFAULT_SCHEMA
 //    Settings > Upload > Add upload preset에서 Signing Mode를 Unsigned로 만들고 preset 이름 복사.
 const CONFIG = {
   MASTER_KEY: '$2a$10$/zHsVqNvW8dkhu5ceJGX.OZJ68c5/pwv/Z8dH3g20w/yVSSWhtWW2',
-  BIN_ID: '',
+  BIN_ID: '6a750e04da38895dfec37b49',
   CLOUDINARY_CLOUD_NAME: 'kkn5hecv',
   CLOUDINARY_UPLOAD_PRESET: 'hiszkvkz'
 };
@@ -593,13 +607,7 @@ function renderTabs(){
       longPressed=false;
       timer=setTimeout(()=>{
         longPressed=true;
-        const json = buildJSONTemplate(cat);
-        if(json){
-          copyToClipboard(json);
-          const orig = btn.innerHTML;
-          btn.innerHTML = '<span style="font-size:11px;">복사됨!</span>';
-          setTimeout(()=>{ btn.innerHTML = orig; }, 900);
-        }
+        openJSONTemplateModal(cat);
       }, 550);
     };
     const cancel=()=>{ if(timer) clearTimeout(timer); };
@@ -632,6 +640,37 @@ function buildJSONTemplate(cat){
   const obj = { category:cat, name:"", link:"", location:"", memo:"", dates:[], sections };
   return JSON.stringify([obj], null, 2);
 }
+
+function openJSONTemplateModal(cat){
+  const json = buildJSONTemplate(cat);
+  if(!json) return;
+  document.getElementById('jsonTemplateTitle').textContent = cat + ' JSON 형식';
+  const ta = document.getElementById('jsonTemplateText');
+  ta.value = json;
+  document.getElementById('copyTemplateBtn').textContent = '복사하기';
+  document.getElementById('jsonTemplateOverlay').classList.add('show');
+  setTimeout(()=>{ ta.focus(); ta.select(); }, 50);
+}
+function closeJSONTemplateModal(){ document.getElementById('jsonTemplateOverlay').classList.remove('show'); }
+document.getElementById('closeJsonTemplate').onclick = closeJSONTemplateModal;
+document.getElementById('closeJsonTemplate2').onclick = closeJSONTemplateModal;
+document.getElementById('copyTemplateBtn').onclick = async ()=>{
+  const ta = document.getElementById('jsonTemplateText');
+  ta.focus();
+  ta.select();
+  let ok = false;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(ta.value);
+      ok = true;
+    } else {
+      ok = document.execCommand('copy');
+    }
+  }catch(err){ ok = false; }
+  const btn = document.getElementById('copyTemplateBtn');
+  btn.textContent = ok ? '복사됨!' : '복사 실패 - 위 텍스트를 직접 길게 눌러 복사해주세요';
+  setTimeout(()=>{ btn.textContent = '복사하기'; }, ok ? 1500 : 3000);
+};
 
 function minPrice(v){
   const nums = [];
@@ -1573,7 +1612,7 @@ document.getElementById('confirmImport').onclick = async ()=>{
 document.getElementById('sortSel').onchange = renderContent;
 document.getElementById('viewSel').onchange = renderContent;
 
-[document.getElementById('editOverlay'), importOverlay, document.getElementById('compareOverlay'), document.getElementById('paymentOverlay')].forEach(ov=>{
+[document.getElementById('editOverlay'), importOverlay, document.getElementById('compareOverlay'), document.getElementById('paymentOverlay'), document.getElementById('jsonTemplateOverlay')].forEach(ov=>{
   ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('show'); });
 });
 
