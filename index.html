@@ -30,21 +30,21 @@ body::before{
 .wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:12px 12px 100px;overflow-x:hidden;}
 .sub{font-size:13.5px;color:var(--ink-soft);}
 
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 14px;scrollbar-width:none;}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none;}
 .tabs::-webkit-scrollbar{display:none;}
 .tab{
-  flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:999px;
-  border:1px solid var(--line);background:var(--card);font-size:13.5px;font-weight:600;color:var(--ink-soft);
+  flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;
+  border:1px solid var(--line);background:var(--card);font-size:13px;font-weight:600;color:var(--ink-soft);
   cursor:pointer;white-space:nowrap;transition:.15s;user-select:none;-webkit-user-select:none;
 }
 .tab .dot{width:7px;height:7px;border-radius:50%;}
 .tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
 .tab.active .dot{filter:brightness(2);}
 
-.toolbar{display:flex;flex-wrap:nowrap;gap:4px;margin-bottom:18px;}
+.toolbar{display:flex;flex-wrap:nowrap;gap:4px;margin-bottom:14px;}
 .btn{
   appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
-  padding:8px 8px;border-radius:10px;font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s;
+  padding:6px 8px;border-radius:10px;font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s;
   display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex:0 0 auto;
 }
 .btn:hover{border-color:var(--ink);}
@@ -52,7 +52,8 @@ body::before{
 .btn.primary:hover{background:#4d6f61;}
 .btn.ghost{background:transparent;}
 .btn.small{padding:6px 10px;font-size:12.5px;border-radius:8px;}
-.btn.heart{font-size:15px;padding:8px 10px;}
+.btn.heart{font-size:18px;padding:0 4px;background:transparent;border:none;color:var(--ink);}
+.btn.heart:hover{border-color:transparent;}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
 .spacer{flex:1 1 auto;min-width:0;}
 select.viewsel{
@@ -70,26 +71,28 @@ select.viewsel{
   background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
 }
 .card.isfinal{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
-.cardhead{display:flex;align-items:flex-start;gap:8px;padding:14px 14px;cursor:pointer;}
-.cardhead .chev{margin-left:2px;flex:0 0 auto;color:var(--ink-soft);font-size:13px;padding-top:8px;transition:.15s;}
+.cardhead{display:flex;align-items:flex-start;gap:8px;padding:11px 14px;cursor:pointer;}
+.cardhead .chev{margin-left:2px;flex:0 0 auto;color:var(--ink-soft);font-size:12px;padding-top:6px;transition:.15s;}
 .cardhead.open .chev{transform:rotate(180deg);}
 .cardmain{flex:1;min-width:0;}
+.topline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;}
 .card .catchip{
   display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ink-soft);
-  background:var(--paper-deep);padding:3px 9px;border-radius:999px;margin-bottom:7px;
+  background:var(--paper-deep);padding:3px 9px;border-radius:999px;
 }
 .card .catchip .dot{width:6px;height:6px;border-radius:50%;}
-.finalbadge{display:inline-block;font-size:10.5px;font-weight:800;color:#fff;background:var(--gold);padding:3px 8px;border-radius:999px;margin-left:4px;margin-bottom:7px;}
-.card h3{margin:0 0 3px;font-size:16px;font-weight:800;letter-spacing:-.01em;}
-.metaline{font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.finalbadge{display:inline-block;font-size:10.5px;font-weight:800;color:#fff;background:var(--gold);padding:3px 8px;border-radius:999px;}
+.availbadge{font-size:10.5px;font-weight:600;color:var(--ink-soft);display:inline-flex;align-items:center;gap:4px;}
+.card h3{margin:0;font-size:15.5px;font-weight:800;letter-spacing:-.01em;}
+.nameloc{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
 .availdot{width:7px;height:7px;border-radius:50%;background:var(--celadon);display:inline-block;}
 .availdot.none{background:var(--line);}
 
-.headactions{display:flex;flex-direction:column;gap:6px;flex:0 0 auto;}
+.headactions{display:flex;flex-direction:column;gap:4px;flex:0 0 auto;align-items:flex-end;}
 .stamp{
-  width:36px;height:36px;border-radius:50%;
+  width:32px;height:32px;border-radius:50%;
   border:2px solid var(--line);color:var(--line);background:transparent;
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;
   cursor:pointer;transform:rotate(-8deg);transition:.15s;font-family:'Pretendard',sans-serif;
 }
 .stamp.on{
@@ -100,25 +103,23 @@ select.viewsel{
 .stamp:active{transform:rotate(-8deg) scale(.92);}
 
 .cmp{
-  width:36px;height:28px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
-  font-size:11px;font-weight:700;color:var(--ink-soft);cursor:pointer;
+  padding:5px 10px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
+  font-size:10.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
 }
 .cmp.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 
-.delx{
-  width:36px;height:28px;border-radius:8px;border:1.5px solid #EAD3CC;background:#FBF3F0;
-  font-size:13px;font-weight:700;color:var(--persimmon);cursor:pointer;
+.editdelrow{display:flex;gap:4px;}
+.headbtn{
+  padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
+  font-size:10.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
 }
+.headbtn.danger{color:var(--persimmon);border-color:#EAD3CC;background:#FBF3F0;}
 
 .cardbody{padding:0 16px 16px;border-top:1px solid var(--line);}
 .cardbody-inner{padding-top:12px;}
 .card a.link{font-size:12px;color:var(--celadon);text-decoration:none;font-weight:600;word-break:break-all;}
 .card a.link:hover{text-decoration:underline;}
-.vendorrow{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
-.vrow{display:flex;gap:8px;font-size:13px;line-height:1.5;}
-.vrow .k{flex:0 0 76px;color:var(--ink-soft);font-weight:600;font-size:11.5px;padding-top:2px;}
-.vrow .v{flex:1;color:var(--ink);white-space:pre-wrap;}
-.card .actions{display:flex;gap:6px;margin-top:12px;}
+.vendorrow{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;}
 
 .datechips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
 .datechip{
@@ -136,17 +137,24 @@ select.viewsel{
 .itemslabel{font-size:11px;font-weight:800;color:var(--celadon);margin-bottom:2px;text-transform:uppercase;letter-spacing:.03em;}
 .product{background:var(--paper-deep);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;}
 .product .itemphoto{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:0 0 auto;cursor:pointer;}
-.product .pfields{flex:1;min-width:0;}
-.product .prow{display:flex;gap:6px;font-size:12.5px;line-height:1.5;margin-bottom:2px;}
-.product .prow .k{flex:0 0 76px;color:var(--ink-soft);font-weight:600;font-size:11px;padding-top:1px;}
-.product .prow .v{flex:1;white-space:pre-wrap;}
+.product .pfields{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;}
+.prow{display:flex;gap:6px;font-size:12.5px;line-height:1.4;min-width:0;}
+.prow .k{flex:0 0 auto;color:var(--ink-soft);font-weight:600;font-size:10.5px;padding-top:1px;white-space:nowrap;}
+.prow .v{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;}
+.prow.full{grid-column:1/-1;}
 .product .prow:first-child .v{font-weight:800;}
-.itemctrls{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.itemctrls{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;grid-column:1/-1;}
 .itemcmp,.itemfinal{border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;cursor:pointer;}
 .itemcmp.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .itemfinal.on{background:var(--gold);color:#fff;border-color:var(--gold);}
 
-.gallery{display:flex;gap:8px;overflow-x:auto;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);}
+.gallerylabel{font-size:11px;font-weight:800;color:var(--celadon);margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);text-transform:uppercase;letter-spacing:.03em;}
+.instalinkrow{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-soft);background:var(--paper-deep);border-radius:8px;padding:6px 10px;margin-top:6px;}
+.instalinkrow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.instalinkrow button{border:none;background:none;color:var(--persimmon);font-size:13px;cursor:pointer;flex:0 0 auto;}
+.instaEmbeds{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px;}
+.gallery{display:flex;gap:8px;overflow-x:auto;margin-top:8px;}
+.gallery.first{padding-top:10px;border-top:1px dashed var(--line);}
 .gallery img{width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:pointer;flex:0 0 auto;}
 
 /* table view */
@@ -203,9 +211,30 @@ td.fav{text-align:center;}
 .prow-head{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
 .rowlabel{flex:1;font-size:11.5px;font-weight:700;color:var(--ink-soft);}
 .rowDel{border:none;background:none;color:var(--persimmon);font-size:15px;cursor:pointer;padding:4px 6px;}
-.itemfields{display:flex;flex-direction:column;gap:6px;}
-.itemfields input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;}
+.itemfields{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.itemfields.onecol{grid-template-columns:1fr;}
+.itemfields input{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;}
 .itemfields textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;min-height:40px;resize:vertical;}
+.exgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;align-items:end;}
+.exfield{min-width:0;}
+.exfield.full{grid-column:1/-1;}
+.exfield label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;}
+.exfield input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;}
+.checkfield{
+  display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:400;color:#9C9890;
+  cursor:pointer;padding:8px 0;
+}
+.checkfield.full{grid-column:1/-1;}
+.quadrow{display:flex;gap:6px;grid-column:1/-1;}
+.quadcell{flex:1;min-width:0;text-align:center;background:var(--card);border-radius:8px;padding:4px 2px;}
+.quadcell .qk{font-size:9px;color:var(--ink-soft);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.quadcell .qv{font-size:11.5px;font-weight:700;margin-top:1px;}
+.quadfield{flex:1;min-width:0;}
+.quadfield label{display:block;font-size:9px;font-weight:700;color:var(--ink-soft);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.quadfield input{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 5px;font-size:11px;font-family:inherit;min-width:0;}
+.quadcheck{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;font-size:9px;font-weight:400;color:#9C9890;cursor:pointer;}
+.quadcheck input{width:15px;height:15px;}
+.checkfield input{width:16px;height:16px;flex:0 0 auto;}
 .itemphotorow{margin-bottom:8px;}
 .itemrow-flex{display:flex;gap:10px;align-items:flex-start;}
 .itemrow-flex .itemphotorow{margin-bottom:0;flex:1 1 0;min-width:0;}
@@ -251,7 +280,7 @@ td.fav{text-align:center;}
   <div class="tabs" id="tabs" style="margin-top:2px;"></div>
 
   <div class="toolbar">
-    <button class="btn primary" id="btnAdd">+ 업체 추가</button>
+    <button class="btn primary" id="btnAdd">+ 추가</button>
     <button class="btn" id="btnImport">JSON 붙여넣기</button>
     <button class="btn heart" id="btnBudget" title="총 비용 보기">♥</button>
     <div class="spacer"></div>
@@ -287,10 +316,14 @@ td.fav{text-align:center;}
       <label>카테고리</label>
       <select id="f_category"></select>
     </div>
-    <div class="field"><label>업체명</label><input id="f_name"></div>
-    <div class="field"><label>인스타 / 링크</label><input id="f_link" placeholder="https://instagram.com/..."></div>
-    <div class="field"><label>주소</label><input id="f_location"></div>
-    <div class="field"><label>가능 날짜</label><input id="f_dates" placeholder="2026-08-23, 2026-09-06"></div>
+    <div id="basicFieldsBox">
+      <div class="field"><label>업체명</label><input id="f_name"></div>
+      <div class="field"><label>인스타 / 링크</label><input id="f_link" placeholder="https://instagram.com/..."></div>
+      <div class="field"><label>주소</label><input id="f_location"></div>
+    </div>
+    <div id="datesFieldBox">
+      <div class="field"><label>가능 날짜</label><input id="f_dates" placeholder="2026-08-23, 2026-09-06"></div>
+    </div>
 
     <div id="gallerySlotTop"></div>
 
@@ -306,7 +339,22 @@ td.fav{text-align:center;}
           <input type="file" id="f_images" accept="image/*" multiple>+
         </label>
         <div class="thumbs" id="imgThumbs"></div>
+        <div class="hint" style="margin-top:14px;">인스타 포스트 링크를 넣으면 게시물이 그대로 보여요</div>
+        <div style="display:flex;gap:6px;">
+          <input id="f_instaLinkInput" placeholder="https://www.instagram.com/p/..." style="flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:14px;font-family:inherit;">
+          <button type="button" class="btn small" id="addInstaLinkBtn" style="flex:0 0 auto;">추가</button>
+        </div>
+        <div id="instaLinksList"></div>
       </div>
+    </div>
+
+    <div id="contractBlock">
+      <h4>계약서 사진</h4>
+      <div class="hint">계약서나 견적서를 촬영해서 올려두면 나중에 찾기 편해요. (최대 8장)</div>
+      <label class="imgpicker" title="사진 추가">
+        <input type="file" id="f_contractImages" accept="image/*" multiple>+
+      </label>
+      <div class="thumbs" id="contractThumbs"></div>
     </div>
 
     <div class="modal-actions">
@@ -355,6 +403,7 @@ td.fav{text-align:center;}
     <div class="field"><label>계약금 낸 사람</label><input id="pm_depositPayer" placeholder="예: 신랑"></div>
     <div class="field"><label>잔금 (만원)</label><input id="pm_balanceAmount" type="number" placeholder="예: 100"></div>
     <div class="field"><label>잔금 예정일</label><input id="pm_balanceDueDate" type="date"></div>
+    <div class="field"><label>잔금 낸 사람</label><input id="pm_balancePayer" placeholder="예: 신부"></div>
     <div class="field"><label>금액 관련 참고사항</label><textarea id="pm_note" placeholder="예: 원본 추가시 10만원 별도"></textarea></div>
     <div class="modal-actions">
       <button class="btn ghost" id="cancelPayment">취소</button>
@@ -386,30 +435,89 @@ td.fav{text-align:center;}
 </div>
 
 <script>
-const CATS = ["야외스냅","정장","드레스","반지","한복","기타"];
+const CATS = ["웨딩홀","야외스냅","스냅준비","정장","반지","한복","기타"];
 const CAT_COLOR = {
-  "야외스냅":"#5F8575","정장":"#23262B","드레스":"#B87A93","반지":"#B4933C","한복":"#B6462F","기타":"#8A8A82"
+  "웨딩홀":"#4A5568","야외스냅":"#5F8575","스냅준비":"#9C8AA5","정장":"#23262B","반지":"#B4933C","한복":"#B6462F","기타":"#8A8A82"
 };
 
 const DEFAULT_SCHEMA = { sections: [
   { key:'main', label:'상품 / 패키지', extraFields:[], itemsLabel:'상품 / 패키지', itemFields:[
-    {key:'name',label:'상품명'},{key:'price',label:'가격'},{key:'package',label:'패키지 내용',type:'textarea'},{key:'memo',label:'메모',type:'textarea'}
+    {key:'name',label:'상품명'},{key:'price',label:'가격'},{key:'package',label:'패키지 내용',type:'textarea',long:true},{key:'memo',label:'메모',type:'textarea',long:true}
   ], itemHasPhoto:false }
 ]};
 const CATEGORY_SCHEMA = {
+  "웨딩홀": { sections: [
+    { key:'hallinfo', label:'홀 정보', extraFields:[
+        {key:'ceremonyDate', label:'예식 날짜'},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
+        {key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'ceremonyDress', label:'본식 드레스', extraFields:[
+      ], itemsLabel:'브랜드별 비교', itemFields:[
+        {key:'brand', label:'브랜드명', long:true},{key:'price', label:'추가금', long:true},{key:'desc', label:'참고사항', long:true}
+      ], itemHasPhoto:true },
+    { key:'mainPhoto', label:'본식촬영', extraFields:[
+        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'iphoneSnap', label:'아이폰스냅', extraFields:[
+        {key:'vendor', label:'업체'},{key:'composition', label:'구성'},{key:'provided', label:'제공내역', long:true},{key:'price', label:'가격'},
+        {key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'hairMakeup', label:'헤어메이크업', extraFields:[
+        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true},
+        {key:'parentsPrice', label:'양가어머님추가금'},{key:'svc', label:'SVC', type:'checkbox'},
+        {key:'contractDate', label:'계약일'},{key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'bouquet', label:'부케', extraFields:[
+        {key:'composition', label:'구성'},{key:'extraPrice', label:'추가금'},{key:'note', label:'참고사항', long:true}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'screen', label:'스크린', extraFields:[
+        {key:'price', label:'비용'},{key:'svc', label:'SVC 여부', type:'checkbox'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'staging', label:'연출도우미', extraFields:[
+        {key:'price', label:'비용'},{key:'svc', label:'SVC 여부', type:'checkbox'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'dressHelper', label:'드레스헬퍼', extraFields:[
+        {key:'price', label:'비용'},{key:'svc', label:'SVC 여부', type:'checkbox'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'catering', label:'식대', extraFields:[
+        {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가'},{key:'liquor', label:'주류비'},{key:'beverage', label:'음료비'},{key:'note', label:'참고사항', long:true},
+        {key:'contractDate', label:'계약일'},{key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+  ]},
+  "스냅준비": { sections: [
+    { key:'dress', label:'드레스', extraFields:[], itemsLabel:'드레스별 추가금', itemFields:[
+        {key:'vendor', label:'업체명'},{key:'price', label:'추가금'},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+      ], itemHasPhoto:true },
+    { key:'hair', label:'헤어', extraFields:[], itemsLabel:'헤어 옵션', itemFields:[
+        {key:'vendor', label:'업체명'},{key:'price', label:'가격'},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+      ], itemHasPhoto:true },
+    { key:'makeup', label:'메이크업', extraFields:[], itemsLabel:'메이크업 옵션', itemFields:[
+        {key:'vendor', label:'업체명'},{key:'price', label:'가격'},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+      ], itemHasPhoto:true },
+    { key:'bouquet', label:'부케', extraFields:[], itemsLabel:'부케 옵션', itemFields:[
+        {key:'vendor', label:'업체명'},{key:'name', label:'구성'},{key:'price', label:'추가금'},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+      ], itemHasPhoto:true },
+    { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 항목', itemFields:[
+        {key:'name', label:'항목명'},{key:'price', label:'가격'},{key:'desc', label:'참고사항', long:true}
+      ], itemHasPhoto:true }
+  ]},
   "야외스냅": { sections: [
     { key:'main', label:'구성별 상세', extraFields:[
       ], itemsLabel:'구성별 상세', itemFields:[
         {key:'name', label:'구성명'},{key:'time', label:'촬영 시간'},{key:'place', label:'장소'},
         {key:'outfits', label:'의상 수'},{key:'hairChanges', label:'헤어 변형 횟수'},{key:'video', label:'영상 제공 여부'},
         {key:'rawCount', label:'원본 제공 수량'},{key:'editedCount', label:'보정본 제공 수량'},
-        {key:'price', label:'가격'},{key:'memo', label:'기타사항'}
+        {key:'price', label:'가격'},{key:'memo', label:'기타사항', long:true}
       ], itemHasPhoto:false }
   ]},
   "정장": { sections: [
     { key:'custom', label:'맞춤정장', extraFields:[
         {key:'shirtCount', label:'셔츠 수량'},{key:'tieCount', label:'넥타이 수량'},{key:'shoesInfo', label:'수제화 구성'},
-        {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여'}
+        {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true}
       ], itemsLabel:'원단별 가격', itemFields:[
         {key:'fabric', label:'원단'},{key:'price', label:'가격'}
       ], itemHasPhoto:false },
@@ -418,22 +526,17 @@ const CATEGORY_SCHEMA = {
         {key:'fabric', label:'원단'},{key:'price', label:'가격'}
       ], itemHasPhoto:false }
   ]},
-  "드레스": { sections: [
-    { key:'main', label:'드레스', extraFields:[], itemsLabel:'드레스별 추가금', itemFields:[
-        {key:'price', label:'추가금'},{key:'desc', label:'참고사항'}
-      ], itemHasPhoto:true }
-  ]},
   "반지": { sections: [
     { key:'main', label:'반지', extraFields:[
         {key:'leadTime', label:'예상 소요일'},{key:'timeEvent', label:'타임이벤트'},
-        {key:'serviceItems', label:'서비스 아이템'},{key:'tiaraRental', label:'티아라 무상대여'}
+        {key:'serviceItems', label:'서비스 아이템'},{key:'tiaraRental', label:'티아라 SVC', type:'checkbox'}
       ], itemsLabel:'참고 사진과 가격', itemFields:[
-        {key:'price', label:'가격'},{key:'desc', label:'참고사항'}
+        {key:'name', label:'이름'},{key:'price', label:'가격'},{key:'desc', label:'참고사항', long:true}
       ], itemHasPhoto:true }
   ]},
   "한복": { sections: [
     { key:'main', label:'대여한복', extraFields:[
-        {key:'customPrice', label:'맞춤한복 가격'},{key:'fittingLimit', label:'피팅비 / 벌수제한'},{key:'propRental', label:'소품 대여'}
+        {key:'customPrice', label:'맞춤한복 가격'},{key:'fittingLimit', label:'피팅비 / 벌수제한'},{key:'propRental', label:'소품 대여', long:true}
       ], itemsLabel:'대여한복 가격 (라벨별)', itemFields:[
         {key:'label', label:'라벨'},{key:'price', label:'가격'}
       ], itemHasPhoto:false }
@@ -460,6 +563,8 @@ let vendors = [];
 let activeTab = "전체";
 let editingSections = {};
 let editingImages = [];
+let editingContractImages = [];
+let editingInstaLinks = [];
 let editingImportBatch = [];
 let expandedIds = new Set();
 let selectedCompare = new Set();
@@ -485,6 +590,8 @@ async function loadVendors(){
     if(!CATS.includes(v.category)) v.category = '기타';
     if(!Array.isArray(v.dates)) v.dates = [];
     if(!Array.isArray(v.images)) v.images = [];
+    if(!Array.isArray(v.contractImages)) v.contractImages = [];
+    if(!Array.isArray(v.instaLinks)) v.instaLinks = [];
     if(!v.sections || typeof v.sections !== 'object'){
       const schema = getSchema(v.category);
       const firstKey = schema.sections[0].key;
@@ -502,7 +609,7 @@ async function loadVendors(){
     });
     if(typeof v.isFinal !== 'boolean') v.isFinal = false;
     if(!v.finalRef) v.finalRef = null;
-    if(!v.payment || typeof v.payment!=='object') v.payment = {depositAmount:'',depositDate:'',depositPayer:'',balanceAmount:'',balanceDueDate:'',note:''};
+    if(!v.payment || typeof v.payment!=='object') v.payment = {depositAmount:'',depositDate:'',depositPayer:'',balanceAmount:'',balanceDueDate:'',balancePayer:'',note:''};
   });
 }
 async function saveVendors(){
@@ -703,12 +810,57 @@ function filteredSorted(){
   return list;
 }
 
+// Packs fields into rows of 2, but any field that would otherwise be
+// stranded alone (e.g. followed by a full-width field, or last odd one out)
+// gets stretched to fill the row instead of leaving empty space.
+function computeFieldLayout(items, isLong){
+  const out = [];
+  let pending = null;
+  items.forEach(it=>{
+    if(isLong(it)){
+      if(pending){ out.push({item:pending, full:true}); pending=null; }
+      out.push({item:it, full:true});
+    } else {
+      if(pending){
+        out.push({item:pending, full:false});
+        out.push({item:it, full:false});
+        pending = null;
+      } else {
+        pending = it;
+      }
+    }
+  });
+  if(pending) out.push({item:pending, full:true});
+  return out;
+}
+
+function fieldRow(f, val, full){
+  if(f.type==='checkbox'){
+    if(val!=='true') return '';
+    return `<div class="prow${full?' full':''}"><div class="k">${esc(f.label)}</div><div class="v">✓ 포함</div></div>`;
+  }
+  if(!val) return '';
+  return `<div class="prow${full?' full':''}"><div class="k">${esc(f.label)}</div><div class="v">${esc(val)}</div></div>`;
+}
+function quadCellHTML(f, val){
+  const shown = f.type==='checkbox' ? (val==='true' ? '✓' : '-') : (val || '-');
+  return `<div class="quadcell"><div class="qk">${esc(f.label)}</div><div class="qv">${esc(shown)}</div></div>`;
+}
+function fieldsToHTML(fields, valuesObj){
+  const quadFields = fields.filter(f=>f.quad);
+  const normalFields = fields.filter(f=>!f.quad);
+  const present = normalFields.filter(f=> f.type==='checkbox' ? valuesObj[f.key]==='true' : !!valuesObj[f.key]);
+  const laid = computeFieldLayout(present, f=>f.long);
+  let html = laid.map(({item,full})=> fieldRow(item, valuesObj[item.key], full)).join('');
+  const anyQuadVal = quadFields.some(f=> f.type==='checkbox' ? valuesObj[f.key]==='true' : !!valuesObj[f.key]);
+  if(anyQuadVal){
+    html += `<div class="quadrow full">${quadFields.map(f=>quadCellHTML(f, valuesObj[f.key])).join('')}</div>`;
+  }
+  return html;
+}
+
 function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls){
-  const fieldsHTML = sec.itemFields.map(f=>{
-    const val = item[f.key];
-    if(!val) return '';
-    return `<div class="prow"><div class="k">${esc(f.label)}</div><div class="v">${esc(val)}</div></div>`;
-  }).join('');
+  const fieldsHTML = fieldsToHTML(sec.itemFields, item);
   const photoHTML = (sec.itemHasPhoto && item.photo) ? `<img class="itemphoto" src="${esc(item.photo)}" data-lightbox-url="${esc(item.photo)}">` : '';
   let controls = '';
   if(showControls){
@@ -728,11 +880,7 @@ function vendorSectionsHTML(v, showControls){
   const schema = getSchema(v.category);
   return schema.sections.map(sec=>{
     const data = (v.sections && v.sections[sec.key]) || {extra:{}, items:[]};
-    let rows = '';
-    sec.extraFields.forEach(f=>{
-      const val = data.extra[f.key];
-      if(val) rows += `<div class="vrow"><div class="k">${esc(f.label)}</div><div class="v">${esc(val)}</div></div>`;
-    });
+    const rows = fieldsToHTML(sec.extraFields, data.extra);
     const extraHTML = rows ? `<div class="vendorrow">${rows}</div>` : '';
     const items = data.items || [];
     const itemsHTML = items.length ? `<div class="products"><div class="itemslabel">${esc(sec.itemsLabel)}</div>${items.map((it,idx)=>itemBlockHTML(it,sec,v.id,sec.key,idx,showControls)).join('')}</div>` : '';
@@ -740,10 +888,21 @@ function vendorSectionsHTML(v, showControls){
   }).join('');
 }
 
-function galleryHTML(v){
-  const imgs = v.images || [];
-  if(imgs.length===0) return '';
-  return `<div class="gallery">${imgs.map((src,i)=>`<img src="${src}" data-lightbox="${v.id}:${i}">`).join('')}</div>`;
+function galleryHTML(imgs, label){
+  if(!imgs || imgs.length===0) return '';
+  const labelHTML = label ? `<div class="gallerylabel">${esc(label)}</div>` : '';
+  return `${labelHTML}<div class="gallery">${imgs.map(src=>`<img src="${src}" data-lightbox-url="${esc(src)}">`).join('')}</div>`;
+}
+
+function instaEmbedsHTML(links){
+  if(!links || links.length===0) return '';
+  const items = links.map(url=>`<blockquote class="instagram-media" data-instgrm-permalink="${esc(url)}" data-instgrm-version="14" style="margin:8px auto;max-width:400px;min-width:280px;width:100%;"></blockquote>`).join('');
+  return `<div class="gallerylabel">인스타 포스트</div><div class="instaEmbeds">${items}</div>`;
+}
+function processInstagramEmbeds(){
+  if(window.instgrm && window.instgrm.Embeds && window.instgrm.Embeds.process){
+    try{ window.instgrm.Embeds.process(); }catch(e){}
+  }
 }
 
 function cardHTML(v){
@@ -751,30 +910,35 @@ function cardHTML(v){
   const hasDate = vendorHasAvailability(v);
   const cmpOn = selectedCompare.has(v.id);
   const finalBadge = v.isFinal ? `<span class="finalbadge">★ 최종 선택</span>` : '';
+  const isSingle = SINGLE_ENTRY_CATS.includes(v.category);
+  const showDates = v.category === '야외스냅';
   const body = open ? `<div class="cardbody"><div class="cardbody-inner">
-      ${v.link? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
-      ${v.location? `<div class="vendorrow"><div class="vrow"><div class="k">주소</div><div class="v">${esc(v.location)}</div></div></div>`:''}
-      ${dateChipsHTML(v)}
+      ${(!isSingle && v.link)? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
+      ${showDates ? dateChipsHTML(v) : ''}
       ${vendorSectionsHTML(v, true)}
-      ${galleryHTML(v)}
-      ${v.memo? `<div class="vendorrow"><div class="vrow"><div class="k">기타사항</div><div class="v">${esc(v.memo)}</div></div></div>`:''}
-      <div class="actions">
-        <button class="btn small" data-edit="${v.id}">수정</button>
-      </div>
+      ${galleryHTML(v.images, v.images&&v.images.length? '레퍼런스 사진':'')}
+      ${instaEmbedsHTML(v.instaLinks)}
+      ${galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'')}
+      ${v.memo? `<div class="vendorrow"><div class="prow full"><div class="k">기타사항</div><div class="v">${esc(v.memo)}</div></div></div>`:''}
     </div></div>` : '';
 
   return `<div class="card ${v.isFinal?'isfinal':''}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
       <button class="stamp ${v.favorite?'on':''}" data-fav="${v.id}">찜</button>
       <div class="cardmain">
-        <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(v.category)}</span>
-        ${finalBadge}
-        <h3>${esc(v.name)||'(이름 없음)'}</h3>
-        <div class="metaline"><span><span class="availdot ${hasDate?'':'none'}"></span> ${hasDate? '가능 날짜 있음':'가능 날짜 없음'}</span></div>
+        <div class="topline">
+          <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(v.category)}</span>
+          ${finalBadge}
+          ${showDates ? `<span class="availbadge"><span class="availdot ${hasDate?'':'none'}"></span>${hasDate? '가능 날짜 있음':'가능 날짜 없음'}</span>` : ''}
+        </div>
+        <h3>${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</h3>
       </div>
       <div class="headactions">
         <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
-        <button class="delx" data-del="${v.id}">✕</button>
+        <div class="editdelrow">
+          <button class="headbtn danger" data-del="${v.id}">삭제</button>
+          <button class="headbtn" data-edit="${v.id}">수정</button>
+        </div>
       </div>
       <span class="chev">▾</span>
     </div>
@@ -909,19 +1073,11 @@ function renderContent(){
   container.querySelectorAll('[data-itemfinal]').forEach(btn=>{
     btn.onclick = (e)=>{ e.stopPropagation(); itemFinalClick(btn.dataset.itemfinal); };
   });
-  container.querySelectorAll('[data-lightbox]').forEach(img=>{
-    img.onclick = (e)=>{
-      e.stopPropagation();
-      const [vid,idx] = img.dataset.lightbox.split(':');
-      const v = vendors.find(x=>x.id===vid);
-      const src = v && v.images ? v.images[+idx] : null;
-      if(src) openLightbox(src);
-    };
-  });
   container.querySelectorAll('[data-lightbox-url]').forEach(img=>{
     img.onclick = (e)=>{ e.stopPropagation(); openLightbox(img.dataset.lightboxUrl); };
   });
 
+  processInstagramEmbeds();
   updateCompareBar();
 }
 
@@ -974,6 +1130,7 @@ function openPayment(vendorId){
   document.getElementById('pm_depositPayer').value = pay.depositPayer||'';
   document.getElementById('pm_balanceAmount').value = pay.balanceAmount||'';
   document.getElementById('pm_balanceDueDate').value = pay.balanceDueDate||'';
+  document.getElementById('pm_balancePayer').value = pay.balancePayer||'';
   document.getElementById('pm_note').value = pay.note||'';
   document.getElementById('paymentOverlay').classList.add('show');
 }
@@ -986,6 +1143,7 @@ document.getElementById('savePayment').onclick = async ()=>{
     depositPayer: document.getElementById('pm_depositPayer').value.trim(),
     balanceAmount: document.getElementById('pm_balanceAmount').value.trim(),
     balanceDueDate: document.getElementById('pm_balanceDueDate').value,
+    balancePayer: document.getElementById('pm_balancePayer').value.trim(),
     note: document.getElementById('pm_note').value.trim()
   };
   await saveVendors();
@@ -1046,7 +1204,7 @@ function renderBudgetPage(){
   let totalDeposit=0, totalBalance=0;
   const rows = CATS.map(cat=>{
     const v = finals.find(x=>x.category===cat);
-    if(!v) return `<tr><td>${esc(cat)}</td><td colspan="8" style="font-size:11px;color:var(--ink-soft);">아직 선택 안 함</td></tr>`;
+    if(!v) return `<tr><td style="white-space:nowrap;">${esc(cat)}</td><td colspan="9" style="font-size:7px;color:#9C9890;">아직 선택 안 함</td></tr>`;
     const pay = v.payment || {};
     const dep = parseFloat(pay.depositAmount||0) || 0;
     const bal = parseFloat(pay.balanceAmount||0) || 0;
@@ -1055,15 +1213,16 @@ function renderBudgetPage(){
     const item = (sec && v.sections[sec.key]) ? v.sections[sec.key].items[v.finalRef.itemIndex] : null;
     const itemLabel = item ? (item.name||item.label||item.fabric||'') : '';
     return `<tr data-vendorid="${v.id}" data-cat="${esc(cat)}">
-      <td>${esc(cat)}</td>
+      <td style="white-space:nowrap;">${esc(cat)}</td>
       <td class="name">${esc(v.name)}</td>
       <td>${esc(itemLabel)||'-'}</td>
       <td>${pay.depositDate||'-'}</td>
       <td>${dep? dep.toLocaleString()+'만원':'-'}</td>
+      <td>${esc(pay.depositPayer)||'-'}</td>
       <td>${pay.balanceDueDate||'-'}</td>
       <td>${bal? bal.toLocaleString()+'만원':'-'}</td>
+      <td>${esc(pay.balancePayer)||'-'}</td>
       <td>${(dep+bal)? (dep+bal).toLocaleString()+'만원':'-'}</td>
-      <td>${esc(pay.depositPayer)||'-'}</td>
     </tr>`;
   }).join('');
 
@@ -1076,7 +1235,7 @@ function renderBudgetPage(){
     </div>
     <h2 style="margin:14px 0 10px;font-size:17px;">♥ 결혼식 준비 총 비용</h2>
     <div class="tablewrap"><table>
-      <thead><tr><th>카테고리</th><th>업체명</th><th>상품</th><th>계약일</th><th>계약금</th><th>잔금일</th><th>잔금</th><th>총액</th><th>지불인</th></tr></thead>
+      <thead><tr><th>카테고리</th><th>업체명</th><th>상품</th><th>계약일</th><th>계약금</th><th>계약금 지불인</th><th>잔금일</th><th>잔금</th><th>잔금 지불인</th><th>총액</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
     <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${(totalDeposit+totalBalance).toLocaleString()}만원 (계약금 ${totalDeposit.toLocaleString()} + 잔금 ${totalBalance.toLocaleString()})</div>
@@ -1134,8 +1293,8 @@ function parseCSV(text){
   return rows.filter(r => !(r.length===1 && r[0]===''));
 }
 const CSV_HEADERS = ['id','category','name','link','location','memo','dates','isFinal','finalRef',
-  'depositAmount','depositDate','depositPayer','balanceAmount','balanceDueDate','paymentNote',
-  'sectionsJSON','imagesJSON','createdAt'];
+  'depositAmount','depositDate','depositPayer','balanceAmount','balanceDueDate','balancePayer','paymentNote',
+  'sectionsJSON','imagesJSON','contractImagesJSON','instaLinksJSON','createdAt'];
 
 function exportData(){
   const lines = [CSV_HEADERS.map(csvEscape).join(',')];
@@ -1147,9 +1306,11 @@ function exportData(){
       v.isFinal ? 'true' : 'false',
       v.finalRef ? JSON.stringify(v.finalRef) : '',
       pay.depositAmount||'', pay.depositDate||'', pay.depositPayer||'',
-      pay.balanceAmount||'', pay.balanceDueDate||'', pay.note||'',
+      pay.balanceAmount||'', pay.balanceDueDate||'', pay.balancePayer||'', pay.note||'',
       JSON.stringify(v.sections||{}),
       JSON.stringify(v.images||[]),
+      JSON.stringify(v.contractImages||[]),
+      JSON.stringify(v.instaLinks||[]),
       v.createdAt||''
     ];
     lines.push(row.map(csvEscape).join(','));
@@ -1170,6 +1331,8 @@ function normalizeLoadedVendor(v){
   if(!CATS.includes(v.category)) v.category = '기타';
   if(!Array.isArray(v.dates)) v.dates = [];
   if(!Array.isArray(v.images)) v.images = [];
+  if(!Array.isArray(v.contractImages)) v.contractImages = [];
+    if(!Array.isArray(v.instaLinks)) v.instaLinks = [];
   if(!v.sections || typeof v.sections !== 'object'){
     const schema = getSchema(v.category);
     const firstKey = schema.sections[0].key;
@@ -1187,7 +1350,7 @@ function normalizeLoadedVendor(v){
   });
   if(typeof v.isFinal !== 'boolean') v.isFinal = false;
   if(!v.finalRef) v.finalRef = null;
-  if(!v.payment || typeof v.payment!=='object') v.payment = {depositAmount:'',depositDate:'',depositPayer:'',balanceAmount:'',balanceDueDate:'',note:''};
+  if(!v.payment || typeof v.payment!=='object') v.payment = {depositAmount:'',depositDate:'',depositPayer:'',balanceAmount:'',balanceDueDate:'',balancePayer:'',note:''};
   if(!v.createdAt) v.createdAt = Date.now();
   if(!v.id) v.id = uid();
   return v;
@@ -1210,6 +1373,10 @@ async function importDataFile(e){
       try{ sections = JSON.parse(get('sectionsJSON') || '{}'); }catch(err){ sections = {}; }
       let images = [];
       try{ images = JSON.parse(get('imagesJSON') || '[]'); }catch(err){ images = []; }
+      let contractImages = [];
+      try{ contractImages = JSON.parse(get('contractImagesJSON') || '[]'); }catch(err){ contractImages = []; }
+      let instaLinks = [];
+      try{ instaLinks = JSON.parse(get('instaLinksJSON') || '[]'); }catch(err){ instaLinks = []; }
       let finalRef = null;
       try{ finalRef = get('finalRef') ? JSON.parse(get('finalRef')) : null; }catch(err){ finalRef = null; }
       let v = {
@@ -1224,9 +1391,10 @@ async function importDataFile(e){
         finalRef,
         payment: {
           depositAmount: get('depositAmount'), depositDate: get('depositDate'), depositPayer: get('depositPayer'),
-          balanceAmount: get('balanceAmount'), balanceDueDate: get('balanceDueDate'), note: get('paymentNote')
+          balanceAmount: get('balanceAmount'), balanceDueDate: get('balanceDueDate'), balancePayer: get('balancePayer'),
+          note: get('paymentNote')
         },
-        sections, images,
+        sections, images, contractImages, instaLinks,
         createdAt: parseInt(get('createdAt')) || Date.now()
       };
       v = normalizeLoadedVendor(v);
@@ -1268,16 +1436,19 @@ function resizeImageToBlob(file, maxDim, quality){
     reader.readAsDataURL(file);
   });
 }
-function renderThumbs(){
-  const box = document.getElementById('imgThumbs');
-  box.innerHTML = editingImages.map((src,i)=>`
+function renderThumbsGeneric(boxId, arr, onChange){
+  const box = document.getElementById(boxId);
+  box.innerHTML = arr.map((src,i)=>`
     <div class="thumb"><img src="${src}"><button type="button" data-thumbdel="${i}">✕</button></div>
   `).join('');
   box.querySelectorAll('[data-thumbdel]').forEach(btn=>{
-    btn.onclick = ()=>{ editingImages.splice(+btn.dataset.thumbdel,1); renderThumbs(); };
+    btn.onclick = ()=>{ arr.splice(+btn.dataset.thumbdel,1); onChange(); };
   });
 }
-document.getElementById('f_images').onchange = async (e)=>{
+function renderThumbs(){ renderThumbsGeneric('imgThumbs', editingImages, renderThumbs); }
+function renderContractThumbs(){ renderThumbsGeneric('contractThumbs', editingContractImages, renderContractThumbs); }
+
+async function handleImagePickerChange(e, arr, renderFn){
   const files = Array.from(e.target.files || []);
   if(PHOTO_SETUP_NEEDED && files.length){
     alert('사진을 같이 보려면 먼저 Cloudinary 설정이 필요해요.');
@@ -1285,27 +1456,51 @@ document.getElementById('f_images').onchange = async (e)=>{
     return;
   }
   for(const f of files){
-    if(editingImages.length >= 8){ alert('사진은 최대 8장까지 올릴 수 있어요.'); break; }
+    if(arr.length >= 8){ alert('사진은 최대 8장까지 올릴 수 있어요.'); break; }
     try{
       const blob = await resizeImageToBlob(f, 1000, 0.75);
       const url = await uploadToCloudinary(blob);
-      editingImages.push(url);
-      renderThumbs();
+      arr.push(url);
+      renderFn();
     }catch(err){
       alert('사진 업로드에 실패했어요.');
     }
   }
   e.target.value = '';
+}
+document.getElementById('f_images').onchange = (e)=> handleImagePickerChange(e, editingImages, renderThumbs);
+document.getElementById('f_contractImages').onchange = (e)=> handleImagePickerChange(e, editingContractImages, renderContractThumbs);
+
+function renderInstaLinks(){
+  const box = document.getElementById('instaLinksList');
+  box.innerHTML = editingInstaLinks.map((url,i)=>`
+    <div class="instalinkrow"><span>${esc(url)}</span><button type="button" data-instadel="${i}">✕</button></div>
+  `).join('');
+  box.querySelectorAll('[data-instadel]').forEach(btn=>{
+    btn.onclick = ()=>{ editingInstaLinks.splice(+btn.dataset.instadel,1); renderInstaLinks(); };
+  });
+}
+document.getElementById('addInstaLinkBtn').onclick = ()=>{
+  const input = document.getElementById('f_instaLinkInput');
+  const url = input.value.trim();
+  if(!url) return;
+  if(!/instagram\.com/.test(url)){ alert('인스타그램 게시물 링크만 추가할 수 있어요.'); return; }
+  if(editingInstaLinks.length >= 6){ alert('인스타 링크는 최대 6개까지 추가할 수 있어요.'); return; }
+  editingInstaLinks.push(url);
+  input.value = '';
+  renderInstaLinks();
 };
 
 // ---- Section-based item editor ----
 function currentSchema(){ return getSchema(document.getElementById('f_category').value); }
 
 function itemEditRowHTML(item, idx, sec){
-  const fieldsHTML = sec.itemFields.map(f=>{
+  const laid = computeFieldLayout(sec.itemFields, f=>f.long);
+  const fieldsHTML = laid.map(({item:f, full})=>{
     const val = esc(item[f.key]||'');
-    if(f.type==='textarea') return `<textarea data-key="${f.key}" placeholder="${esc(f.label)}">${val}</textarea>`;
-    return `<input data-key="${f.key}" placeholder="${esc(f.label)}" value="${val}">`;
+    const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
+    if(f.type==='textarea') return `<textarea data-key="${f.key}" placeholder="${esc(f.label)}"${fullStyle}>${val}</textarea>`;
+    return `<input data-key="${f.key}" placeholder="${esc(f.label)}" value="${val}"${fullStyle}>`;
   }).join('');
   if(sec.itemHasPhoto){
     const photoHTML = item.photo
@@ -1315,7 +1510,7 @@ function itemEditRowHTML(item, idx, sec){
       <div class="prow-head"><div class="rowlabel">#${idx+1}</div><button type="button" class="rowDel" data-sec="${sec.key}" data-idx="${idx}">✕</button></div>
       <div class="itemrow-flex">
         <div class="itemphotorow">${photoHTML}</div>
-        <div class="itemfields">${fieldsHTML}</div>
+        <div class="itemfields onecol">${fieldsHTML}</div>
       </div>
     </div>`;
   }
@@ -1324,15 +1519,40 @@ function itemEditRowHTML(item, idx, sec){
     <div class="itemfields">${fieldsHTML}</div>
   </div>`;
 }
+function extraFieldHTML(f, sec, val, full){
+  if(f.type==='checkbox'){
+    const checked = val==='true';
+    return `<label class="checkfield${full?' full':''}"><input type="checkbox" data-sec="${sec.key}" data-exkey="${f.key}" ${checked?'checked':''}> ${esc(f.label)}</label>`;
+  }
+  const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
+  return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}></div>`;
+}
+function quadEditCellHTML(f, sec, val){
+  if(f.type==='checkbox'){
+    const checked = val==='true';
+    return `<label class="quadcheck"><input type="checkbox" data-sec="${sec.key}" data-exkey="${f.key}" ${checked?'checked':''}><span>${esc(f.label)}</span></label>`;
+  }
+  return `<div class="quadfield"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"></div>`;
+}
 function sectionEditorHTML(sec, data){
-  const extraHTML = sec.extraFields.map(f=>{
-    const val = esc(data.extra[f.key]||'');
-    return `<div class="field"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${val}"></div>`;
-  }).join('');
+  const quadFields = sec.extraFields.filter(f=>f.quad);
+  const normalFields = sec.extraFields.filter(f=>!f.quad);
+  const laidExtra = computeFieldLayout(normalFields, f=>f.long);
+  let extraHTML = laidExtra.map(({item:f, full})=> extraFieldHTML(f, sec, data.extra[f.key], full)).join('');
+  if(quadFields.length){
+    extraHTML += `<div class="quadrow full">${quadFields.map(f=>quadEditCellHTML(f, sec, data.extra[f.key])).join('')}</div>`;
+  }
+  const extraWrapped = extraHTML ? `<div class="exgrid">${extraHTML}</div>` : '';
+  if(sec.itemFields.length===0){
+    return `<div class="editsection">
+      <h4>${esc(sec.label)}</h4>
+      ${extraWrapped}
+    </div>`;
+  }
   const itemsHTML = data.items.map((item,idx)=>itemEditRowHTML(item,idx,sec)).join('') || '<div class="hint">등록된 항목이 없어요.</div>';
   return `<div class="editsection">
     <h4>${esc(sec.label)}</h4>
-    ${extraHTML}
+    ${extraWrapped}
     <div class="hint" style="margin-top:2px;">${esc(sec.itemsLabel)}</div>
     <div class="itemrows" data-sec="${sec.key}">${itemsHTML}</div>
     <button type="button" class="btn small addItemBtn" data-sec="${sec.key}">+ 항목 추가</button>
@@ -1388,7 +1608,9 @@ function syncSectionsFromDOM(schemaOverride){
   schema.sections.forEach(sec=>{
     const extraInputs = document.querySelectorAll(`#sectionsBox [data-sec="${sec.key}"][data-exkey]`);
     const extra = {};
-    extraInputs.forEach(el=>{ extra[el.dataset.exkey] = el.value.trim(); });
+    extraInputs.forEach(el=>{
+      extra[el.dataset.exkey] = el.type==='checkbox' ? (el.checked?'true':'false') : el.value.trim();
+    });
     const rows = document.querySelectorAll(`#sectionsBox .productRow[data-sec="${sec.key}"]`);
     const items = Array.from(rows).map((row,i)=>{
       const existing = editingSections[sec.key] && editingSections[sec.key].items[i];
@@ -1400,12 +1622,22 @@ function syncSectionsFromDOM(schemaOverride){
   });
 }
 const GALLERY_TOP_CATS = ['야외스냅','정장','한복'];
+const SINGLE_ENTRY_CATS = ['웨딩홀','스냅준비'];
+const NO_GALLERY_CATS = ['스냅준비'];
 function repositionGallery(){
   const cat = document.getElementById('f_category').value;
   const target = GALLERY_TOP_CATS.includes(cat) ? 'gallerySlotTop' : 'gallerySlotBottom';
   const slot = document.getElementById(target);
   const block = document.getElementById('galleryBlock');
   if(slot && block && block.parentElement !== slot) slot.appendChild(block);
+}
+function updateFieldVisibility(){
+  const cat = document.getElementById('f_category').value;
+  document.getElementById('basicFieldsBox').style.display = SINGLE_ENTRY_CATS.includes(cat) ? 'none' : '';
+  document.getElementById('datesFieldBox').style.display = (cat === '야외스냅') ? '' : 'none';
+  const hideGallery = NO_GALLERY_CATS.includes(cat);
+  document.getElementById('galleryBlock').style.display = hideGallery ? 'none' : '';
+  document.getElementById('contractBlock').style.display = hideGallery ? 'none' : '';
 }
 
 document.getElementById('f_category').addEventListener('change', ()=>{
@@ -1415,10 +1647,14 @@ document.getElementById('f_category').addEventListener('change', ()=>{
   const old = editingSections;
   editingSections = {};
   newSchema.sections.forEach(sec=>{
-    editingSections[sec.key] = old[sec.key] ? old[sec.key] : {extra:{}, items:[{}]};
+    editingSections[sec.key] = old[sec.key] ? old[sec.key] : {extra:{}, items: sec.itemFields.length ? [{}] : []};
+    if(sec.itemFields.length && editingSections[sec.key].items.length===0){
+      editingSections[sec.key].items = [{}];
+    }
   });
   renderSections();
   repositionGallery();
+  updateFieldVisibility();
 });
 
 // ---- Edit modal ----
@@ -1427,7 +1663,7 @@ function openEdit(id){
   const v = id ? vendors.find(x=>x.id===id) : null;
   document.getElementById('editTitle').textContent = v ? '업체 수정' : '업체 추가';
   document.getElementById('editId').value = v ? v.id : '';
-  const cat = v ? v.category : (activeTab!=="전체" ? activeTab : "야외스냅");
+  const cat = v ? v.category : (activeTab!=="전체" ? activeTab : "웨딩홀");
   document.getElementById('f_category').value = cat;
   document.getElementById('f_name').value = v ? v.name : '';
   document.getElementById('f_link').value = v ? v.link : '';
@@ -1440,13 +1676,21 @@ function openEdit(id){
   editingSections = {};
   schema.sections.forEach(sec=>{
     const existing = v && v.sections && v.sections[sec.key];
-    editingSections[sec.key] = existing ? JSON.parse(JSON.stringify(existing)) : {extra:{}, items:[{}]};
+    editingSections[sec.key] = existing ? JSON.parse(JSON.stringify(existing)) : {extra:{}, items: sec.itemFields.length ? [{}] : []};
+    if(sec.itemFields.length && editingSections[sec.key].items.length===0){
+      editingSections[sec.key].items = [{}];
+    }
   });
   renderSections();
   repositionGallery();
+  updateFieldVisibility();
 
   editingImages = v ? (v.images||[]).slice() : [];
+  editingContractImages = v ? (v.contractImages||[]).slice() : [];
+  editingInstaLinks = v ? (v.instaLinks||[]).slice() : [];
   renderThumbs();
+  renderContractThumbs();
+  renderInstaLinks();
   overlay.classList.add('show');
 }
 function closeEdit(){ document.getElementById('editOverlay').classList.remove('show'); }
@@ -1466,15 +1710,19 @@ document.getElementById('saveEdit').onclick = async ()=>{
     sections[sec.key] = { extra: data.extra, items };
   });
   const dates = document.getElementById('f_dates').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const cat = document.getElementById('f_category').value;
+  const single = SINGLE_ENTRY_CATS.includes(cat);
   const data = {
-    category: document.getElementById('f_category').value,
-    name: document.getElementById('f_name').value.trim(),
-    link: document.getElementById('f_link').value.trim(),
-    location: document.getElementById('f_location').value.trim(),
+    category: cat,
+    name: single ? cat : document.getElementById('f_name').value.trim(),
+    link: single ? '' : document.getElementById('f_link').value.trim(),
+    location: single ? '' : document.getElementById('f_location').value.trim(),
     memo: document.getElementById('f_memo').value.trim(),
-    dates,
+    dates: cat === '야외스냅' ? dates : [],
     sections,
-    images: editingImages.slice()
+    images: NO_GALLERY_CATS.includes(cat) ? [] : editingImages.slice(),
+    contractImages: NO_GALLERY_CATS.includes(cat) ? [] : editingContractImages.slice(),
+    instaLinks: NO_GALLERY_CATS.includes(cat) ? [] : editingInstaLinks.slice()
   };
   if(!data.name){ alert('업체명을 입력해주세요.'); return; }
   if(id){
@@ -1625,5 +1873,6 @@ window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); }
   renderContent();
 })();
 </script>
+<script async src="https://www.instagram.com/embed.js"></script>
 </body>
 </html>
