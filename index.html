@@ -88,7 +88,7 @@ select.viewsel{
 .availdot{width:7px;height:7px;border-radius:50%;background:var(--celadon);display:inline-block;}
 .availdot.none{background:var(--line);}
 
-.headactions{display:flex;flex-direction:column;gap:4px;flex:0 0 auto;align-items:flex-end;}
+.headactions{display:flex;flex-direction:row;gap:4px;flex:0 0 auto;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
 .stamp{
   width:32px;height:32px;border-radius:50%;
   border:2px solid var(--line);color:var(--line);background:transparent;
@@ -103,15 +103,14 @@ select.viewsel{
 .stamp:active{transform:rotate(-8deg) scale(.92);}
 
 .cmp{
-  padding:5px 10px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
-  font-size:10.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
+  padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
+  font-size:10px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
 }
 .cmp.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 
-.editdelrow{display:flex;gap:4px;}
 .headbtn{
-  padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
-  font-size:10.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
+  padding:5px 7px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
+  font-size:10px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
 }
 .headbtn.danger{color:var(--persimmon);border-color:#EAD3CC;background:#FBF3F0;}
 
@@ -121,14 +120,14 @@ select.viewsel{
 .card a.link:hover{text-decoration:underline;}
 .vendorrow{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;}
 
-.datechips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.datechips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
 .datechip{
-  font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:#fff;
+  font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;background:#fff;
   border:1px solid var(--celadon);color:var(--celadon);
 }
 .datechip.today{border-color:var(--gold);color:var(--gold);}
 .datechip.past{background:transparent;border-color:var(--line);color:#B4AFA0;text-decoration:line-through;}
-.nodates{font-size:11.5px;color:var(--ink-soft);margin-top:8px;}
+.nodates{font-size:10px;color:var(--ink-soft);margin-top:6px;}
 
 .sectionblock{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);}
 .sectionblock:first-of-type{margin-top:10px;}
@@ -227,9 +226,11 @@ td.fav{text-align:center;}
 .checkfield.full{grid-column:1/-1;}
 .quadrow{display:flex;gap:6px;grid-column:1/-1;}
 .quadcell{flex:1;min-width:0;text-align:center;background:var(--card);border-radius:8px;padding:4px 2px;}
+.quadcell.wide{flex:2;}
 .quadcell .qk{font-size:9px;color:var(--ink-soft);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .quadcell .qv{font-size:11.5px;font-weight:700;margin-top:1px;}
 .quadfield{flex:1;min-width:0;}
+.quadfield.wide{flex:2;}
 .quadfield label{display:block;font-size:9px;font-weight:700;color:var(--ink-soft);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .quadfield input{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 5px;font-size:11px;font-family:inherit;min-width:0;}
 .quadcheck{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;font-size:9px;font-weight:400;color:#9C9890;cursor:pointer;}
@@ -322,7 +323,14 @@ td.fav{text-align:center;}
       <div class="field"><label>주소</label><input id="f_location"></div>
     </div>
     <div id="datesFieldBox">
-      <div class="field"><label>가능 날짜</label><input id="f_dates" placeholder="2026-08-23, 2026-09-06"></div>
+      <div class="field">
+        <label>가능 날짜</label>
+        <div style="display:flex;gap:6px;">
+          <input id="f_dateInput" placeholder="20260823" inputmode="numeric" maxlength="8" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:14px;font-family:inherit;">
+          <button type="button" class="btn small" id="addDateBtn" style="flex:0 0 auto;">추가</button>
+        </div>
+        <div id="datesList"></div>
+      </div>
     </div>
 
     <div id="gallerySlotTop"></div>
@@ -429,6 +437,18 @@ td.fav{text-align:center;}
   </div>
 </div>
 
+<!-- Confirm Modal -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal">
+    <h2>확인</h2>
+    <div class="sub" id="confirmMsg" style="margin-bottom:16px;"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="confirmCancelBtn">취소</button>
+      <button class="btn primary" id="confirmOkBtn">확인</button>
+    </div>
+  </div>
+</div>
+
 <!-- Lightbox -->
 <div class="overlay" id="lightboxOverlay">
   <div class="modal lightbox"><img id="lightboxImg" src=""></div>
@@ -474,19 +494,24 @@ const CATEGORY_SCHEMA = {
         {key:'composition', label:'구성'},{key:'extraPrice', label:'추가금'},{key:'note', label:'참고사항', long:true}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'screen', label:'스크린', extraFields:[
-        {key:'price', label:'비용'},{key:'svc', label:'SVC 여부', type:'checkbox'}
+        {key:'price', label:'비용'},{key:'svc', label:'SVC', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'staging', label:'연출도우미', extraFields:[
-        {key:'price', label:'비용'},{key:'svc', label:'SVC 여부', type:'checkbox'}
+        {key:'price', label:'비용'},{key:'svc', label:'SVC', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'dressHelper', label:'드레스헬퍼', extraFields:[
-        {key:'price', label:'비용'},{key:'svc', label:'SVC 여부', type:'checkbox'}
+        {key:'price', label:'비용'},{key:'svc', label:'SVC', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'catering', label:'식대', extraFields:[
         {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가'},{key:'liquor', label:'주류비'},{key:'beverage', label:'음료비'},{key:'note', label:'참고사항', long:true},
-        {key:'contractDate', label:'계약일'},{key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+        {key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'finalAmount', label:'최종금액'},
+        {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류', maxLength:3},
+        {key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
+        {key:'note', label:'내역'},{key:'amount', label:'금액'}
+      ], itemHasPhoto:false }
   ]},
   "스냅준비": { sections: [
     { key:'dress', label:'드레스', extraFields:[], itemsLabel:'드레스별 추가금', itemFields:[
@@ -508,7 +533,7 @@ const CATEGORY_SCHEMA = {
   "야외스냅": { sections: [
     { key:'main', label:'구성별 상세', extraFields:[
       ], itemsLabel:'구성별 상세', itemFields:[
-        {key:'name', label:'구성명'},{key:'time', label:'촬영 시간'},{key:'place', label:'장소'},
+        {key:'name', label:'구성명', long:true},{key:'time', label:'촬영 시간'},{key:'place', label:'장소'},
         {key:'outfits', label:'의상 수'},{key:'hairChanges', label:'헤어 변형 횟수'},{key:'video', label:'영상 제공 여부'},
         {key:'rawCount', label:'원본 제공 수량'},{key:'editedCount', label:'보정본 제공 수량'},
         {key:'price', label:'가격'},{key:'memo', label:'기타사항', long:true}
@@ -529,7 +554,7 @@ const CATEGORY_SCHEMA = {
   "반지": { sections: [
     { key:'main', label:'반지', extraFields:[
         {key:'leadTime', label:'예상 소요일'},{key:'timeEvent', label:'타임이벤트'},
-        {key:'serviceItems', label:'서비스 아이템'},{key:'tiaraRental', label:'티아라 SVC', type:'checkbox'}
+        {key:'serviceItems', label:'서비스 아이템', long:true},{key:'tiaraRental', label:'티아라 SVC', type:'checkbox'}
       ], itemsLabel:'참고 사진과 가격', itemFields:[
         {key:'name', label:'이름'},{key:'price', label:'가격'},{key:'desc', label:'참고사항', long:true}
       ], itemHasPhoto:true }
@@ -565,6 +590,7 @@ let editingSections = {};
 let editingImages = [];
 let editingContractImages = [];
 let editingInstaLinks = [];
+let editingDates = [];
 let editingImportBatch = [];
 let expandedIds = new Set();
 let selectedCompare = new Set();
@@ -657,6 +683,34 @@ async function uploadToCloudinary(blob){
 }
 
 function uid(){ return 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+function showConfirm(message){
+  return new Promise(resolve=>{
+    document.getElementById('confirmMsg').textContent = message;
+    document.getElementById('confirmOverlay').classList.add('show');
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    function cleanup(result){
+      document.getElementById('confirmOverlay').classList.remove('show');
+      okBtn.onclick = null; cancelBtn.onclick = null;
+      resolve(result);
+    }
+    okBtn.onclick = ()=>cleanup(true);
+    cancelBtn.onclick = ()=>cleanup(false);
+  });
+}
+
+function toCompactDate(iso){
+  return (iso||'').replace(/-/g,'');
+}
+function toISODate(compact){
+  const digits = (compact||'').replace(/\D/g,'');
+  if(digits.length !== 8) return null;
+  const y = digits.slice(0,4), m = digits.slice(4,6), d = digits.slice(6,8);
+  const iso = `${y}-${m}-${d}`;
+  if(isNaN(new Date(iso+'T00:00:00').getTime())) return null;
+  return iso;
+}
+
 function esc(s){
   return (s||'').toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
@@ -844,7 +898,7 @@ function fieldRow(f, val, full){
 }
 function quadCellHTML(f, val){
   const shown = f.type==='checkbox' ? (val==='true' ? '✓' : '-') : (val || '-');
-  return `<div class="quadcell"><div class="qk">${esc(f.label)}</div><div class="qv">${esc(shown)}</div></div>`;
+  return `<div class="quadcell${f.wide?' wide':''}"><div class="qk">${esc(f.label)}</div><div class="qv">${esc(shown)}</div></div>`;
 }
 function fieldsToHTML(fields, valuesObj){
   const quadFields = fields.filter(f=>f.quad);
@@ -883,7 +937,7 @@ function vendorSectionsHTML(v, showControls){
     const rows = fieldsToHTML(sec.extraFields, data.extra);
     const extraHTML = rows ? `<div class="vendorrow">${rows}</div>` : '';
     const items = data.items || [];
-    const itemsHTML = items.length ? `<div class="products"><div class="itemslabel">${esc(sec.itemsLabel)}</div>${items.map((it,idx)=>itemBlockHTML(it,sec,v.id,sec.key,idx,showControls)).join('')}</div>` : '';
+    const itemsHTML = items.length ? `<div class="products">${items.map((it,idx)=>itemBlockHTML(it,sec,v.id,sec.key,idx,showControls)).join('')}</div>` : '';
     return `<div class="sectionblock"><div class="sectionlabel">${esc(sec.label)}</div>${extraHTML}${itemsHTML}</div>`;
   }).join('');
 }
@@ -914,7 +968,6 @@ function cardHTML(v){
   const showDates = v.category === '야외스냅';
   const body = open ? `<div class="cardbody"><div class="cardbody-inner">
       ${(!isSingle && v.link)? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
-      ${showDates ? dateChipsHTML(v) : ''}
       ${vendorSectionsHTML(v, true)}
       ${galleryHTML(v.images, v.images&&v.images.length? '레퍼런스 사진':'')}
       ${instaEmbedsHTML(v.instaLinks)}
@@ -932,13 +985,12 @@ function cardHTML(v){
           ${showDates ? `<span class="availbadge"><span class="availdot ${hasDate?'':'none'}"></span>${hasDate? '가능 날짜 있음':'가능 날짜 없음'}</span>` : ''}
         </div>
         <h3>${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</h3>
+        ${showDates ? dateChipsHTML(v) : ''}
       </div>
       <div class="headactions">
         <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
-        <div class="editdelrow">
-          <button class="headbtn danger" data-del="${v.id}">삭제</button>
-          <button class="headbtn" data-edit="${v.id}">수정</button>
-        </div>
+        <button class="headbtn danger" data-del="${v.id}">삭제</button>
+        <button class="headbtn" data-edit="${v.id}">수정</button>
       </div>
       <span class="chev">▾</span>
     </div>
@@ -1090,7 +1142,8 @@ document.getElementById('lightboxOverlay').addEventListener('click', ()=>{
 });
 
 async function deleteVendorById(id){
-  if(!confirm('이 업체를 삭제할까요?')) return;
+  const ok = await showConfirm('이 업체를 삭제할까요?');
+  if(!ok) return;
   vendors = vendors.filter(x=>x.id!==id);
   selectedCompare.delete(id);
   expandedIds.delete(id);
@@ -1365,7 +1418,8 @@ async function importDataFile(e){
     const headers = rows[0];
     const idx = name => headers.indexOf(name);
     const dataRows = rows.slice(1);
-    if(!confirm(`${dataRows.length}개 업체 데이터를 불러올까요? 현재 목록에 추가돼요 (기존 데이터는 지워지지 않아요).`)){ e.target.value=''; return; }
+    const ok = await showConfirm(`${dataRows.length}개 업체 데이터를 불러올까요? 현재 목록에 추가돼요 (기존 데이터는 지워지지 않아요).`);
+    if(!ok){ e.target.value=''; return; }
     const existingIds = new Set(vendors.map(v=>v.id));
     dataRows.forEach(r=>{
       const get = name => { const i = idx(name); return i>=0 ? (r[i]||'') : ''; };
@@ -1491,6 +1545,27 @@ document.getElementById('addInstaLinkBtn').onclick = ()=>{
   renderInstaLinks();
 };
 
+function renderDatesList(){
+  const box = document.getElementById('datesList');
+  const sorted = editingDates.slice().sort();
+  box.innerHTML = sorted.map(iso=>{
+    const info = dayInfo(iso);
+    const label = info ? info.label : iso;
+    return `<div class="instalinkrow"><span>${esc(label)} · ${esc(toCompactDate(iso))}</span><button type="button" data-datedel="${esc(iso)}">✕</button></div>`;
+  }).join('');
+  box.querySelectorAll('[data-datedel]').forEach(btn=>{
+    btn.onclick = ()=>{ editingDates = editingDates.filter(d=>d!==btn.dataset.datedel); renderDatesList(); };
+  });
+}
+document.getElementById('addDateBtn').onclick = ()=>{
+  const input = document.getElementById('f_dateInput');
+  const iso = toISODate(input.value.trim());
+  if(!iso){ alert('날짜는 8자리 숫자로 입력해주세요. 예: 20260823'); return; }
+  if(!editingDates.includes(iso)) editingDates.push(iso);
+  input.value = '';
+  renderDatesList();
+};
+
 // ---- Section-based item editor ----
 function currentSchema(){ return getSchema(document.getElementById('f_category').value); }
 
@@ -1525,14 +1600,16 @@ function extraFieldHTML(f, sec, val, full){
     return `<label class="checkfield${full?' full':''}"><input type="checkbox" data-sec="${sec.key}" data-exkey="${f.key}" ${checked?'checked':''}> ${esc(f.label)}</label>`;
   }
   const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
-  return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}></div>`;
+  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : '';
+  return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}${maxAttr}></div>`;
 }
 function quadEditCellHTML(f, sec, val){
   if(f.type==='checkbox'){
     const checked = val==='true';
     return `<label class="quadcheck"><input type="checkbox" data-sec="${sec.key}" data-exkey="${f.key}" ${checked?'checked':''}><span>${esc(f.label)}</span></label>`;
   }
-  return `<div class="quadfield"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"></div>`;
+  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : '';
+  return `<div class="quadfield${f.wide?' wide':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${maxAttr}></div>`;
 }
 function sectionEditorHTML(sec, data){
   const quadFields = sec.extraFields.filter(f=>f.quad);
@@ -1668,7 +1745,7 @@ function openEdit(id){
   document.getElementById('f_name').value = v ? v.name : '';
   document.getElementById('f_link').value = v ? v.link : '';
   document.getElementById('f_location').value = v ? v.location : '';
-  document.getElementById('f_dates').value = v ? (v.dates||[]).join(', ') : '';
+  editingDates = v ? (v.dates||[]).slice() : [];
   document.getElementById('f_memo').value = v ? v.memo : '';
   document.getElementById('deleteEdit').style.display = v ? 'inline-flex' : 'none';
 
@@ -1691,6 +1768,7 @@ function openEdit(id){
   renderThumbs();
   renderContractThumbs();
   renderInstaLinks();
+  renderDatesList();
   overlay.classList.add('show');
 }
 function closeEdit(){ document.getElementById('editOverlay').classList.remove('show'); }
@@ -1709,7 +1787,7 @@ document.getElementById('saveEdit').onclick = async ()=>{
     const items = data.items.filter(it=> it.photo || sec.itemFields.some(f=>(it[f.key]||'').toString().trim()));
     sections[sec.key] = { extra: data.extra, items };
   });
-  const dates = document.getElementById('f_dates').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const dates = editingDates.slice();
   const cat = document.getElementById('f_category').value;
   const single = SINGLE_ENTRY_CATS.includes(cat);
   const data = {
