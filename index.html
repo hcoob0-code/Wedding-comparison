@@ -1776,6 +1776,11 @@ function openEdit(id){
   renderInstaLinks();
   renderDatesList();
   overlay.classList.add('show');
+  const modalEl = overlay.querySelector('.modal');
+  if(modalEl){
+    modalEl.scrollTop = 0;
+    setTimeout(()=>{ modalEl.scrollTop = 0; }, 30);
+  }
 }
 function closeEdit(){ document.getElementById('editOverlay').classList.remove('show'); }
 
