@@ -178,7 +178,8 @@ td.fav{text-align:center;}
 .budgettable table{font-size:7px;min-width:100%;}
 .budgettable th{font-size:6.5px;padding:5px 4px;}
 .budgettable td{padding:5px 4px;font-size:7px;}
-.budgetcathead td{font-weight:800;background:var(--paper-deep);color:var(--ink);font-size:9px;padding:6px 5px;}
+.budgetcathead td{font-weight:800;background:var(--paper-deep);color:var(--ink);font-size:9px;padding:7px 5px;border-top:2px solid var(--line);border-bottom:1px solid var(--line);}
+.budgettotal{font-weight:800;color:var(--ink);}
 
 /* compare bar */
 .comparebar{
@@ -1312,7 +1313,16 @@ function itemFinalClick(key){
   }
 
   const isThisFinal = existingIdx>=0;
-  if(isThisFinal){ openPayment(vid); return; }
+  if(isThisFinal){
+    (async ()=>{
+      v.finalRefs.splice(existingIdx,1);
+      v.finalRef = null;
+      v.isFinal = v.finalRefs.length>0;
+      await saveVendors();
+      renderContent();
+    })();
+    return;
+  }
   (async ()=>{
     vendors.forEach(v2=>{
       if(v2.category===v.category && v2.id!==v.id){ v2.isFinal=false; v2.finalRef=null; v2.finalRefs=[]; }
@@ -1428,7 +1438,11 @@ function renderBudgetPage(){
       }
     }
 
-    bodyHTML += `<tr class="budgetcathead"><td colspan="6">${esc(cat)}</td></tr>`;
+    const catTotal = detailRows.reduce((a,r)=>a+r.total, 0);
+    bodyHTML += `<tr class="budgetcathead">
+      <td>${esc(cat)}</td><td></td><td></td><td></td><td></td>
+      <td class="budgettotal">${catTotal? catTotal.toLocaleString()+'만원':'-'}</td>
+    </tr>`;
     if(!v){
       bodyHTML += `<tr><td colspan="6" style="font-size:7px;color:#9C9890;">아직 선택 안 함</td></tr>`;
       return;
@@ -1441,7 +1455,7 @@ function renderBudgetPage(){
         <td>${esc(r.depositPayer)||'-'}</td>
         <td>${r.balance? r.balance.toLocaleString()+'만원':'-'}</td>
         <td>${esc(r.balancePayer)||'-'}</td>
-        <td>${r.total? r.total.toLocaleString()+'만원':'-'}</td>
+        <td class="budgettotal">${r.total? r.total.toLocaleString()+'만원':'-'}</td>
       </tr>`;
     });
   });
