@@ -91,6 +91,7 @@ select.viewsel{
 .availbadge{font-size:10.5px;font-weight:600;color:var(--ink-soft);display:inline-flex;align-items:center;gap:4px;}
 .card h3{margin:0;font-size:15.5px;font-weight:800;letter-spacing:-.01em;}
 .nameloc{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+.hallsummary{font-size:11.5px;font-weight:600;color:var(--celadon);margin-top:3px;}
 .availdot{width:7px;height:7px;border-radius:50%;background:var(--celadon);display:inline-block;}
 .availdot.none{background:var(--line);}
 
@@ -155,6 +156,8 @@ select.viewsel{
 
 .gallerylabel{font-size:11px;font-weight:800;color:var(--celadon);margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);text-transform:uppercase;letter-spacing:.03em;}
 .instalinkrow{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-soft);background:var(--paper-deep);border-radius:8px;padding:6px 10px;margin-top:6px;}
+.sectionmedia{margin-top:6px;}
+.mediarow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:6px;}
 .instalinkrow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .instalinkrow button{border:none;background:none;color:var(--persimmon);font-size:13px;cursor:pointer;flex:0 0 auto;}
 .instaEmbeds{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px;}
@@ -171,7 +174,11 @@ td.name{font-weight:700;}
 td.fav{text-align:center;}
 .cmptoolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .cmpthumb{width:48px;height:48px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--line);}
-.budgetheader{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.budgetheader{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.budgettable table{font-size:7px;min-width:100%;}
+.budgettable th{font-size:6.5px;padding:5px 4px;}
+.budgettable td{padding:5px 4px;font-size:7px;}
+.budgetcathead td{font-weight:800;background:var(--paper-deep);color:var(--ink);font-size:9px;padding:6px 5px;}
 
 /* compare bar */
 .comparebar{
@@ -190,7 +197,7 @@ td.fav{text-align:center;}
 }
 .overlay.show{display:flex;}
 .modal{
-  background:var(--paper);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;border-radius:20px 20px 0 0;
+  background:var(--paper);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;overflow-x:hidden;border-radius:20px 20px 0 0;
   padding:20px 18px 26px;border-top:1px solid var(--line);
 }
 .modal.wide{max-width:820px;}
@@ -207,6 +214,8 @@ td.fav{text-align:center;}
   font-family:inherit;background:#fff;color:var(--ink);
 }
 .field textarea{resize:vertical;min-height:56px;}
+.field input[type="date"]{min-width:0;max-width:100%;width:100%;-webkit-appearance:none;appearance:none;}
+input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .modal-actions{display:flex;gap:8px;margin-top:16px;}
 .modal-actions .btn{flex:1;justify-content:center;}
 
@@ -230,6 +239,8 @@ td.fav{text-align:center;}
   cursor:pointer;padding:8px 0;
 }
 .checkfield.full{grid-column:1/-1;}
+.checkrow{display:flex;gap:16px;align-items:center;grid-column:1/-1;}
+.checkrow .checkfield{padding:8px 0;}
 .quadrow{display:flex;gap:6px;grid-column:1/-1;}
 .quadcell{flex:1;min-width:0;text-align:center;background:var(--card);border-radius:8px;padding:4px 2px;}
 .quadcell.wide{flex:2;}
@@ -468,72 +479,82 @@ const CAT_COLOR = {
 
 const DEFAULT_SCHEMA = { sections: [
   { key:'main', label:'상품 / 패키지', extraFields:[], itemsLabel:'상품 / 패키지', itemFields:[
-    {key:'name',label:'상품명'},{key:'price',label:'가격'},{key:'package',label:'패키지 내용',type:'textarea',long:true},{key:'memo',label:'메모',type:'textarea',long:true}
+    {key:'name',label:'상품명'},{key:'price',label:'가격', money:true},{key:'package',label:'패키지 내용',type:'textarea',long:true},{key:'memo',label:'메모',type:'textarea',long:true}
   ], itemHasPhoto:false }
 ]};
 const CATEGORY_SCHEMA = {
   "웨딩홀": { sections: [
     { key:'hallinfo', label:'홀 정보', extraFields:[
-        {key:'ceremonyDate', label:'예식 날짜'},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
-        {key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
+        {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
+        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'ceremonyDress', label:'본식 드레스', extraFields:[
       ], itemsLabel:'브랜드별 비교', itemFields:[
-        {key:'brand', label:'브랜드명', long:true},{key:'price', label:'추가금', long:true},{key:'desc', label:'참고사항', long:true}
+        {key:'brand', label:'브랜드명', long:true},{key:'price', label:'추가금', long:true, money:true},
+        {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
+        {key:'desc', label:'참고사항', long:true}
       ], itemHasPhoto:true },
     { key:'mainPhoto', label:'본식촬영', extraFields:[
-        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true}
+        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true},
+        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'iphoneSnap', label:'아이폰스냅', extraFields:[
-        {key:'vendor', label:'업체'},{key:'composition', label:'구성'},{key:'provided', label:'제공내역', long:true},{key:'price', label:'가격'},
-        {key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+        {key:'vendor', label:'업체', long:true},{key:'composition', label:'구성', long:true},{key:'provided', label:'참고사항', long:true},{key:'price', label:'가격', money:true},
+        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
     { key:'hairMakeup', label:'헤어메이크업', extraFields:[
         {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true},
-        {key:'parentsPrice', label:'양가어머님추가금'},{key:'svc', label:'SVC', type:'checkbox'},
-        {key:'contractDate', label:'계약일'},{key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+        {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'},
+        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
     { key:'bouquet', label:'부케', extraFields:[
-        {key:'composition', label:'구성'},{key:'extraPrice', label:'추가금'},{key:'note', label:'참고사항', long:true}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+        {key:'vendor', label:'업체'},{key:'extraPrice', label:'추가금', money:true},
+        {key:'composition', label:'구성', long:true},{key:'note', label:'참고사항', long:true}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
     { key:'screen', label:'스크린', extraFields:[
-        {key:'price', label:'비용'},{key:'svc', label:'SVC', type:'checkbox'}
+        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'staging', label:'연출도우미', extraFields:[
-        {key:'price', label:'비용'},{key:'svc', label:'SVC', type:'checkbox'}
+        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'dressHelper', label:'드레스헬퍼', extraFields:[
-        {key:'price', label:'비용'},{key:'svc', label:'SVC', type:'checkbox'}
+        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'catering', label:'식대', extraFields:[
-        {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가'},{key:'liquor', label:'주류비'},{key:'beverage', label:'음료비'},{key:'note', label:'참고사항', long:true},
-        {key:'depositAmount', label:'계약금'},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'finalAmount', label:'최종금액'},
-        {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류', maxLength:3},
-        {key:'balanceAmount', label:'잔금'},{key:'balancePayer', label:'잔금 지불자'}
+        {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true},{key:'liquor', label:'주류비 (병)', money:true},{key:'beverage', label:'음료비 (병)', money:true},{key:'note', label:'참고사항', long:true},
+        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'finalAmount', label:'최종금액', money:true},
+        {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3},
+        {key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
-        {key:'note', label:'내역'},{key:'amount', label:'금액'}
+        {key:'note', label:'내역'},{key:'amount', label:'금액', money:true}
       ], itemHasPhoto:false }
   ]},
   "스냅준비": { sections: [
     { key:'dress', label:'드레스', extraFields:[], itemsLabel:'드레스별 추가금', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'price', label:'추가금'},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+        {key:'vendor', label:'업체명'},{key:'price', label:'추가금', money:true},
+        {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
+        {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+      ], itemHasPhoto:true },
+    { key:'suit', label:'정장', extraFields:[], itemsLabel:'정장별 추가금', itemFields:[
+        {key:'vendor', label:'업체명'},{key:'price', label:'추가금', money:true},
+        {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
+        {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
       ], itemHasPhoto:true },
     { key:'hair', label:'헤어', extraFields:[], itemsLabel:'헤어 옵션', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'price', label:'가격'},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+        {key:'vendor', label:'업체명'},{key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
       ], itemHasPhoto:true },
     { key:'makeup', label:'메이크업', extraFields:[], itemsLabel:'메이크업 옵션', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'price', label:'가격'},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+        {key:'vendor', label:'업체명'},{key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
       ], itemHasPhoto:true },
     { key:'bouquet', label:'부케', extraFields:[], itemsLabel:'부케 옵션', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'name', label:'구성'},{key:'price', label:'추가금'},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+        {key:'vendor', label:'업체명'},{key:'name', label:'구성'},{key:'price', label:'추가금', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
       ], itemHasPhoto:true },
     { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 항목', itemFields:[
-        {key:'name', label:'항목명'},{key:'price', label:'가격'},{key:'desc', label:'참고사항', long:true}
+        {key:'name', label:'항목명'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true}
       ], itemHasPhoto:true }
   ]},
   "야외스냅": { sections: [
@@ -542,7 +563,7 @@ const CATEGORY_SCHEMA = {
         {key:'name', label:'구성명', long:true},{key:'time', label:'촬영 시간'},{key:'place', label:'장소'},
         {key:'outfits', label:'의상 수'},{key:'hairChanges', label:'헤어 변형 횟수'},{key:'video', label:'영상 제공 여부'},
         {key:'rawCount', label:'원본 제공 수량'},{key:'editedCount', label:'보정본 제공 수량'},
-        {key:'price', label:'가격'},{key:'memo', label:'기타사항', long:true}
+        {key:'price', label:'가격', money:true},{key:'memo', label:'기타사항', long:true}
       ], itemHasPhoto:false }
   ]},
   "정장": { sections: [
@@ -550,11 +571,11 @@ const CATEGORY_SCHEMA = {
         {key:'shirtCount', label:'셔츠 수량'},{key:'tieCount', label:'넥타이 수량'},{key:'shoesInfo', label:'수제화 구성'},
         {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true}
       ], itemsLabel:'원단별 가격', itemFields:[
-        {key:'fabric', label:'원단'},{key:'price', label:'가격'}
+        {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
       ], itemHasPhoto:false },
     { key:'rental', label:'대여정장', extraFields:[
       ], itemsLabel:'원단별 대여가격', itemFields:[
-        {key:'fabric', label:'원단'},{key:'price', label:'가격'}
+        {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
       ], itemHasPhoto:false }
   ]},
   "반지": { sections: [
@@ -562,14 +583,14 @@ const CATEGORY_SCHEMA = {
         {key:'leadTime', label:'예상 소요일'},{key:'timeEvent', label:'타임이벤트'},
         {key:'serviceItems', label:'서비스 아이템', long:true},{key:'tiaraRental', label:'티아라 SVC', type:'checkbox'}
       ], itemsLabel:'참고 사진과 가격', itemFields:[
-        {key:'name', label:'이름'},{key:'price', label:'가격'},{key:'desc', label:'참고사항', long:true}
+        {key:'name', label:'이름'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true}
       ], itemHasPhoto:true }
   ]},
   "한복": { sections: [
     { key:'main', label:'대여한복', extraFields:[
-        {key:'customPrice', label:'맞춤한복 가격'},{key:'fittingLimit', label:'피팅비 / 벌수제한'},{key:'propRental', label:'소품 대여', long:true}
+        {key:'customPrice', label:'맞춤한복 가격', money:true},{key:'fittingLimit', label:'피팅비 / 벌수제한'},{key:'propRental', label:'소품 대여', long:true}
       ], itemsLabel:'대여한복 가격 (라벨별)', itemFields:[
-        {key:'label', label:'라벨'},{key:'price', label:'가격'}
+        {key:'label', label:'라벨'},{key:'price', label:'가격', money:true}
       ], itemHasPhoto:false }
   ]}
 };
@@ -641,6 +662,7 @@ async function loadVendors(){
     });
     if(typeof v.isFinal !== 'boolean') v.isFinal = false;
     if(!v.finalRef) v.finalRef = null;
+    if(!Array.isArray(v.finalRefs)) v.finalRefs = v.finalRef ? [v.finalRef] : [];
     if(!v.payment || typeof v.payment!=='object') v.payment = {depositAmount:'',depositDate:'',depositPayer:'',balanceAmount:'',balanceDueDate:'',balancePayer:'',note:''};
   });
 }
@@ -894,22 +916,122 @@ function computeFieldLayout(items, isLong){
   return out;
 }
 
+function moneyToManwon(raw){
+  if(!raw) return 0;
+  const str = String(raw).trim();
+  if(/^\d+$/.test(str)) return parseInt(str, 10);
+  const m = str.match(/(\d+(?:,\d+)*)\s*만/);
+  if(m) return parseInt(m[1].replace(/,/g,''), 10);
+  return 0;
+}
+function computeWeddingHallTotal(v){
+  return budgetRowsForWeddingHall(v).reduce((a,r)=>a+r.total, 0);
+}
+function computeSnapPrepTotal(v){
+  return budgetRowsForSnapPrep(v).reduce((a,r)=>a+r.total, 0);
+}
+function budgetRowsForWeddingHall(v){
+  const s = v.sections || {};
+  const rows = [];
+
+  const hi = (s.hallinfo && s.hallinfo.extra) || {};
+  const hiDep = moneyToManwon(hi.depositAmount), hiBal = moneyToManwon(hi.balanceAmount);
+  rows.push({ label:'홀', deposit:hiDep, depositPayer:hi.depositPayer, balance:hiBal, balancePayer:hi.balancePayer, total:hiDep+hiBal });
+
+  const dressItems = (s.ceremonyDress && s.ceremonyDress.items) || [];
+  let dressTotal = 0;
+  (v.finalRefs||[]).forEach(r=>{
+    if(r.sectionKey==='ceremonyDress' && dressItems[r.itemIndex]) dressTotal += moneyToManwon(dressItems[r.itemIndex].price);
+  });
+  rows.push({ label:'드레스', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:dressTotal });
+
+  const mp = (s.mainPhoto && s.mainPhoto.extra) || {};
+  rows.push({ label:'본식촬영', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:moneyToManwon(mp.extraPrice) });
+
+  const ip = (s.iphoneSnap && s.iphoneSnap.extra) || {};
+  const ipDep = moneyToManwon(ip.depositAmount), ipBal = moneyToManwon(ip.balanceAmount);
+  rows.push({ label:'아이폰스냅', deposit:ipDep, depositPayer:ip.depositPayer, balance:ipBal, balancePayer:ip.balancePayer, total:ipDep+ipBal });
+
+  const hm = (s.hairMakeup && s.hairMakeup.extra) || {};
+  const hmTotal = hm.svc==='true' ? 0 : (moneyToManwon(hm.parentsPrice) + moneyToManwon(hm.extraPrice));
+  rows.push({ label:'헤어메이크업', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:hmTotal });
+
+  const bq = (s.bouquet && s.bouquet.extra) || {};
+  rows.push({ label:'부케', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:moneyToManwon(bq.extraPrice) });
+
+  [['screen','스크린'],['staging','연출도우미'],['dressHelper','드레스헬퍼']].forEach(([key,label])=>{
+    const ex = (s[key] && s[key].extra) || {};
+    const t = ex.svc==='true' ? 0 : moneyToManwon(ex.price);
+    rows.push({ label, deposit:0, depositPayer:'', balance:0, balancePayer:'', total:t });
+  });
+
+  const ct = (s.catering && s.catering.extra) || {};
+  const ctDep = moneyToManwon(ct.depositAmount), ctBal = moneyToManwon(ct.balanceAmount);
+  rows.push({ label:'식대', deposit:ctDep, depositPayer:ct.depositPayer, balance:ctBal, balancePayer:ct.balancePayer, total:ctDep+ctBal });
+
+  const etcItems = (s.etc && s.etc.items) || [];
+  const etcTotal = etcItems.reduce((a,it)=>a+moneyToManwon(it.amount), 0);
+  rows.push({ label:'기타', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:etcTotal });
+
+  return rows;
+}
+function budgetRowsForSnapPrep(v){
+  const s = v.sections || {};
+  const schema = getSchema('스냅준비');
+  return schema.sections.map(sec=>{
+    let total = 0;
+    (v.finalRefs||[]).forEach(r=>{
+      if(r.sectionKey===sec.key){
+        const it = s[sec.key] && s[sec.key].items && s[sec.key].items[r.itemIndex];
+        if(it) total += moneyToManwon(it.price);
+      }
+    });
+    return { label:sec.label, deposit:0, depositPayer:'', balance:0, balancePayer:'', total };
+  });
+}
+
+function formatMoney(raw){
+  if(!raw) return raw;
+  const str = String(raw).trim();
+  if(!/^\d+$/.test(str)) return raw;
+  const num = parseInt(str, 10);
+  return `${num.toLocaleString()}만원`;
+}
+function formatKoreanDateDisplay(raw){
+  const digits = (raw||'').toString().replace(/\D/g,'');
+  if(digits.length !== 8) return raw;
+  const y = digits.slice(0,4), m = parseInt(digits.slice(4,6),10), day = parseInt(digits.slice(6,8),10);
+  const dt = new Date(`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}T00:00:00`);
+  if(isNaN(dt.getTime())) return raw;
+  const week = ['일','월','화','수','목','금','토'][dt.getDay()];
+  return `${y}/${m}/${day}(${week})`;
+}
+
 function fieldRow(f, val, full){
   if(f.type==='checkbox'){
+    if(f.alwaysShow){
+      const shown = (val==='true') ? (f.trueLabel||'✓') : (f.falseLabel||'-');
+      return `<div class="prow${full?' full':''}"><div class="k">${esc(f.label)}</div><div class="v">${esc(shown)}</div></div>`;
+    }
     if(val!=='true') return '';
     return `<div class="prow${full?' full':''}"><div class="k">${esc(f.label)}</div><div class="v">✓ 포함</div></div>`;
   }
   if(!val) return '';
-  return `<div class="prow${full?' full':''}"><div class="k">${esc(f.label)}</div><div class="v">${esc(val)}</div></div>`;
+  let shown = val;
+  if(f.money) shown = formatMoney(val);
+  else if(f.dateFormat) shown = formatKoreanDateDisplay(val);
+  return `<div class="prow${full?' full':''}"><div class="k">${esc(f.label)}</div><div class="v">${esc(shown)}</div></div>`;
 }
 function quadCellHTML(f, val){
-  const shown = f.type==='checkbox' ? (val==='true' ? '✓' : '-') : (val || '-');
+  let shown = f.type==='checkbox' ? (val==='true' ? '✓' : '-') : (val || '-');
+  if(val && f.money) shown = formatMoney(val);
+  else if(val && f.dateFormat) shown = formatKoreanDateDisplay(val);
   return `<div class="quadcell${f.wide?' wide':''}"><div class="qk">${esc(f.label)}</div><div class="qv">${esc(shown)}</div></div>`;
 }
 function fieldsToHTML(fields, valuesObj){
   const quadFields = fields.filter(f=>f.quad);
   const normalFields = fields.filter(f=>!f.quad);
-  const present = normalFields.filter(f=> f.type==='checkbox' ? valuesObj[f.key]==='true' : !!valuesObj[f.key]);
+  const present = normalFields.filter(f=> f.type==='checkbox' ? (f.alwaysShow || valuesObj[f.key]==='true') : !!valuesObj[f.key]);
   const laid = computeFieldLayout(present, f=>f.long);
   let html = laid.map(({item,full})=> fieldRow(item, valuesObj[item.key], full)).join('');
   const anyQuadVal = quadFields.some(f=> f.type==='checkbox' ? valuesObj[f.key]==='true' : !!valuesObj[f.key]);
@@ -927,7 +1049,7 @@ function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls){
     const key = `${vendorId}::${sectionKey}::${idx}`;
     const cmpOn = selectedItems.has(key);
     const v = vendors.find(x=>x.id===vendorId);
-    const isThisFinal = !!(v && v.isFinal && v.finalRef && v.finalRef.sectionKey===sectionKey && v.finalRef.itemIndex===idx);
+    const isThisFinal = !!(v && v.finalRefs && v.finalRefs.some(r=>r.sectionKey===sectionKey && r.itemIndex===idx));
     controls = `<div class="itemctrls">
       <button class="itemcmp ${cmpOn?'on':''}" data-itemcmp="${key}">${cmpOn?'선택됨':'비교 담기'}</button>
       <button class="itemfinal ${isThisFinal?'on':''}" data-itemfinal="${key}">${isThisFinal?'★ 최종 선택':'최종 선택'}</button>
@@ -944,7 +1066,8 @@ function vendorSectionsHTML(v, showControls){
     const extraHTML = rows ? `<div class="vendorrow">${rows}</div>` : '';
     const items = data.items || [];
     const itemsHTML = items.length ? `<div class="products">${items.map((it,idx)=>itemBlockHTML(it,sec,v.id,sec.key,idx,showControls)).join('')}</div>` : '';
-    return `<div class="sectionblock"><div class="sectionlabel">${esc(sec.label)}</div>${extraHTML}${itemsHTML}</div>`;
+    const mediaHTML = sec.hasMedia ? (galleryHTML(data.images, '') + instaEmbedsHTML(data.instaLinks)) : '';
+    return `<div class="sectionblock"><div class="sectionlabel">${esc(sec.label)}</div>${extraHTML}${itemsHTML}${mediaHTML}</div>`;
   }).join('');
 }
 
@@ -963,6 +1086,17 @@ function processInstagramEmbeds(){
   if(window.instgrm && window.instgrm.Embeds && window.instgrm.Embeds.process){
     try{ window.instgrm.Embeds.process(); }catch(e){}
   }
+}
+
+function weddingHallSummaryHTML(v){
+  if(v.category !== '웨딩홀') return '';
+  const extra = (v.sections && v.sections.hallinfo && v.sections.hallinfo.extra) || {};
+  const parts = [];
+  if(extra.ceremonyDate) parts.push(formatKoreanDateDisplay(extra.ceremonyDate));
+  if(extra.ceremonyTime) parts.push(extra.ceremonyTime);
+  if(extra.hallName) parts.push(extra.hallName);
+  if(parts.length===0) return '';
+  return `<div class="hallsummary">${esc(parts.join(' · '))}</div>`;
 }
 
 function cardHTML(v){
@@ -992,6 +1126,7 @@ function cardHTML(v){
         </div>
         <h3>${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</h3>
         ${showDates ? dateChipsHTML(v) : ''}
+        ${weddingHallSummaryHTML(v)}
       </div>
       <div class="headactions">
         <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
@@ -1162,14 +1297,29 @@ function itemFinalClick(key){
   const idx = +idxStr;
   const v = vendors.find(x=>x.id===vid);
   if(!v) return;
-  const isThisFinal = !!(v.isFinal && v.finalRef && v.finalRef.sectionKey===sectionKey && v.finalRef.itemIndex===idx);
+  if(!Array.isArray(v.finalRefs)) v.finalRefs = v.finalRef ? [v.finalRef] : [];
+  const existingIdx = v.finalRefs.findIndex(r=>r.sectionKey===sectionKey && r.itemIndex===idx);
+
+  if(SINGLE_ENTRY_CATS.includes(v.category)){
+    (async ()=>{
+      if(existingIdx>=0) v.finalRefs.splice(existingIdx,1);
+      else v.finalRefs.push({sectionKey, itemIndex:idx});
+      v.isFinal = v.finalRefs.length>0;
+      await saveVendors();
+      renderContent();
+    })();
+    return;
+  }
+
+  const isThisFinal = existingIdx>=0;
   if(isThisFinal){ openPayment(vid); return; }
   (async ()=>{
     vendors.forEach(v2=>{
-      if(v2.category===v.category && v2.id!==v.id){ v2.isFinal=false; v2.finalRef=null; }
+      if(v2.category===v.category && v2.id!==v.id){ v2.isFinal=false; v2.finalRef=null; v2.finalRefs=[]; }
     });
-    v.isFinal = true;
     v.finalRef = { sectionKey, itemIndex: idx };
+    v.finalRefs = [{ sectionKey, itemIndex: idx }];
+    v.isFinal = true;
     await saveVendors();
     renderContent();
     openPayment(vid);
@@ -1253,54 +1403,63 @@ document.getElementById('closeCompare').onclick = ()=> document.getElementById('
 
 // ---- Budget page ----
 document.getElementById('btnBudget').onclick = ()=>{
-  showBudget = true;
+  showBudget = !showBudget;
   renderContent();
 };
 
 function renderBudgetPage(){
   const container = document.getElementById('content');
-  const finals = vendors.filter(v=>v.isFinal);
-  let totalDeposit=0, totalBalance=0;
-  const rows = CATS.map(cat=>{
-    const v = finals.find(x=>x.category===cat);
-    if(!v) return `<tr><td style="white-space:nowrap;">${esc(cat)}</td><td colspan="9" style="font-size:7px;color:#9C9890;">아직 선택 안 함</td></tr>`;
-    const pay = v.payment || {};
-    const dep = parseFloat(pay.depositAmount||0) || 0;
-    const bal = parseFloat(pay.balanceAmount||0) || 0;
-    totalDeposit += dep; totalBalance += bal;
-    const sec = v.finalRef ? getSchema(v.category).sections.find(s=>s.key===v.finalRef.sectionKey) : null;
-    const item = (sec && v.sections[sec.key]) ? v.sections[sec.key].items[v.finalRef.itemIndex] : null;
-    const itemLabel = item ? (item.name||item.label||item.fabric||'') : '';
-    return `<tr data-vendorid="${v.id}" data-cat="${esc(cat)}">
-      <td style="white-space:nowrap;">${esc(cat)}</td>
-      <td class="name">${esc(v.name)}</td>
-      <td>${esc(itemLabel)||'-'}</td>
-      <td>${pay.depositDate||'-'}</td>
-      <td>${dep? dep.toLocaleString()+'만원':'-'}</td>
-      <td>${esc(pay.depositPayer)||'-'}</td>
-      <td>${pay.balanceDueDate||'-'}</td>
-      <td>${bal? bal.toLocaleString()+'만원':'-'}</td>
-      <td>${esc(pay.balancePayer)||'-'}</td>
-      <td>${(dep+bal)? (dep+bal).toLocaleString()+'만원':'-'}</td>
-    </tr>`;
-  }).join('');
+  let grandTotal = 0;
+  let bodyHTML = '';
+
+  CATS.forEach(cat=>{
+    let v = null;
+    let detailRows = [];
+
+    if(cat === '웨딩홀' || cat === '스냅준비'){
+      v = vendors.find(x=>x.category===cat);
+      if(v) detailRows = cat==='웨딩홀' ? budgetRowsForWeddingHall(v) : budgetRowsForSnapPrep(v);
+    } else {
+      v = vendors.find(x=>x.category===cat && x.isFinal);
+      if(v){
+        const pay = v.payment || {};
+        const dep = moneyToManwon(pay.depositAmount), bal = moneyToManwon(pay.balanceAmount);
+        detailRows = [{ label:v.name, deposit:dep, depositPayer:pay.depositPayer, balance:bal, balancePayer:pay.balancePayer, total:dep+bal }];
+      }
+    }
+
+    bodyHTML += `<tr class="budgetcathead"><td colspan="6">${esc(cat)}</td></tr>`;
+    if(!v){
+      bodyHTML += `<tr><td colspan="6" style="font-size:7px;color:#9C9890;">아직 선택 안 함</td></tr>`;
+      return;
+    }
+    detailRows.forEach(r=>{
+      grandTotal += r.total;
+      bodyHTML += `<tr data-vendorid="${v.id}" data-cat="${esc(cat)}">
+        <td>${esc(r.label)}</td>
+        <td>${r.deposit? r.deposit.toLocaleString()+'만원':'-'}</td>
+        <td>${esc(r.depositPayer)||'-'}</td>
+        <td>${r.balance? r.balance.toLocaleString()+'만원':'-'}</td>
+        <td>${esc(r.balancePayer)||'-'}</td>
+        <td>${r.total? r.total.toLocaleString()+'만원':'-'}</td>
+      </tr>`;
+    });
+  });
 
   container.innerHTML = `
     <div class="budgetheader">
-      <button class="btn small" id="backFromBudget">← 돌아가기</button>
+      <h2 style="margin:0;font-size:16px;">♥ 결혼식 준비 총 비용</h2>
       <div class="spacer"></div>
       <button class="btn small" id="exportDataBtn">내보내기</button>
       <label class="btn small" id="importDataLabel">불러오기<input type="file" id="importDataFile" accept=".csv,text/csv" style="display:none;"></label>
     </div>
-    <h2 style="margin:14px 0 10px;font-size:17px;">♥ 결혼식 준비 총 비용</h2>
-    <div class="tablewrap"><table>
-      <thead><tr><th>카테고리</th><th>업체명</th><th>상품</th><th>계약일</th><th>계약금</th><th>계약금 지불인</th><th>잔금일</th><th>잔금</th><th>잔금 지불인</th><th>총액</th></tr></thead>
-      <tbody>${rows}</tbody>
+    <div class="tablewrap budgettable"><table>
+      <thead><tr><th>업체명</th><th>계약금</th><th>계약금 지불인</th><th>잔금</th><th>잔금 지불인</th><th>총액</th></tr></thead>
+      <tbody>${bodyHTML}</tbody>
     </table></div>
-    <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${(totalDeposit+totalBalance).toLocaleString()}만원 (계약금 ${totalDeposit.toLocaleString()} + 잔금 ${totalBalance.toLocaleString()})</div>
+    <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${grandTotal.toLocaleString()}만원</div>
   `;
 
-  document.getElementById('backFromBudget').onclick = ()=>{ showBudget=false; renderContent(); };
   container.querySelectorAll('tr[data-vendorid]').forEach(tr=>{
     tr.style.cursor = 'pointer';
     tr.onclick = ()=>{
@@ -1409,6 +1568,7 @@ function normalizeLoadedVendor(v){
   });
   if(typeof v.isFinal !== 'boolean') v.isFinal = false;
   if(!v.finalRef) v.finalRef = null;
+    if(!Array.isArray(v.finalRefs)) v.finalRefs = v.finalRef ? [v.finalRef] : [];
   if(!v.payment || typeof v.payment!=='object') v.payment = {depositAmount:'',depositDate:'',depositPayer:'',balanceAmount:'',balanceDueDate:'',balancePayer:'',note:''};
   if(!v.createdAt) v.createdAt = Date.now();
   if(!v.id) v.id = uid();
@@ -1577,11 +1737,38 @@ function currentSchema(){ return getSchema(document.getElementById('f_category')
 
 function itemEditRowHTML(item, idx, sec){
   const laid = computeFieldLayout(sec.itemFields, f=>f.long);
-  const fieldsHTML = laid.map(({item:f, full})=>{
+  const grouped = [];
+  let pendingChecks = [];
+  laid.forEach(entry=>{
+    if(entry.item.type==='checkbox' && !entry.full){
+      pendingChecks.push(entry);
+    } else {
+      if(pendingChecks.length){ grouped.push({checkGroup:pendingChecks}); pendingChecks = []; }
+      grouped.push(entry);
+    }
+  });
+  if(pendingChecks.length) grouped.push({checkGroup:pendingChecks});
+
+  const fieldsHTML = grouped.map(g=>{
+    if(g.checkGroup){
+      const cells = g.checkGroup.map(({item:f})=>{
+        const checked = item[f.key]==='true';
+        return `<label class="checkfield"><input type="checkbox" data-key="${f.key}" ${checked?'checked':''}> ${esc(f.label)}</label>`;
+      }).join('');
+      return `<div class="checkrow">${cells}</div>`;
+    }
+    const {item:f, full} = g;
+    if(f.type==='checkbox'){
+      const checked = item[f.key]==='true';
+      const checkLabel = f.trueLabel && f.falseLabel ? `${f.label} (${checked?f.trueLabel:f.falseLabel})` : f.label;
+      return `<label class="checkfield${full?' full':''}"><input type="checkbox" data-key="${f.key}" ${checked?'checked':''}> ${esc(checkLabel)}</label>`;
+    }
     const val = esc(item[f.key]||'');
     const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
-    if(f.type==='textarea') return `<textarea data-key="${f.key}" placeholder="${esc(f.label)}"${fullStyle}>${val}</textarea>`;
-    return `<input data-key="${f.key}" placeholder="${esc(f.label)}" value="${val}"${fullStyle}>`;
+    const placeholder = f.money ? '(단위: 만원)' : f.label;
+    const moneyAttr = f.money ? ' inputmode="numeric"' : '';
+    if(f.type==='textarea') return `<textarea data-key="${f.key}" placeholder="${esc(placeholder)}"${fullStyle}>${val}</textarea>`;
+    return `<input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${val}"${fullStyle}${moneyAttr}>`;
   }).join('');
   if(sec.itemHasPhoto){
     const photoHTML = item.photo
@@ -1606,16 +1793,35 @@ function extraFieldHTML(f, sec, val, full){
     return `<label class="checkfield${full?' full':''}"><input type="checkbox" data-sec="${sec.key}" data-exkey="${f.key}" ${checked?'checked':''}> ${esc(f.label)}</label>`;
   }
   const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
-  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : '';
-  return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}${maxAttr}></div>`;
+  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : (f.money ? ' inputmode="numeric"' : '');
+  const placeholderAttr = f.money ? ` placeholder="(단위: 만원)"` : '';
+  return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}${maxAttr}${placeholderAttr}></div>`;
 }
 function quadEditCellHTML(f, sec, val){
   if(f.type==='checkbox'){
     const checked = val==='true';
     return `<label class="quadcheck"><input type="checkbox" data-sec="${sec.key}" data-exkey="${f.key}" ${checked?'checked':''}><span>${esc(f.label)}</span></label>`;
   }
-  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : '';
-  return `<div class="quadfield${f.wide?' wide':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${maxAttr}></div>`;
+  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : (f.money ? ' inputmode="numeric"' : '');
+  const placeholderAttr = f.money ? ` placeholder="만원"` : '';
+  return `<div class="quadfield${f.wide?' wide':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${maxAttr}${placeholderAttr}></div>`;
+}
+function sectionMediaHTML(sec, data){
+  if(!sec.hasMedia) return '';
+  const images = data.images || [];
+  const instaLinks = data.instaLinks || [];
+  const thumbs = images.map((src,i)=>`<div class="thumb small"><img src="${esc(src)}"><button type="button" class="sectionPhotoDel" data-sec="${sec.key}" data-idx="${i}">✕</button></div>`).join('');
+  const picker = `<label class="imgpicker small" title="사진 추가"><input type="file" accept="image/*" multiple class="sectionPhotoInput" data-sec="${sec.key}">+</label>`;
+  const links = instaLinks.map((url,i)=>`<div class="instalinkrow"><span>${esc(url)}</span><button type="button" class="sectionInstaDel" data-sec="${sec.key}" data-idx="${i}">✕</button></div>`).join('');
+  return `<div class="sectionmedia">
+    <div class="hint" style="margin-top:10px;">사진 / 인스타 링크</div>
+    <div class="mediarow">${picker}${thumbs}</div>
+    <div style="display:flex;gap:6px;margin-top:8px;">
+      <input class="sectionInstaInput" data-sec="${sec.key}" placeholder="https://www.instagram.com/p/..." style="flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:12.5px;font-family:inherit;">
+      <button type="button" class="btn small sectionInstaAdd" data-sec="${sec.key}" style="flex:0 0 auto;">추가</button>
+    </div>
+    ${links}
+  </div>`;
 }
 function sectionEditorHTML(sec, data){
   const quadFields = sec.extraFields.filter(f=>f.quad);
@@ -1626,16 +1832,19 @@ function sectionEditorHTML(sec, data){
     extraHTML += `<div class="quadrow full">${quadFields.map(f=>quadEditCellHTML(f, sec, data.extra[f.key])).join('')}</div>`;
   }
   const extraWrapped = extraHTML ? `<div class="exgrid">${extraHTML}</div>` : '';
+  const mediaHTML = sectionMediaHTML(sec, data);
   if(sec.itemFields.length===0){
     return `<div class="editsection">
       <h4>${esc(sec.label)}</h4>
       ${extraWrapped}
+      ${mediaHTML}
     </div>`;
   }
   const itemsHTML = data.items.map((item,idx)=>itemEditRowHTML(item,idx,sec)).join('') || '<div class="hint">등록된 항목이 없어요.</div>';
   return `<div class="editsection">
     <h4>${esc(sec.label)}</h4>
     ${extraWrapped}
+    ${mediaHTML}
     <div class="hint" style="margin-top:2px;">${esc(sec.itemsLabel)}</div>
     <div class="itemrows" data-sec="${sec.key}">${itemsHTML}</div>
     <button type="button" class="btn small addItemBtn" data-sec="${sec.key}">+ 항목 추가</button>
@@ -1685,6 +1894,53 @@ function renderSections(){
       renderSections();
     };
   });
+  box.querySelectorAll('.sectionPhotoInput').forEach(inp=>{
+    inp.onchange = async (e)=>{
+      const sk = inp.dataset.sec;
+      const files = Array.from(e.target.files || []);
+      if(PHOTO_SETUP_NEEDED && files.length){ alert('사진을 같이 보려면 Cloudinary 설정이 필요해요.'); e.target.value=''; return; }
+      syncSectionsFromDOM();
+      if(!editingSections[sk].images) editingSections[sk].images = [];
+      for(const file of files){
+        if(editingSections[sk].images.length >= 6){ alert('사진은 최대 6장까지 올릴 수 있어요.'); break; }
+        try{
+          const blob = await resizeImageToBlob(file, 900, 0.75);
+          const url = await uploadToCloudinary(blob);
+          editingSections[sk].images.push(url);
+        }catch(err){ alert('사진 업로드에 실패했어요.'); }
+      }
+      e.target.value = '';
+      renderSections();
+    };
+  });
+  box.querySelectorAll('.sectionPhotoDel').forEach(btn=>{
+    btn.onclick = ()=>{
+      syncSectionsFromDOM();
+      editingSections[btn.dataset.sec].images.splice(+btn.dataset.idx, 1);
+      renderSections();
+    };
+  });
+  box.querySelectorAll('.sectionInstaAdd').forEach(btn=>{
+    btn.onclick = ()=>{
+      const sk = btn.dataset.sec;
+      const input = box.querySelector(`.sectionInstaInput[data-sec="${sk}"]`);
+      const url = input.value.trim();
+      if(!url) return;
+      if(!/instagram\.com/.test(url)){ alert('인스타그램 게시물 링크만 추가할 수 있어요.'); return; }
+      syncSectionsFromDOM();
+      if(!editingSections[sk].instaLinks) editingSections[sk].instaLinks = [];
+      if(editingSections[sk].instaLinks.length >= 4){ alert('인스타 링크는 최대 4개까지 추가할 수 있어요.'); return; }
+      editingSections[sk].instaLinks.push(url);
+      renderSections();
+    };
+  });
+  box.querySelectorAll('.sectionInstaDel').forEach(btn=>{
+    btn.onclick = ()=>{
+      syncSectionsFromDOM();
+      editingSections[btn.dataset.sec].instaLinks.splice(+btn.dataset.idx, 1);
+      renderSections();
+    };
+  });
 }
 function syncSectionsFromDOM(schemaOverride){
   const schema = schemaOverride || currentSchema();
@@ -1698,10 +1954,14 @@ function syncSectionsFromDOM(schemaOverride){
     const items = Array.from(rows).map((row,i)=>{
       const existing = editingSections[sec.key] && editingSections[sec.key].items[i];
       const obj = { photo: existing ? existing.photo : undefined };
-      row.querySelectorAll('[data-key]').forEach(el=>{ obj[el.dataset.key] = el.value.trim(); });
+      row.querySelectorAll('[data-key]').forEach(el=>{
+        obj[el.dataset.key] = el.type==='checkbox' ? (el.checked?'true':'false') : el.value.trim();
+      });
       return obj;
     });
-    editingSections[sec.key] = { extra, items };
+    const prevImages = (editingSections[sec.key] && editingSections[sec.key].images) || [];
+    const prevInsta = (editingSections[sec.key] && editingSections[sec.key].instaLinks) || [];
+    editingSections[sec.key] = { extra, items, images: prevImages, instaLinks: prevInsta };
   });
 }
 const GALLERY_TOP_CATS = ['야외스냅','정장','한복'];
@@ -1730,7 +1990,7 @@ document.getElementById('f_category').addEventListener('change', ()=>{
   const old = editingSections;
   editingSections = {};
   newSchema.sections.forEach(sec=>{
-    editingSections[sec.key] = old[sec.key] ? old[sec.key] : {extra:{}, items: sec.itemFields.length ? [{}] : []};
+    editingSections[sec.key] = old[sec.key] ? old[sec.key] : {extra:{}, items: sec.itemFields.length ? [{}] : [], images:[], instaLinks:[]};
     if(sec.itemFields.length && editingSections[sec.key].items.length===0){
       editingSections[sec.key].items = [{}];
     }
@@ -1759,7 +2019,7 @@ function openEdit(id){
   editingSections = {};
   schema.sections.forEach(sec=>{
     const existing = v && v.sections && v.sections[sec.key];
-    editingSections[sec.key] = existing ? JSON.parse(JSON.stringify(existing)) : {extra:{}, items: sec.itemFields.length ? [{}] : []};
+    editingSections[sec.key] = existing ? JSON.parse(JSON.stringify(existing)) : {extra:{}, items: sec.itemFields.length ? [{}] : [], images:[], instaLinks:[]};
     if(sec.itemFields.length && editingSections[sec.key].items.length===0){
       editingSections[sec.key].items = [{}];
     }
@@ -1796,7 +2056,7 @@ document.getElementById('saveEdit').onclick = async ()=>{
   schema.sections.forEach(sec=>{
     const data = editingSections[sec.key] || {extra:{}, items:[]};
     const items = data.items.filter(it=> it.photo || sec.itemFields.some(f=>(it[f.key]||'').toString().trim()));
-    sections[sec.key] = { extra: data.extra, items };
+    sections[sec.key] = { extra: data.extra, items, images: data.images||[], instaLinks: data.instaLinks||[] };
   });
   const dates = editingDates.slice();
   const cat = document.getElementById('f_category').value;
