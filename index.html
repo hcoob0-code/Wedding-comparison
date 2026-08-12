@@ -77,9 +77,13 @@ select.viewsel{
   background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
 }
 .card.isfinal{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
-.cardhead{display:flex;align-items:flex-start;gap:8px;padding:11px 14px;cursor:pointer;}
+.cardhead{padding:11px 14px;cursor:pointer;}
+.cardheadtop{display:flex;align-items:flex-start;gap:8px;}
+.cardheadbottom{margin-top:2px;}
 .cardhead .chev{margin-left:2px;flex:0 0 auto;color:var(--ink-soft);font-size:12px;padding-top:6px;transition:.15s;}
 .cardhead.open .chev{transform:rotate(180deg);}
+.draghandle{flex:0 0 auto;color:var(--ink-soft);font-size:18px;padding:6px 2px 6px 6px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;}
+.card.dragging{opacity:.55;box-shadow:0 8px 20px rgba(0,0,0,.18);z-index:50;position:relative;}
 .cardmain{flex:1;min-width:0;}
 .topline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;}
 .card .catchip{
@@ -144,8 +148,8 @@ select.viewsel{
 .product{background:var(--paper-deep);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;}
 .product .itemphoto{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:0 0 auto;cursor:pointer;}
 .product .pfields{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;}
-.prow{display:flex;gap:6px;font-size:12.5px;line-height:1.4;min-width:0;}
-.prow .k{flex:0 0 auto;color:var(--ink-soft);font-weight:600;font-size:10.5px;padding-top:1px;white-space:nowrap;}
+.prow{display:flex;gap:8px;font-size:12.5px;line-height:1.4;min-width:0;}
+.prow .k{flex:0 0 62px;color:var(--ink-soft);font-weight:600;font-size:10.5px;padding-top:1px;}
 .prow .v{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;}
 .prow.full{grid-column:1/-1;}
 .product .prow:first-child .v{font-weight:800;}
@@ -170,6 +174,7 @@ select.viewsel{
 table{border-collapse:collapse;width:100%;min-width:520px;font-size:13px;}
 th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
 th{background:var(--paper-deep);font-size:11.5px;color:var(--ink-soft);position:sticky;top:0;white-space:nowrap;}
+.clickableth{text-decoration:underline;text-decoration-style:dotted;cursor:pointer;}
 td.name{font-weight:700;}
 td.fav{text-align:center;}
 .cmptoolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
@@ -178,7 +183,7 @@ td.fav{text-align:center;}
 .budgettable table{font-size:7px;min-width:100%;}
 .budgettable th{font-size:6.5px;padding:5px 4px;}
 .budgettable td{padding:5px 4px;font-size:7px;}
-.budgetcathead td{font-weight:800;background:var(--paper-deep);color:var(--ink);font-size:9px;padding:7px 5px;border-top:2px solid var(--line);border-bottom:1px solid var(--line);}
+.budgetsubtotal td{font-weight:700;background:var(--paper-deep);color:var(--ink-soft);border-top:1px dashed var(--line);}
 .budgettotal{font-weight:800;color:var(--ink);}
 
 /* compare bar */
@@ -285,12 +290,27 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .closebtn{position:sticky;top:0;text-align:right;margin-bottom:-6px;}
 .closebtn button{background:none;border:none;font-size:20px;color:var(--ink-soft);cursor:pointer;padding:4px 8px;}
 
-.comparegrid{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;}
-.comparecol{flex:0 0 250px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px;}
+.comparegrid{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.comparecol{flex:0 0 47%;min-width:150px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:10px;font-size:12px;}
+.comparecol h3{font-size:14px;margin:4px 0 0;}
+.comparecol .catchip{font-size:10px;padding:2px 7px;}
+.cmpaddr{font-size:11px;color:var(--ink-soft);margin-top:1px;}
+.comparecol .sectionlabel{font-size:11px;}
+.comparecol .prow .k{font-size:9.5px;flex-basis:52px;}
+.comparecol .prow .v{font-size:11px;}
+.comparecol .instaEmbeds{transform:scale(.7);transform-origin:top left;width:143%;margin-bottom:-40%;}
+.comparecol .instagram-media{min-width:0 !important;max-width:100% !important;}
 .comparecol h3{margin:0 0 4px;font-size:15px;font-weight:800;}
 
-.lightbox{background:transparent;box-shadow:none;padding:0;max-width:92vw;max-height:88vh;}
-.lightbox img{max-width:92vw;max-height:88vh;border-radius:12px;display:block;}
+.lightboxfull{background:rgba(10,10,10,.95);flex-direction:row;align-items:center;padding:0;}
+.lightboxfullimg{max-width:100vw;max-height:100vh;object-fit:contain;}
+.lbarrow{
+  position:fixed;top:50%;transform:translateY(-50%);z-index:30;
+  background:none;border:none;color:rgba(255,255,255,.45);font-size:44px;line-height:1;
+  padding:14px 18px;cursor:pointer;font-family:inherit;
+}
+.lbprev{left:2px;}
+.lbnext{right:2px;}
 </style>
 </head>
 <body>
@@ -308,6 +328,7 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
       <option value="fav">찜한순</option>
       <option value="price">가격순</option>
       <option value="hasdate">날짜순</option>
+      <option value="manual">직접 정렬</option>
     </select>
     <select class="viewsel" id="viewSel">
       <option value="card">카드 형</option>
@@ -342,9 +363,9 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
     </div>
     <div id="datesFieldBox">
       <div class="field">
-        <label>가능 날짜</label>
+        <label>가능 날짜 (특정일 20260823, 해당 월 전체는 202608)</label>
         <div style="display:flex;gap:6px;">
-          <input id="f_dateInput" placeholder="20260823" inputmode="numeric" maxlength="8" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:14px;font-family:inherit;">
+          <input id="f_dateInput" placeholder="20260823 또는 202608" inputmode="numeric" maxlength="8" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:14px;font-family:inherit;">
           <button type="button" class="btn small" id="addDateBtn" style="flex:0 0 auto;">추가</button>
         </div>
         <div id="datesList"></div>
@@ -455,6 +476,15 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
   </div>
 </div>
 
+<!-- Payer Summary Modal -->
+<div class="overlay" id="payerSummaryOverlay">
+  <div class="modal">
+    <div class="closebtn"><button id="closePayerSummary">✕</button></div>
+    <h2 id="payerSummaryTitle">지불인별 합계</h2>
+    <div id="payerSummaryBody"></div>
+  </div>
+</div>
+
 <!-- Confirm Modal -->
 <div class="overlay" id="confirmOverlay">
   <div class="modal">
@@ -468,8 +498,10 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 </div>
 
 <!-- Lightbox -->
-<div class="overlay" id="lightboxOverlay">
-  <div class="modal lightbox"><img id="lightboxImg" src=""></div>
+<div class="overlay lightboxfull" id="lightboxOverlay">
+  <button class="lbarrow lbprev" id="lightboxPrev">‹</button>
+  <img id="lightboxImg" src="" class="lightboxfullimg">
+  <button class="lbarrow lbnext" id="lightboxNext">›</button>
 </div>
 
 <script>
@@ -494,77 +526,83 @@ const CATEGORY_SCHEMA = {
       ], itemsLabel:'브랜드별 비교', itemFields:[
         {key:'brand', label:'브랜드명', long:true},{key:'price', label:'추가금', long:true, money:true},
         {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
-        {key:'desc', label:'참고사항', long:true}
+        {key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true },
     { key:'mainPhoto', label:'본식촬영', extraFields:[
-        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true},
+        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
         {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'iphoneSnap', label:'아이폰스냅', extraFields:[
-        {key:'vendor', label:'업체', long:true},{key:'composition', label:'구성', long:true},{key:'provided', label:'참고사항', long:true},{key:'price', label:'가격', money:true},
+        {key:'vendor', label:'업체', long:true},{key:'composition', label:'구성', long:true},{key:'provided', label:'참고사항', long:true, type:'textarea'},{key:'price', label:'가격', money:true},
         {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
         {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
     { key:'hairMakeup', label:'헤어메이크업', extraFields:[
-        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true},
+        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
         {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'},
-        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
+        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true},
+        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
     { key:'bouquet', label:'부케', extraFields:[
         {key:'vendor', label:'업체'},{key:'extraPrice', label:'추가금', money:true},
-        {key:'composition', label:'구성', long:true},{key:'note', label:'참고사항', long:true}
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},
+        {key:'composition', label:'구성', long:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
     { key:'screen', label:'스크린', extraFields:[
-        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
+        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'staging', label:'연출도우미', extraFields:[
-        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
+        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'dressHelper', label:'드레스헬퍼', extraFields:[
-        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
+        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'catering', label:'식대', extraFields:[
-        {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true},{key:'liquor', label:'주류비 (병)', money:true},{key:'beverage', label:'음료비 (병)', money:true},{key:'note', label:'참고사항', long:true},
+        {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true},{key:'liquor', label:'주류비 (병)', money:true},{key:'beverage', label:'음료비 (병)', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'},
         {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'finalAmount', label:'최종금액', money:true},
         {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3},
         {key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
-        {key:'note', label:'내역'},{key:'amount', label:'금액', money:true}
+        {key:'note', label:'내역'},{key:'amount', label:'금액', money:true},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'}
       ], itemHasPhoto:false }
   ]},
   "스냅준비": { sections: [
     { key:'dress', label:'드레스', extraFields:[], itemsLabel:'드레스별 추가금', itemFields:[
         {key:'vendor', label:'업체명'},{key:'price', label:'추가금', money:true},
         {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
-        {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+        {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true },
     { key:'suit', label:'정장', extraFields:[], itemsLabel:'정장별 추가금', itemFields:[
         {key:'vendor', label:'업체명'},{key:'price', label:'추가금', money:true},
         {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
-        {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+        {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true },
     { key:'hair', label:'헤어', extraFields:[], itemsLabel:'헤어 옵션', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+        {key:'vendor', label:'업체명'},{key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true },
     { key:'makeup', label:'메이크업', extraFields:[], itemsLabel:'메이크업 옵션', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+        {key:'vendor', label:'업체명'},{key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true },
     { key:'bouquet', label:'부케', extraFields:[], itemsLabel:'부케 옵션', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'name', label:'구성'},{key:'price', label:'추가금', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true}
+        {key:'vendor', label:'업체명'},{key:'name', label:'구성'},{key:'price', label:'추가금', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true },
     { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 항목', itemFields:[
-        {key:'name', label:'항목명'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true}
+        {key:'name', label:'항목명'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true }
   ]},
   "야외스냅": { sections: [
     { key:'main', label:'구성별 상세', extraFields:[
       ], itemsLabel:'구성별 상세', itemFields:[
-        {key:'name', label:'구성명', long:true},{key:'time', label:'촬영 시간'},{key:'place', label:'장소'},
-        {key:'outfits', label:'의상 수'},{key:'hairChanges', label:'헤어 변형 횟수'},{key:'video', label:'영상 제공 여부'},
-        {key:'rawCount', label:'원본 제공 수량'},{key:'editedCount', label:'보정본 제공 수량'},
-        {key:'price', label:'가격', money:true},{key:'memo', label:'기타사항', long:true}
+        {key:'name', label:'구성명', long:true},{key:'time', label:'촬영 시간', unit:'시간'},{key:'place', label:'장소', unit:'장소'},
+        {key:'outfits', label:'의상 수', unit:'벌'},{key:'hairChanges', label:'헤어 변형 횟수', unit:'회'},{key:'video', label:'영상 제공 여부'},
+        {key:'rawCount', label:'원본 제공 수량'},{key:'editedCount', label:'보정본 제공 수량', unit:'장'},
+        {key:'price', label:'가격', money:true},{key:'memo', label:'기타사항', long:true, type:'textarea'}
       ], itemHasPhoto:false }
   ]},
   "정장": { sections: [
@@ -584,7 +622,7 @@ const CATEGORY_SCHEMA = {
         {key:'leadTime', label:'예상 소요일'},{key:'timeEvent', label:'타임이벤트'},
         {key:'serviceItems', label:'서비스 아이템', long:true},{key:'tiaraRental', label:'티아라 SVC', type:'checkbox'}
       ], itemsLabel:'참고 사진과 가격', itemFields:[
-        {key:'name', label:'이름'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true}
+        {key:'name', label:'이름'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true }
   ]},
   "한복": { sections: [
@@ -712,6 +750,16 @@ async function uploadToCloudinary(blob){
 }
 
 function uid(){ return 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+function showPayerSummary(title, map){
+  document.getElementById('payerSummaryTitle').textContent = title;
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('payerSummaryBody').innerHTML = entries.length
+    ? `<div class="vendorrow">${entries.map(([name,amt])=>`<div class="prow full"><div class="k">${esc(name)}</div><div class="v">${amt.toLocaleString()}만원</div></div>`).join('')}</div>`
+    : '<div class="hint">아직 입력된 내용이 없어요.</div>';
+  document.getElementById('payerSummaryOverlay').classList.add('show');
+}
+document.getElementById('closePayerSummary').onclick = ()=> document.getElementById('payerSummaryOverlay').classList.remove('show');
+
 function showConfirm(message){
   return new Promise(resolve=>{
     document.getElementById('confirmMsg').textContent = message;
@@ -733,6 +781,11 @@ function toCompactDate(iso){
 }
 function toISODate(compact){
   const digits = (compact||'').replace(/\D/g,'');
+  if(digits.length === 6){
+    const y = digits.slice(0,4), m = digits.slice(4,6);
+    if(+m < 1 || +m > 12) return null;
+    return `${y}-${m}`;
+  }
   if(digits.length !== 8) return null;
   const y = digits.slice(0,4), m = digits.slice(4,6), d = digits.slice(6,8);
   const iso = `${y}-${m}-${d}`;
@@ -757,6 +810,13 @@ function copyToClipboard(text){
 }
 
 function dayInfo(dateStr){
+  if(/^\d{4}-\d{2}$/.test(dateStr)){
+    const [y,m] = dateStr.split('-').map(Number);
+    const d = new Date(y, m-1, 1);
+    const now = new Date();
+    const isPastMonth = (y < now.getFullYear()) || (y===now.getFullYear() && m < now.getMonth()+1);
+    return { date:d, label:`${m}월 잔여일 있음`, past:isPastMonth, today:false, diff:0, monthOnly:true };
+  }
   const d = new Date(dateStr+'T00:00:00');
   if(isNaN(d.getTime())) return null;
   const today = new Date(); today.setHours(0,0,0,0);
@@ -862,6 +922,56 @@ document.getElementById('copyTemplateBtn').onclick = async ()=>{
   setTimeout(()=>{ btn.textContent = '복사하기'; }, ok ? 1500 : 3000);
 };
 
+let dragCardId = null;
+function normalizeVendorOrderToCurrentView(){
+  const currentList = filteredSorted();
+  const inView = new Set(currentList.map(v=>v.id));
+  const notInView = vendors.filter(v=>!inView.has(v.id));
+  vendors = [...currentList, ...notInView];
+}
+function startCardDrag(id, startY){
+  const sortSel = document.getElementById('sortSel');
+  if(sortSel.value !== 'manual'){
+    normalizeVendorOrderToCurrentView();
+    sortSel.value = 'manual';
+  }
+  dragCardId = id;
+  const cardEl = document.querySelector(`.card[data-id="${id}"]`);
+  if(cardEl) cardEl.classList.add('dragging');
+  document.addEventListener('pointermove', onCardDragMove);
+  document.addEventListener('pointerup', onCardDragEnd, { once:true });
+  document.addEventListener('pointercancel', onCardDragEnd, { once:true });
+}
+function onCardDragMove(e){
+  if(!dragCardId) return;
+  const y = e.clientY;
+  const cards = Array.from(document.querySelectorAll('.card[data-id]'));
+  const draggedIdx = vendors.findIndex(v=>v.id===dragCardId);
+  if(draggedIdx===-1) return;
+  for(const el of cards){
+    if(el.dataset.id === dragCardId) continue;
+    const rect = el.getBoundingClientRect();
+    if(y >= rect.top && y <= rect.bottom){
+      const targetIdx = vendors.findIndex(v=>v.id===el.dataset.id);
+      if(targetIdx>-1 && targetIdx!==draggedIdx){
+        const [item] = vendors.splice(draggedIdx,1);
+        vendors.splice(targetIdx,0,item);
+        renderContent();
+        const newEl = document.querySelector(`.card[data-id="${dragCardId}"]`);
+        if(newEl) newEl.classList.add('dragging');
+      }
+      break;
+    }
+  }
+}
+async function onCardDragEnd(){
+  document.removeEventListener('pointermove', onCardDragMove);
+  const cardEl = dragCardId ? document.querySelector(`.card[data-id="${dragCardId}"]`) : null;
+  if(cardEl) cardEl.classList.remove('dragging');
+  dragCardId = null;
+  await saveVendors();
+}
+
 function minPrice(v){
   const nums = [];
   Object.values(v.sections||{}).forEach(sec=>{
@@ -886,9 +996,12 @@ function filteredSorted(){
     list.sort((a,b)=> minPrice(a)-minPrice(b));
   } else if(sort==='hasdate'){
     list.sort((a,b)=> (vendorHasAvailability(b)?1:0)-(vendorHasAvailability(a)?1:0) || b.createdAt-a.createdAt);
+  } else if(sort==='manual'){
+    // preserve current array order (set via drag-reordering)
   } else {
     list.sort((a,b)=> b.createdAt-a.createdAt);
   }
+  list.sort((a,b)=> (b.favorite?1:0)-(a.favorite?1:0));
   list.sort((a,b)=> (b.isFinal?1:0)-(a.isFinal?1:0));
   return list;
 }
@@ -920,9 +1033,9 @@ function computeFieldLayout(items, isLong){
 function moneyToManwon(raw){
   if(!raw) return 0;
   const str = String(raw).trim();
-  if(/^\d+$/.test(str)) return parseInt(str, 10);
-  const m = str.match(/(\d+(?:,\d+)*)\s*만/);
-  if(m) return parseInt(m[1].replace(/,/g,''), 10);
+  if(/^\d+(\.\d+)?$/.test(str)) return parseFloat(str);
+  const m = str.match(/(\d+(?:,\d+)*(?:\.\d+)?)\s*만/);
+  if(m) return parseFloat(m[1].replace(/,/g,''));
   return 0;
 }
 function computeWeddingHallTotal(v){
@@ -937,42 +1050,45 @@ function budgetRowsForWeddingHall(v){
 
   const hi = (s.hallinfo && s.hallinfo.extra) || {};
   const hiDep = moneyToManwon(hi.depositAmount), hiBal = moneyToManwon(hi.balanceAmount);
-  rows.push({ label:'홀', deposit:hiDep, depositPayer:hi.depositPayer, balance:hiBal, balancePayer:hi.balancePayer, total:hiDep+hiBal });
+  rows.push({ label:'홀', deposit:hiDep, depositPayer:hi.depositPayer, balanceDue:'', balance:hiBal, balancePayer:hi.balancePayer, total:hiDep+hiBal });
 
   const dressItems = (s.ceremonyDress && s.ceremonyDress.items) || [];
   let dressTotal = 0;
   (v.finalRefs||[]).forEach(r=>{
     if(r.sectionKey==='ceremonyDress' && dressItems[r.itemIndex]) dressTotal += moneyToManwon(dressItems[r.itemIndex].price);
   });
-  rows.push({ label:'드레스', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:dressTotal });
+  rows.push({ label:'드레스', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', total:dressTotal });
 
   const mp = (s.mainPhoto && s.mainPhoto.extra) || {};
-  rows.push({ label:'본식촬영', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:moneyToManwon(mp.extraPrice) });
+  rows.push({ label:'본식촬영', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', total:moneyToManwon(mp.extraPrice) });
 
   const ip = (s.iphoneSnap && s.iphoneSnap.extra) || {};
   const ipDep = moneyToManwon(ip.depositAmount), ipBal = moneyToManwon(ip.balanceAmount);
-  rows.push({ label:'아이폰스냅', deposit:ipDep, depositPayer:ip.depositPayer, balance:ipBal, balancePayer:ip.balancePayer, total:ipDep+ipBal });
+  rows.push({ label:'아이폰스냅', deposit:ipDep, depositPayer:ip.depositPayer, balanceDue:ip.balanceDueDate, balance:ipBal, balancePayer:ip.balancePayer, total:ipDep+ipBal });
 
   const hm = (s.hairMakeup && s.hairMakeup.extra) || {};
-  const hmTotal = hm.svc==='true' ? 0 : (moneyToManwon(hm.parentsPrice) + moneyToManwon(hm.extraPrice));
-  rows.push({ label:'헤어메이크업', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:hmTotal });
+  const hmExtra = hm.svc==='true' ? 0 : (moneyToManwon(hm.parentsPrice) + moneyToManwon(hm.extraPrice));
+  const hmDep = hm.svc==='true' ? 0 : moneyToManwon(hm.depositAmount);
+  const hmBal = hm.svc==='true' ? 0 : moneyToManwon(hm.balanceAmount);
+  rows.push({ label:'헤어메이크업', deposit:hmDep, depositPayer:hm.depositPayer, balanceDue:hm.balanceDueDate, balance:hmBal, balancePayer:hm.balancePayer, total:hmExtra+hmDep+hmBal });
 
   const bq = (s.bouquet && s.bouquet.extra) || {};
-  rows.push({ label:'부케', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:moneyToManwon(bq.extraPrice) });
+  rows.push({ label:'부케', deposit:0, depositPayer:'', balanceDue:bq.balanceDueDate, balance:0, balancePayer:bq.balancePayer, total:moneyToManwon(bq.extraPrice) });
 
   [['screen','스크린'],['staging','연출도우미'],['dressHelper','드레스헬퍼']].forEach(([key,label])=>{
     const ex = (s[key] && s[key].extra) || {};
     const t = ex.svc==='true' ? 0 : moneyToManwon(ex.price);
-    rows.push({ label, deposit:0, depositPayer:'', balance:0, balancePayer:'', total:t });
+    rows.push({ label, deposit:0, depositPayer:'', balanceDue: ex.svc==='true'?'':ex.balanceDueDate, balance:0, balancePayer: ex.svc==='true'?'':ex.balancePayer, total:t });
   });
 
   const ct = (s.catering && s.catering.extra) || {};
   const ctDep = moneyToManwon(ct.depositAmount), ctBal = moneyToManwon(ct.balanceAmount);
-  rows.push({ label:'식대', deposit:ctDep, depositPayer:ct.depositPayer, balance:ctBal, balancePayer:ct.balancePayer, total:ctDep+ctBal });
+  rows.push({ label:'식대', deposit:ctDep, depositPayer:ct.depositPayer, balanceDue:'', balance:ctBal, balancePayer:ct.balancePayer, total:ctDep+ctBal });
 
   const etcItems = (s.etc && s.etc.items) || [];
   const etcTotal = etcItems.reduce((a,it)=>a+moneyToManwon(it.amount), 0);
-  rows.push({ label:'기타', deposit:0, depositPayer:'', balance:0, balancePayer:'', total:etcTotal });
+  const lastEtc = etcItems[etcItems.length-1] || {};
+  rows.push({ label:'기타', deposit:0, depositPayer:'', balanceDue:lastEtc.balanceDueDate, balance:0, balancePayer:lastEtc.balancePayer, total:etcTotal });
 
   return rows;
 }
@@ -987,16 +1103,16 @@ function budgetRowsForSnapPrep(v){
         if(it) total += moneyToManwon(it.price);
       }
     });
-    return { label:sec.label, deposit:0, depositPayer:'', balance:0, balancePayer:'', total };
+    return { label:sec.label, deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', total };
   });
 }
 
 function formatMoney(raw){
   if(!raw) return raw;
   const str = String(raw).trim();
-  if(!/^\d+$/.test(str)) return raw;
-  const num = parseInt(str, 10);
-  return `${num.toLocaleString()}만원`;
+  if(!/^\d+(\.\d+)?$/.test(str)) return raw;
+  const num = parseFloat(str);
+  return `${num.toLocaleString(undefined,{maximumFractionDigits:2})}만원`;
 }
 function formatKoreanDateDisplay(raw){
   const digits = (raw||'').toString().replace(/\D/g,'');
@@ -1021,6 +1137,7 @@ function fieldRow(f, val, full){
   let shown = val;
   if(f.money) shown = formatMoney(val);
   else if(f.dateFormat) shown = formatKoreanDateDisplay(val);
+  else if(f.unit && /^\d+$/.test(String(val).trim())) shown = `${val}${f.unit}`;
   return `<div class="prow${full?' full':''}"><div class="k">${esc(f.label)}</div><div class="v">${esc(shown)}</div></div>`;
 }
 function quadCellHTML(f, val){
@@ -1029,11 +1146,11 @@ function quadCellHTML(f, val){
   else if(val && f.dateFormat) shown = formatKoreanDateDisplay(val);
   return `<div class="quadcell${f.wide?' wide':''}"><div class="qk">${esc(f.label)}</div><div class="qv">${esc(shown)}</div></div>`;
 }
-function fieldsToHTML(fields, valuesObj){
+function fieldsToHTML(fields, valuesObj, oneCol){
   const quadFields = fields.filter(f=>f.quad);
   const normalFields = fields.filter(f=>!f.quad);
   const present = normalFields.filter(f=> f.type==='checkbox' ? (f.alwaysShow || valuesObj[f.key]==='true') : !!valuesObj[f.key]);
-  const laid = computeFieldLayout(present, f=>f.long);
+  const laid = oneCol ? present.map(item=>({item, full:true})) : computeFieldLayout(present, f=>f.long);
   let html = laid.map(({item,full})=> fieldRow(item, valuesObj[item.key], full)).join('');
   const anyQuadVal = quadFields.some(f=> f.type==='checkbox' ? valuesObj[f.key]==='true' : !!valuesObj[f.key]);
   if(anyQuadVal){
@@ -1042,8 +1159,8 @@ function fieldsToHTML(fields, valuesObj){
   return html;
 }
 
-function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls){
-  const fieldsHTML = fieldsToHTML(sec.itemFields, item);
+function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls, oneCol){
+  const fieldsHTML = fieldsToHTML(sec.itemFields, item, oneCol);
   const photoHTML = (sec.itemHasPhoto && item.photo) ? `<img class="itemphoto" src="${esc(item.photo)}" data-lightbox-url="${esc(item.photo)}">` : '';
   let controls = '';
   if(showControls){
@@ -1059,14 +1176,14 @@ function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls){
   return `<div class="product">${photoHTML}<div class="pfields">${fieldsHTML || '<div class="hint" style="margin:0;">입력된 내용이 없어요</div>'}${controls}</div></div>`;
 }
 
-function vendorSectionsHTML(v, showControls){
+function vendorSectionsHTML(v, showControls, oneCol){
   const schema = getSchema(v.category);
   return schema.sections.map(sec=>{
     const data = (v.sections && v.sections[sec.key]) || {extra:{}, items:[]};
-    const rows = fieldsToHTML(sec.extraFields, data.extra);
+    const rows = fieldsToHTML(sec.extraFields, data.extra, oneCol);
     const extraHTML = rows ? `<div class="vendorrow">${rows}</div>` : '';
     const items = data.items || [];
-    const itemsHTML = items.length ? `<div class="products">${items.map((it,idx)=>itemBlockHTML(it,sec,v.id,sec.key,idx,showControls)).join('')}</div>` : '';
+    const itemsHTML = items.length ? `<div class="products">${items.map((it,idx)=>itemBlockHTML(it,sec,v.id,sec.key,idx,showControls,oneCol)).join('')}</div>` : '';
     const mediaHTML = sec.hasMedia ? (galleryHTML(data.images, '') + instaEmbedsHTML(data.instaLinks)) : '';
     return `<div class="sectionblock"><div class="sectionlabel">${esc(sec.label)}</div>${extraHTML}${itemsHTML}${mediaHTML}</div>`;
   }).join('');
@@ -1107,6 +1224,7 @@ function cardHTML(v){
   const finalBadge = v.isFinal ? `<span class="finalbadge">★ 최종 선택</span>` : '';
   const isSingle = SINGLE_ENTRY_CATS.includes(v.category);
   const showDates = v.category === '야외스냅';
+  const hallSummary = weddingHallSummaryHTML(v);
   const body = open ? `<div class="cardbody"><div class="cardbody-inner">
       ${(!isSingle && v.link)? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
       ${vendorSectionsHTML(v, true)}
@@ -1118,23 +1236,28 @@ function cardHTML(v){
 
   return `<div class="card ${v.isFinal?'isfinal':''}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
-      <button class="stamp ${v.favorite?'on':''}" data-fav="${v.id}">찜</button>
-      <div class="cardmain">
-        <div class="topline">
-          <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(v.category)}</span>
-          ${finalBadge}
-          ${showDates ? `<span class="availbadge"><span class="availdot ${hasDate?'':'none'}"></span>${hasDate? '가능 날짜 있음':'가능 날짜 없음'}</span>` : ''}
+      <div class="cardheadtop">
+        <button class="stamp ${v.favorite?'on':''}" data-fav="${v.id}">찜</button>
+        <div class="cardmain">
+          <div class="topline">
+            <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(v.category)}</span>
+            ${finalBadge}
+            ${showDates ? `<span class="availbadge"><span class="availdot ${hasDate?'':'none'}"></span>${hasDate? '가능 날짜 있음':'가능 날짜 없음'}</span>` : ''}
+          </div>
+          <h3>${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</h3>
         </div>
-        <h3>${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</h3>
+        <div class="headactions">
+          <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
+          <button class="headbtn danger" data-del="${v.id}">삭제</button>
+          <button class="headbtn" data-edit="${v.id}">수정</button>
+        </div>
+        <span class="draghandle" data-drag="${v.id}" title="드래그해서 순서 바꾸기">⠿</span>
+        <span class="chev">▾</span>
+      </div>
+      ${(showDates || hallSummary) ? `<div class="cardheadbottom">
         ${showDates ? dateChipsHTML(v) : ''}
-        ${weddingHallSummaryHTML(v)}
-      </div>
-      <div class="headactions">
-        <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
-        <button class="headbtn danger" data-del="${v.id}">삭제</button>
-        <button class="headbtn" data-edit="${v.id}">수정</button>
-      </div>
-      <span class="chev">▾</span>
+        ${hallSummary}
+      </div>` : ''}
     </div>
     ${body}
   </div>`;
@@ -1199,7 +1322,7 @@ function renderContent(){
     const clearBtn = document.getElementById('clearItemCompare');
     if(clearBtn) clearBtn.onclick = ()=>{ selectedItems.clear(); renderContent(); };
     container.querySelectorAll('[data-lightbox-url]').forEach(img=>{
-      img.onclick = ()=> openLightbox(img.dataset.lightboxUrl);
+      img.onclick = ()=> openLightboxFromEl(img);
     });
     updateCompareBar();
     return;
@@ -1222,6 +1345,13 @@ function renderContent(){
       if(expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
       renderContent();
     };
+  });
+  container.querySelectorAll('[data-drag]').forEach(handle=>{
+    handle.addEventListener('pointerdown', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      startCardDrag(handle.dataset.drag, e.clientY);
+    });
   });
   container.querySelectorAll('[data-fav]').forEach(btn=>{
     btn.onclick = async (e)=>{
@@ -1268,17 +1398,44 @@ function renderContent(){
     btn.onclick = (e)=>{ e.stopPropagation(); itemFinalClick(btn.dataset.itemfinal); };
   });
   container.querySelectorAll('[data-lightbox-url]').forEach(img=>{
-    img.onclick = (e)=>{ e.stopPropagation(); openLightbox(img.dataset.lightboxUrl); };
+    img.onclick = (e)=>{ e.stopPropagation(); openLightboxFromEl(img); };
   });
 
   processInstagramEmbeds();
   updateCompareBar();
 }
 
-function openLightbox(src){
-  document.getElementById('lightboxImg').src = src;
+let lightboxImages = [];
+let lightboxIndex = 0;
+function openLightbox(images, index){
+  lightboxImages = images;
+  lightboxIndex = index;
+  renderLightbox();
   document.getElementById('lightboxOverlay').classList.add('show');
 }
+function openLightboxFromEl(imgEl){
+  const container = imgEl.parentElement;
+  const siblings = container ? Array.from(container.querySelectorAll('[data-lightbox-url]')) : [imgEl];
+  const urls = siblings.map(el=>el.dataset.lightboxUrl);
+  const idx = Math.max(0, siblings.indexOf(imgEl));
+  openLightbox(urls, idx);
+}
+function renderLightbox(){
+  document.getElementById('lightboxImg').src = lightboxImages[lightboxIndex] || '';
+  const multi = lightboxImages.length > 1;
+  document.getElementById('lightboxPrev').style.display = multi ? '' : 'none';
+  document.getElementById('lightboxNext').style.display = multi ? '' : 'none';
+}
+document.getElementById('lightboxPrev').onclick = (e)=>{
+  e.stopPropagation();
+  lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+  renderLightbox();
+};
+document.getElementById('lightboxNext').onclick = (e)=>{
+  e.stopPropagation();
+  lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+  renderLightbox();
+};
 document.getElementById('lightboxOverlay').addEventListener('click', ()=>{
   document.getElementById('lightboxOverlay').classList.remove('show');
 });
@@ -1401,10 +1558,9 @@ document.getElementById('compareGo').onclick = ()=>{
     return `<div class="comparecol">
       <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(v.category)}</span>
       <h3>${esc(v.name)}</h3>
-      ${v.link? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
-      ${v.location? `<div class="vendorrow"><div class="vrow"><div class="k">주소</div><div class="v">${esc(v.location)}</div></div></div>`:''}
+      ${v.location? `<div class="cmpaddr">${esc(v.location)}</div>`:''}
       ${dateChipsHTML(v)}
-      ${vendorSectionsHTML(v, false)}
+      ${vendorSectionsHTML(v, false, true)}
     </div>`;
   }).join('');
   document.getElementById('compareOverlay').classList.add('show');
@@ -1421,6 +1577,12 @@ function renderBudgetPage(){
   const container = document.getElementById('content');
   let grandTotal = 0;
   let bodyHTML = '';
+  const depositByPayer = {};
+  const balanceByPayer = {};
+  function addPayer(map, name, amt){
+    if(!name || !amt) return;
+    map[name] = (map[name]||0) + amt;
+  }
 
   CATS.forEach(cat=>{
     let v = null;
@@ -1434,30 +1596,36 @@ function renderBudgetPage(){
       if(v){
         const pay = v.payment || {};
         const dep = moneyToManwon(pay.depositAmount), bal = moneyToManwon(pay.balanceAmount);
-        detailRows = [{ label:v.name, deposit:dep, depositPayer:pay.depositPayer, balance:bal, balancePayer:pay.balancePayer, total:dep+bal }];
+        detailRows = [{ label:v.name, deposit:dep, depositPayer:pay.depositPayer, balanceDue:pay.balanceDueDate, balance:bal, balancePayer:pay.balancePayer, total:dep+bal }];
       }
     }
 
-    const catTotal = detailRows.reduce((a,r)=>a+r.total, 0);
-    bodyHTML += `<tr class="budgetcathead">
-      <td>${esc(cat)}</td><td></td><td></td><td></td><td></td>
-      <td class="budgettotal">${catTotal? catTotal.toLocaleString()+'만원':'-'}</td>
-    </tr>`;
     if(!v){
-      bodyHTML += `<tr><td colspan="6" style="font-size:7px;color:#9C9890;">아직 선택 안 함</td></tr>`;
+      bodyHTML += `<tr><td style="white-space:nowrap;">${esc(cat)}</td><td colspan="7" style="font-size:7px;color:#9C9890;">아직 선택 안 함</td></tr>`;
       return;
     }
-    detailRows.forEach(r=>{
+    const catTotal = detailRows.reduce((a,r)=>a+r.total, 0);
+    detailRows.forEach((r,i)=>{
       grandTotal += r.total;
+      addPayer(depositByPayer, r.depositPayer, r.deposit);
+      addPayer(balanceByPayer, r.balancePayer, r.balance);
       bodyHTML += `<tr data-vendorid="${v.id}" data-cat="${esc(cat)}">
+        <td style="white-space:nowrap;">${i===0? esc(cat) : ''}</td>
         <td>${esc(r.label)}</td>
         <td>${r.deposit? r.deposit.toLocaleString()+'만원':'-'}</td>
         <td>${esc(r.depositPayer)||'-'}</td>
+        <td>${r.balanceDue||'-'}</td>
         <td>${r.balance? r.balance.toLocaleString()+'만원':'-'}</td>
         <td>${esc(r.balancePayer)||'-'}</td>
         <td class="budgettotal">${r.total? r.total.toLocaleString()+'만원':'-'}</td>
       </tr>`;
     });
+    if(detailRows.length > 1){
+      bodyHTML += `<tr class="budgetsubtotal">
+        <td></td><td>소계</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+        <td class="budgettotal">${catTotal? catTotal.toLocaleString()+'만원':'-'}</td>
+      </tr>`;
+    }
   });
 
   container.innerHTML = `
@@ -1468,11 +1636,14 @@ function renderBudgetPage(){
       <label class="btn small" id="importDataLabel">불러오기<input type="file" id="importDataFile" accept=".csv,text/csv" style="display:none;"></label>
     </div>
     <div class="tablewrap budgettable"><table>
-      <thead><tr><th>업체명</th><th>계약금</th><th>계약금 지불인</th><th>잔금</th><th>잔금 지불인</th><th>총액</th></tr></thead>
+      <thead><tr><th>카테고리</th><th>업체명</th><th>계약금</th><th class="clickableth" id="thDepositPayer">계약금 지불인</th><th>잔금일</th><th>잔금</th><th class="clickableth" id="thBalancePayer">잔금 지불인</th><th>총액</th></tr></thead>
       <tbody>${bodyHTML}</tbody>
     </table></div>
     <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${grandTotal.toLocaleString()}만원</div>
   `;
+
+  document.getElementById('thDepositPayer').onclick = ()=> showPayerSummary('계약금 지불인별 합계', depositByPayer);
+  document.getElementById('thBalancePayer').onclick = ()=> showPayerSummary('잔금 지불인별 합계', balanceByPayer);
 
   container.querySelectorAll('tr[data-vendorid]').forEach(tr=>{
     tr.style.cursor = 'pointer';
@@ -1740,7 +1911,7 @@ function renderDatesList(){
 document.getElementById('addDateBtn').onclick = ()=>{
   const input = document.getElementById('f_dateInput');
   const iso = toISODate(input.value.trim());
-  if(!iso){ alert('날짜는 8자리 숫자로 입력해주세요. 예: 20260823'); return; }
+  if(!iso){ alert('날짜는 8자리(20260823) 또는 6자리 월(202608)로 입력해주세요.'); return; }
   if(!editingDates.includes(iso)) editingDates.push(iso);
   input.value = '';
   renderDatesList();
@@ -1779,8 +1950,8 @@ function itemEditRowHTML(item, idx, sec){
     }
     const val = esc(item[f.key]||'');
     const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
-    const placeholder = f.money ? '(단위: 만원)' : f.label;
-    const moneyAttr = f.money ? ' inputmode="numeric"' : '';
+    const placeholder = f.money ? '(단위: 만원, 소수점 가능)' : (f.unit ? `숫자만 입력 (예: 2 → 2${f.unit})` : f.label);
+    const moneyAttr = f.money ? ' inputmode="decimal"' : '';
     if(f.type==='textarea') return `<textarea data-key="${f.key}" placeholder="${esc(placeholder)}"${fullStyle}>${val}</textarea>`;
     return `<input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${val}"${fullStyle}${moneyAttr}>`;
   }).join('');
@@ -1807,8 +1978,11 @@ function extraFieldHTML(f, sec, val, full){
     return `<label class="checkfield${full?' full':''}"><input type="checkbox" data-sec="${sec.key}" data-exkey="${f.key}" ${checked?'checked':''}> ${esc(f.label)}</label>`;
   }
   const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
-  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : (f.money ? ' inputmode="numeric"' : '');
-  const placeholderAttr = f.money ? ` placeholder="(단위: 만원)"` : '';
+  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : (f.money ? ' inputmode="decimal"' : '');
+  const placeholderAttr = f.money ? ` placeholder="(단위: 만원, 소수점 가능)"` : '';
+  if(f.type==='textarea'){
+    return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><textarea data-sec="${sec.key}" data-exkey="${f.key}"${fullStyle}>${esc(val||'')}</textarea></div>`;
+  }
   return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}${maxAttr}${placeholderAttr}></div>`;
 }
 function quadEditCellHTML(f, sec, val){
@@ -1816,7 +1990,7 @@ function quadEditCellHTML(f, sec, val){
     const checked = val==='true';
     return `<label class="quadcheck"><input type="checkbox" data-sec="${sec.key}" data-exkey="${f.key}" ${checked?'checked':''}><span>${esc(f.label)}</span></label>`;
   }
-  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : (f.money ? ' inputmode="numeric"' : '');
+  const maxAttr = f.maxLength ? ` maxlength="${f.maxLength}" inputmode="numeric"` : (f.money ? ' inputmode="decimal"' : '');
   const placeholderAttr = f.money ? ` placeholder="만원"` : '';
   return `<div class="quadfield${f.wide?' wide':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${maxAttr}${placeholderAttr}></div>`;
 }
@@ -2223,7 +2397,7 @@ document.getElementById('confirmImport').onclick = async ()=>{
 document.getElementById('sortSel').onchange = renderContent;
 document.getElementById('viewSel').onchange = renderContent;
 
-[document.getElementById('editOverlay'), importOverlay, document.getElementById('compareOverlay'), document.getElementById('paymentOverlay'), document.getElementById('jsonTemplateOverlay')].forEach(ov=>{
+[document.getElementById('editOverlay'), importOverlay, document.getElementById('compareOverlay'), document.getElementById('paymentOverlay'), document.getElementById('jsonTemplateOverlay'), document.getElementById('payerSummaryOverlay')].forEach(ov=>{
   ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('show'); });
 });
 
