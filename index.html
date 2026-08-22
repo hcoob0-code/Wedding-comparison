@@ -88,10 +88,10 @@ select.viewsel{
 .draghandle{flex:0 0 auto;color:var(--ink-soft);font-size:18px;padding:2px 2px 6px 6px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;line-height:1;}
 .card.dragging{opacity:.55;box-shadow:0 8px 20px rgba(0,0,0,.18);z-index:50;position:relative;}
 .cardmain{flex:1;min-width:0;}
-.topline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;}
+.topline{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;margin-bottom:3px;overflow:hidden;}
 .card .catchip{
-  display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ink-soft);
-  background:var(--paper-deep);padding:5px 9px;border-radius:999px;white-space:nowrap;flex:0 0 auto;
+  display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--ink-soft);
+  background:var(--paper-deep);padding:5px 8px;border-radius:999px;white-space:nowrap;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;
 }
 .card .catchip .dot{width:6px;height:6px;border-radius:50%;}
 .finalbadge{display:inline-block;font-size:10.5px;font-weight:800;color:#fff;background:var(--gold);padding:3px 8px;border-radius:999px;}
@@ -119,14 +119,14 @@ select.viewsel{
 .stamp:active{transform:rotate(-8deg) scale(.92);}
 
 .cmp{
-  padding:5px 8px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
-  font-size:10px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
+  padding:4px 7px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
+  font-size:9.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
 }
 .cmp.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 
 .headbtn{
-  padding:5px 7px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
-  font-size:10px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
+  padding:4px 6px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
+  font-size:9.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
 }
 .headbtn.danger{color:var(--persimmon);border-color:#EAD3CC;background:#FBF3F0;}
 .headbtn.finalon{color:#fff;background:var(--gold);border-color:var(--gold);}
@@ -147,6 +147,8 @@ select.viewsel{
 .nodates{font-size:10px;color:var(--ink-soft);margin-top:6px;}
 
 .sectionblock{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);}
+.sectiongroup{margin-top:16px;font-size:14px;font-weight:800;color:var(--ink);background:var(--paper-deep);padding:8px 12px;border-radius:10px;}
+.sectionblock.grouped{margin-top:6px;padding:10px 12px;border-top:none;background:var(--paper-deep);border-radius:10px;}
 .sectionblock:first-of-type{margin-top:10px;}
 .sectionlabel{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:6px;}
 .products{margin-top:8px;display:flex;flex-direction:column;gap:8px;}
@@ -544,10 +546,28 @@ const DEFAULT_SCHEMA = { sections: [
 ]};
 const CATEGORY_SCHEMA = {
   "본식": { sections: [
-    { key:'hallinfo', label:'홀 정보', extraFields:[
+    { key:'hallinfo', label:'홀 정보', group:'웨딩홀', extraFields:[
         {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
         {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'screen', label:'스크린', group:'웨딩홀', extraFields:[
+        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'staging', label:'연출도우미', group:'웨딩홀', extraFields:[
+        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'dressHelper', label:'드레스헬퍼', group:'웨딩홀', extraFields:[
+        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'catering', label:'식대', group:'웨딩홀', extraFields:[
+        {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true},{key:'liquor', label:'주류비 (병)', money:true},{key:'beverage', label:'음료비 (병)', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'},
+        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3},
+        {key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'ceremonyDress', label:'본식 드레스', extraFields:[
       ], itemsLabel:'브랜드별 비교', itemFields:[
@@ -574,41 +594,23 @@ const CATEGORY_SCHEMA = {
     { key:'iphoneSnap', label:'아이폰스냅', extraFields:[
         {key:'vendor', label:'업체', long:true},{key:'composition', label:'구성', long:true},{key:'provided', label:'참고사항', long:true, type:'textarea'},{key:'price', label:'가격', money:true},
         {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
     { key:'hairMakeup', label:'헤어메이크업', extraFields:[
         {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
         {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'},
         {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true},
         {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
     { key:'bouquet', label:'부케', extraFields:[
         {key:'vendor', label:'업체'},{key:'extraPrice', label:'추가금', money:true},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'},
         {key:'composition', label:'구성', long:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
-    { key:'screen', label:'스크린', extraFields:[
-        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'staging', label:'연출도우미', extraFields:[
-        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'dressHelper', label:'드레스헬퍼', extraFields:[
-        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'catering', label:'식대', extraFields:[
-        {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true},{key:'liquor', label:'주류비 (병)', money:true},{key:'beverage', label:'음료비 (병)', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'},
-        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3},
-        {key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
     { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
         {key:'note', label:'내역'},{key:'amount', label:'금액', money:true},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'}
+        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemHasPhoto:false }
   ]},
   "스냅준비": { sections: [
@@ -1083,45 +1085,45 @@ function budgetRowsForWeddingHall(v){
 
   const hi = (s.hallinfo && s.hallinfo.extra) || {};
   const hiDep = moneyToManwon(hi.depositAmount), hiBal = moneyToManwon(hi.balanceAmount);
-  rows.push({ label:'홀', deposit:hiDep, depositPayer:hi.depositPayer, balanceDue:'', balance:hiBal, balancePayer:hi.balancePayer, total:hiDep+hiBal });
+  rows.push({ label:'홀', deposit:hiDep, depositPayer:hi.depositPayer, balanceDue:hi.balanceDueDate, balance:hiBal, balancePayer:hi.balancePayer, balancePaid:hi.balancePaid==='true', total:hiDep+hiBal });
 
   const dressItems = (s.ceremonyDress && s.ceremonyDress.items) || [];
   let dressTotal = 0;
   (v.finalRefs||[]).forEach(r=>{
     if(r.sectionKey==='ceremonyDress' && dressItems[r.itemIndex]) dressTotal += moneyToManwon(dressItems[r.itemIndex].price);
   });
-  rows.push({ label:'드레스', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', total:dressTotal });
+  rows.push({ label:'드레스', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:dressTotal });
 
   const mp = (s.mainPhoto && s.mainPhoto.extra) || {};
-  rows.push({ label:'본식촬영', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', total:moneyToManwon(mp.extraPrice) });
+  rows.push({ label:'본식촬영', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(mp.extraPrice) });
 
   const ip = (s.iphoneSnap && s.iphoneSnap.extra) || {};
   const ipDep = moneyToManwon(ip.depositAmount), ipBal = moneyToManwon(ip.balanceAmount);
-  rows.push({ label:'아이폰스냅', deposit:ipDep, depositPayer:ip.depositPayer, balanceDue:ip.balanceDueDate, balance:ipBal, balancePayer:ip.balancePayer, total:ipDep+ipBal });
+  rows.push({ label:'아이폰스냅', deposit:ipDep, depositPayer:ip.depositPayer, balanceDue:ip.balanceDueDate, balance:ipBal, balancePayer:ip.balancePayer, balancePaid:ip.balancePaid==='true', total:ipDep+ipBal });
 
   const hm = (s.hairMakeup && s.hairMakeup.extra) || {};
   const hmExtra = hm.svc==='true' ? 0 : (moneyToManwon(hm.parentsPrice) + moneyToManwon(hm.extraPrice));
   const hmDep = hm.svc==='true' ? 0 : moneyToManwon(hm.depositAmount);
   const hmBal = hm.svc==='true' ? 0 : moneyToManwon(hm.balanceAmount);
-  rows.push({ label:'헤어메이크업', deposit:hmDep, depositPayer:hm.depositPayer, balanceDue:hm.balanceDueDate, balance:hmBal, balancePayer:hm.balancePayer, total:hmExtra+hmDep+hmBal });
+  rows.push({ label:'헤어메이크업', deposit:hmDep, depositPayer:hm.depositPayer, balanceDue:hm.balanceDueDate, balance:hmBal, balancePayer:hm.balancePayer, balancePaid:hm.balancePaid==='true', total:hmExtra+hmDep+hmBal });
 
   const bq = (s.bouquet && s.bouquet.extra) || {};
-  rows.push({ label:'부케', deposit:0, depositPayer:'', balanceDue:bq.balanceDueDate, balance:0, balancePayer:bq.balancePayer, total:moneyToManwon(bq.extraPrice) });
+  rows.push({ label:'부케', deposit:0, depositPayer:'', balanceDue:bq.balanceDueDate, balance:0, balancePayer:bq.balancePayer, balancePaid:bq.balancePaid==='true', total:moneyToManwon(bq.extraPrice) });
 
   [['screen','스크린'],['staging','연출도우미'],['dressHelper','드레스헬퍼']].forEach(([key,label])=>{
     const ex = (s[key] && s[key].extra) || {};
     const t = ex.svc==='true' ? 0 : moneyToManwon(ex.price);
-    rows.push({ label, deposit:0, depositPayer:'', balanceDue: ex.svc==='true'?'':ex.balanceDueDate, balance:0, balancePayer: ex.svc==='true'?'':ex.balancePayer, total:t });
+    rows.push({ label, deposit:0, depositPayer:'', balanceDue: ex.svc==='true'?'':ex.balanceDueDate, balance:0, balancePayer: ex.svc==='true'?'':ex.balancePayer, balancePaid:ex.balancePaid==='true', total:t });
   });
 
   const ct = (s.catering && s.catering.extra) || {};
   const ctDep = moneyToManwon(ct.depositAmount), ctBal = moneyToManwon(ct.balanceAmount);
-  rows.push({ label:'식대', deposit:ctDep, depositPayer:ct.depositPayer, balanceDue:'', balance:ctBal, balancePayer:ct.balancePayer, total:ctDep+ctBal });
+  rows.push({ label:'식대', deposit:ctDep, depositPayer:ct.depositPayer, balanceDue:ct.balanceDueDate, balance:ctBal, balancePayer:ct.balancePayer, balancePaid:ct.balancePaid==='true', total:ctDep+ctBal });
 
   const etcItems = (s.etc && s.etc.items) || [];
   const etcTotal = etcItems.reduce((a,it)=>a+moneyToManwon(it.amount), 0);
   const lastEtc = etcItems[etcItems.length-1] || {};
-  rows.push({ label:'기타', deposit:0, depositPayer:'', balanceDue:lastEtc.balanceDueDate, balance:0, balancePayer:lastEtc.balancePayer, total:etcTotal });
+  rows.push({ label:'기타', deposit:0, depositPayer:'', balanceDue:lastEtc.balanceDueDate, balance:0, balancePayer:lastEtc.balancePayer, balancePaid:lastEtc.balancePaid==='true', total:etcTotal });
 
   return rows;
 }
@@ -1136,7 +1138,7 @@ function budgetRowsForSnapPrep(v){
         if(it) total += moneyToManwon(it.price);
       }
     });
-    return { label:sec.label, deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', total };
+    return { label:sec.label, deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total };
   });
 }
 
@@ -1212,15 +1214,30 @@ function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls, oneCo
 
 function vendorSectionsHTML(v, showControls, oneCol){
   const schema = getSchema(v.category);
-  return schema.sections.map(sec=>{
+  let html = '';
+  let currentGroup = null;
+  schema.sections.forEach(sec=>{
+    if(sec.group !== currentGroup){
+      if(currentGroup === '웨딩홀'){
+        html += galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'');
+      }
+      if(sec.group){
+        html += `<div class="sectiongroup">${esc(sec.group)}</div>`;
+      }
+      currentGroup = sec.group || null;
+    }
     const data = (v.sections && v.sections[sec.key]) || {extra:{}, items:[]};
     const rows = fieldsToHTML(sec.extraFields, data.extra, oneCol);
     const extraHTML = rows ? `<div class="vendorrow">${rows}</div>` : '';
     const items = data.items || [];
     const itemsHTML = items.length ? `<div class="products">${items.map((it,idx)=>itemBlockHTML(it,sec,v.id,sec.key,idx,showControls,oneCol)).join('')}</div>` : '';
     const mediaHTML = sec.hasMedia ? (galleryHTML(data.images, '') + instaEmbedsHTML(data.instaLinks)) : '';
-    return `<div class="sectionblock"><div class="sectionlabel">${esc(sec.label)}</div>${extraHTML}${itemsHTML}${mediaHTML}</div>`;
-  }).join('');
+    html += `<div class="sectionblock${sec.group?' grouped':''}"><div class="sectionlabel">${esc(sec.label)}</div>${extraHTML}${itemsHTML}${mediaHTML}</div>`;
+  });
+  if(currentGroup === '웨딩홀'){
+    html += galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'');
+  }
+  return html;
 }
 
 function galleryHTML(imgs, label){
@@ -1281,7 +1298,7 @@ function cardHTML(v){
       ${vendorSectionsHTML(v, true)}
       ${galleryHTML(v.images, v.images&&v.images.length? '레퍼런스 사진':'')}
       ${instaEmbedsHTML(v.instaLinks)}
-      ${galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'')}
+      ${v.category !== '본식' ? galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'') : ''}
       ${v.memo? `<div class="vendorrow"><div class="prow full"><div class="k">기타사항</div><div class="v">${esc(v.memo)}</div></div></div>`:''}
     </div></div>` : '';
 
@@ -1653,6 +1670,7 @@ function renderBudgetPage(){
   let bodyHTML = '';
   const depositByPayer = {};
   const balanceByPayer = {};
+  const balanceDueList = [];
   function addPayer(map, name, amt){
     if(!name || !amt) return;
     map[name] = (map[name]||0) + amt;
@@ -1670,7 +1688,7 @@ function renderBudgetPage(){
       if(v){
         const pay = v.payment || {};
         const dep = moneyToManwon(pay.depositAmount), bal = moneyToManwon(pay.balanceAmount);
-        detailRows = [{ label:v.name, deposit:dep, depositPayer:pay.depositPayer, balanceDue:pay.balanceDueDate, balance:bal, balancePayer:pay.balancePayer, total:dep+bal }];
+        detailRows = [{ label:v.name, deposit:dep, depositPayer:pay.depositPayer, balanceDue:pay.balanceDueDate, balance:bal, balancePayer:pay.balancePayer, balancePaid:pay.balancePaid==='true', total:dep+bal }];
       }
     }
 
@@ -1683,6 +1701,9 @@ function renderBudgetPage(){
       grandTotal += r.total;
       addPayer(depositByPayer, r.depositPayer, r.deposit);
       addPayer(balanceByPayer, r.balancePayer, r.balance);
+      if(r.balance > 0 && r.balanceDue && !r.balancePaid){
+        balanceDueList.push({ cat, label:r.label, amount:r.balance, dueDate:r.balanceDue, payer:r.balancePayer });
+      }
       bodyHTML += `<tr data-cat="${esc(cat)}">
         <td style="white-space:nowrap;">${i===0? esc(cat) : ''}</td>
         <td>${esc(r.label)}</td>
@@ -1702,15 +1723,14 @@ function renderBudgetPage(){
     }
   });
 
-  const paymentStatusRows = [];
-  CATS.forEach(cat=>{
-    if(cat==='본식' || cat==='스냅준비') return;
-    const v = vendors.find(x=>x.category===cat && x.isFinal);
-    if(!v || !v.payment) return;
-    const pay = v.payment;
-    if(!pay.depositAmount && !pay.balanceAmount) return;
-    paymentStatusRows.push({ cat, name:v.name, pay });
-  });
+  balanceDueList.sort((a,b)=> (a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
+
+  const payerNames = new Set([...Object.keys(depositByPayer), ...Object.keys(balanceByPayer)]);
+  const payerRows = [...payerNames].map(name=>{
+    const dep = depositByPayer[name]||0;
+    const bal = balanceByPayer[name]||0;
+    return { name, dep, bal, total: dep+bal };
+  }).sort((a,b)=> b.total-a.total);
 
   container.innerHTML = `
     <div class="budgetheader">
@@ -1720,30 +1740,34 @@ function renderBudgetPage(){
       <label class="btn small" id="importDataLabel">불러오기<input type="file" id="importDataFile" accept=".csv,text/csv" style="display:none;"></label>
     </div>
     <div class="tablewrap budgettable"><table>
-      <thead><tr><th>카테고리</th><th>업체명</th><th>계약금</th><th class="clickableth" id="thDepositPayer">계약금 지불인</th><th>잔금일</th><th>잔금</th><th class="clickableth" id="thBalancePayer">잔금 지불인</th><th>총액</th></tr></thead>
+      <thead><tr><th>카테고리</th><th>업체명</th><th>계약금</th><th>계약금 지불인</th><th>잔금일</th><th>잔금</th><th>잔금 지불인</th><th>총액</th></tr></thead>
       <tbody>${bodyHTML}</tbody>
     </table></div>
     <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${grandTotal.toLocaleString()}만원</div>
-    <h3 style="margin:18px 0 8px;font-size:13px;">결제 현황</h3>
+
+    <h3 style="margin:18px 0 8px;font-size:13px;">잔금 내역 (빠른 순)</h3>
     <div class="paystatuslist">
-      ${paymentStatusRows.length===0 ? '<div class="hint">아직 결제 정보가 입력된 곳이 없어요.</div>' : paymentStatusRows.map(({cat,name,pay})=>{
-        const dep = moneyToManwon(pay.depositAmount);
-        const bal = moneyToManwon(pay.balanceAmount);
-        const paidLabel = pay.balancePaid==='true' ? '✓ 지불 완료' : '지불 안 함';
-        return `<div class="paystatuscard">
-          <div class="paystatushead">${esc(cat)} · ${esc(name)}</div>
-          <div class="prow"><div class="k">계약금</div><div class="v">${dep? dep.toLocaleString()+'만원':'-'} (${esc(pay.depositPayer)||'-'})</div></div>
-          <div class="prow"><div class="k">잔금</div><div class="v">${bal? bal.toLocaleString()+'만원':'-'} (${esc(pay.balancePayer)||'-'})</div></div>
-          <div class="prow"><div class="k">잔금일</div><div class="v">${pay.balanceDueDate||'-'}</div></div>
-          <div class="prow"><div class="k">지불 여부</div><div class="v">${paidLabel}</div></div>
-          <div class="prow"><div class="k">결제 수단</div><div class="v">${esc(pay.paymentMethod)||'-'}</div></div>
-        </div>`;
-      }).join('')}
+      ${balanceDueList.length===0 ? '<div class="hint">낼 잔금이 없거나 전부 지불 완료됐어요.</div>' : balanceDueList.map(b=>`
+        <div class="paystatuscard">
+          <div class="paystatushead">${esc(b.cat)} · ${esc(b.label)}</div>
+          <div class="prow"><div class="k">금액</div><div class="v">${b.amount.toLocaleString()}만원 (${esc(b.payer)||'-'})</div></div>
+          <div class="prow"><div class="k">잔금일</div><div class="v">${esc(b.dueDate)}</div></div>
+        </div>
+      `).join('')}
+    </div>
+
+    <h3 style="margin:18px 0 8px;font-size:13px;">지불인별 합계</h3>
+    <div class="paystatuslist">
+      ${payerRows.length===0 ? '<div class="hint">아직 지불인이 입력된 곳이 없어요.</div>' : payerRows.map(p=>`
+        <div class="paystatuscard">
+          <div class="paystatushead">${esc(p.name)}</div>
+          <div class="prow"><div class="k">계약금</div><div class="v">${p.dep.toLocaleString()}만원</div></div>
+          <div class="prow"><div class="k">잔금</div><div class="v">${p.bal.toLocaleString()}만원</div></div>
+          <div class="prow"><div class="k">총 지출</div><div class="v" style="font-weight:800;">${p.total.toLocaleString()}만원</div></div>
+        </div>
+      `).join('')}
     </div>
   `;
-
-  document.getElementById('thDepositPayer').onclick = ()=> showPayerSummary('계약금 지불인별 합계', depositByPayer);
-  document.getElementById('thBalancePayer').onclick = ()=> showPayerSummary('잔금 지불인별 합계', balanceByPayer);
 
   document.getElementById('exportDataBtn').onclick = exportData;
   document.getElementById('importDataFile').onchange = importDataFile;
@@ -2131,7 +2155,11 @@ function renderSections(){
   const schema = currentSchema();
   lastCategoryValue = document.getElementById('f_category').value;
   const box = document.getElementById('sectionsBox');
-  box.innerHTML = schema.sections.map(sec=> sectionEditorHTML(sec, editingSections[sec.key]||{extra:{},items:[]})).join('');
+  box.innerHTML = schema.sections.map((sec,i)=>{
+    const prevGroup = i>0 ? schema.sections[i-1].group : null;
+    const groupHeader = (sec.group && sec.group !== prevGroup) ? `<div class="sectiongroup">${esc(sec.group)}</div>` : '';
+    return groupHeader + sectionEditorHTML(sec, editingSections[sec.key]||{extra:{},items:[]});
+  }).join('');
 
   box.querySelectorAll('.rowDel').forEach(btn=>{
     btn.onclick = ()=>{
