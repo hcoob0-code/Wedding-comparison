@@ -199,6 +199,7 @@ td.fav{text-align:center;}
 .budgettable table{font-size:7px;min-width:100%;}
 .budgettable th{font-size:6.5px;padding:5px 4px;}
 .budgettable td{padding:5px 4px;font-size:7px;}
+.budgettable .vendornamecell{max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .budgetsubtotal td{font-weight:700;background:var(--paper-deep);color:var(--ink-soft);border-top:1px dashed var(--line);}
 .duetable table{font-size:12px;min-width:100%;}
 .duetable th{font-size:11px;padding:7px 6px;}
@@ -2045,13 +2046,13 @@ function renderBudgetPage(){
       const nameCell = isGrouped ? (esc(r.vendorName)||'-') : esc(r.label);
       bodyHTML += `<tr data-cat="${esc(cat)}">
         <td style="white-space:nowrap;">${catCell}</td>
-        <td>${nameCell}</td>
-        <td>${r.deposit? r.deposit.toLocaleString()+'만원':'-'}</td>
-        <td>${esc(r.depositPayer)||'-'}</td>
-        <td>${r.balanceDue||'-'}</td>
-        <td>${r.balance? r.balance.toLocaleString()+'만원':'-'}</td>
-        <td>${esc(r.balancePayer)||'-'}</td>
-        <td class="budgettotal">${r.total? r.total.toLocaleString()+'만원':'-'}</td>
+        <td class="vendornamecell">${nameCell}</td>
+        <td style="white-space:nowrap;">${r.deposit? r.deposit.toLocaleString()+'만원':'-'}</td>
+        <td style="white-space:nowrap;">${esc(r.depositPayer)||'-'}</td>
+        <td style="white-space:nowrap;">${r.balanceDue||'-'}</td>
+        <td style="white-space:nowrap;">${r.balance? r.balance.toLocaleString()+'만원':'-'}</td>
+        <td style="white-space:nowrap;">${esc(r.balancePayer)||'-'}</td>
+        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원':'-'}</td>
       </tr>`;
     });
     if(detailRows.length > 1){
@@ -2093,7 +2094,7 @@ function renderBudgetPage(){
           ${balanceDueList.map(b=>`<tr>
             <td style="white-space:nowrap;">${esc(b.cat)}</td>
             <td>${esc(b.label)}</td>
-            <td class="budgettotal">${b.amount.toLocaleString()}만원</td>
+            <td class="budgettotal" style="white-space:nowrap;">${b.amount.toLocaleString()}만원</td>
             <td style="white-space:nowrap;">${esc(b.dueDate)}</td>
           </tr>`).join('')}
         </tbody>
