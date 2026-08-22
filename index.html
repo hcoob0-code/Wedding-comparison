@@ -79,6 +79,7 @@ select.viewsel{
   background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
 }
 .card.isfinal{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
+.card.vendorhidden{opacity:.5;}
 .cardhead{padding:11px 14px;cursor:pointer;}
 .cardheadtop{display:flex;align-items:flex-start;gap:8px;}
 .cardheadbottom{margin-top:2px;}
@@ -98,6 +99,7 @@ select.viewsel{
 .card h3{margin:0;font-size:15.5px;font-weight:800;letter-spacing:-.01em;}
 .nameloc{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
 .hallsummary{font-size:11.5px;font-weight:600;color:var(--celadon);margin-top:3px;}
+.shootsummary{font-size:11.5px;font-weight:700;color:var(--gold);margin-top:3px;text-align:right;}
 .availdot{width:7px;height:7px;border-radius:50%;background:var(--celadon);display:inline-block;}
 .availdot.none{background:var(--line);}
 
@@ -152,7 +154,7 @@ select.viewsel{
 .product .itemphoto{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:0 0 auto;cursor:pointer;}
 .product .pfields{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;}
 .prow{display:flex;gap:8px;font-size:12.5px;line-height:1.4;min-width:0;}
-.prow .k{flex:0 0 84px;color:var(--ink-soft);font-weight:600;font-size:9.5px;padding-top:1px;white-space:nowrap;}
+.prow .k{flex:0 0 62px;color:var(--ink-soft);font-weight:600;font-size:9.5px;padding-top:1px;white-space:normal;line-height:1.25;}
 .prow .v{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;}
 .prow.full{grid-column:1/-1;}
 .prow.stacked{flex-direction:column;gap:2px;}
@@ -189,6 +191,10 @@ td.fav{text-align:center;}
 .budgettable th{font-size:6.5px;padding:5px 4px;}
 .budgettable td{padding:5px 4px;font-size:7px;}
 .budgetsubtotal td{font-weight:700;background:var(--paper-deep);color:var(--ink-soft);border-top:1px dashed var(--line);}
+.paystatuslist{display:flex;flex-direction:column;gap:8px;}
+.paystatuscard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
+.paystatushead{font-weight:800;font-size:12.5px;margin-bottom:6px;}
+.paystatuscard .prow{margin-bottom:3px;}
 .budgettotal{font-weight:800;color:var(--ink);}
 
 /* compare bar */
@@ -239,12 +245,13 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .itemfields{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
 .itemfields.onecol{grid-template-columns:1fr;}
 .itemfields input{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;}
-.itemfields textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;min-height:40px;resize:vertical;}
+.itemfields textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;min-height:72px;resize:vertical;}
 .exgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;align-items:end;}
 .exfield{min-width:0;}
 .exfield.full{grid-column:1/-1;}
 .exfield label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:4px;}
 .exfield input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;}
+.exfield textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;min-height:80px;resize:vertical;}
 .checkfield{
   display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:400;color:#9C9890;
   cursor:pointer;padding:8px 0;
@@ -332,7 +339,6 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
     <div class="spacer"></div>
     <select class="viewsel" id="sortSel">
       <option value="recent">최근순</option>
-      <option value="fav">찜한순</option>
       <option value="price">가격순</option>
       <option value="hasdate">날짜순</option>
       <option value="manual">직접 정렬</option>
@@ -343,7 +349,7 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
     </select>
   </div>
   <div class="toolbar" style="margin-top:-10px;">
-    <label class="hidetoggle"><input type="checkbox" id="hideUndecidedChk"> 결정된 곳은 안 고른 업체 숨기기</label>
+    <label class="hidetoggle"><input type="checkbox" id="showHiddenChk"> 숨긴 업체 보기</label>
   </div>
 
   <div id="content"></div>
@@ -462,6 +468,15 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
     <div class="field"><label>잔금 (만원)</label><input id="pm_balanceAmount" type="number" placeholder="예: 100"></div>
     <div class="field"><label>잔금 예정일</label><input id="pm_balanceDueDate" type="date"></div>
     <div class="field"><label>잔금 낸 사람</label><input id="pm_balancePayer" placeholder="예: 신부"></div>
+    <div class="field"><label class="checkfield" style="padding:8px 0;"><input type="checkbox" id="pm_balancePaid" style="width:16px;height:16px;"> 잔금 지불 완료</label></div>
+    <div class="field"><label>결제 수단</label>
+      <select id="pm_paymentMethod">
+        <option value="">선택 안 함</option>
+        <option value="현금">현금</option>
+        <option value="카드 일시불">카드 일시불</option>
+        <option value="카드 할부">카드 할부</option>
+      </select>
+    </div>
     <div class="field"><label>금액 관련 참고사항</label><textarea id="pm_note" placeholder="예: 원본 추가시 10만원 별도"></textarea></div>
     <div class="modal-actions">
       <button class="btn ghost" id="cancelPayment">취소</button>
@@ -516,9 +531,9 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 </div>
 
 <script>
-const CATS = ["웨딩홀","야외스냅","스냅준비","정장","반지","한복","기타"];
+const CATS = ["본식","야외스냅","스냅준비","반지","한복","기타"];
 const CAT_COLOR = {
-  "웨딩홀":"#4A5568","야외스냅":"#5F8575","스냅준비":"#9C8AA5","정장":"#23262B","반지":"#B4933C","한복":"#B6462F","기타":"#8A8A82"
+  "본식":"#4A5568","야외스냅":"#5F8575","스냅준비":"#9C8AA5","반지":"#B4933C","한복":"#B6462F","기타":"#8A8A82"
 };
 
 const DEFAULT_SCHEMA = { sections: [
@@ -527,7 +542,7 @@ const DEFAULT_SCHEMA = { sections: [
   ], itemHasPhoto:false }
 ]};
 const CATEGORY_SCHEMA = {
-  "웨딩홀": { sections: [
+  "본식": { sections: [
     { key:'hallinfo', label:'홀 정보', extraFields:[
         {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
         {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
@@ -539,6 +554,16 @@ const CATEGORY_SCHEMA = {
         {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
         {key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true },
+    { key:'groomSuitCustom', label:'맞춤정장', extraFields:[
+        {key:'shirtCount', label:'셔츠 수량'},{key:'tieCount', label:'넥타이 수량'},{key:'shoesInfo', label:'수제화 구성'},
+        {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true}
+      ], itemsLabel:'원단별 가격', itemFields:[
+        {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
+      ], itemHasPhoto:false },
+    { key:'groomSuitRental', label:'대여정장', extraFields:[
+      ], itemsLabel:'원단별 대여가격', itemFields:[
+        {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
+      ], itemHasPhoto:false },
     { key:'mainPhoto', label:'본식촬영', extraFields:[
         {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
         {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
@@ -614,18 +639,6 @@ const CATEGORY_SCHEMA = {
         {key:'outfits', label:'의상 수', unit:'벌'},{key:'hairChanges', label:'헤어 변형 횟수', unit:'회'},{key:'video', label:'영상 제공 여부'},
         {key:'rawCount', label:'원본 제공 수량'},{key:'editedCount', label:'보정본 제공 수량', unit:'장'},
         {key:'price', label:'가격', money:true},{key:'memo', label:'기타사항', long:true, type:'textarea'}
-      ], itemHasPhoto:false }
-  ]},
-  "정장": { sections: [
-    { key:'custom', label:'맞춤정장', extraFields:[
-        {key:'shirtCount', label:'셔츠 수량'},{key:'tieCount', label:'넥타이 수량'},{key:'shoesInfo', label:'수제화 구성'},
-        {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true}
-      ], itemsLabel:'원단별 가격', itemFields:[
-        {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
-      ], itemHasPhoto:false },
-    { key:'rental', label:'대여정장', extraFields:[
-      ], itemsLabel:'원단별 대여가격', itemFields:[
-        {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
       ], itemHasPhoto:false }
   ]},
   "반지": { sections: [
@@ -1001,15 +1014,12 @@ function minPrice(v){
 
 function filteredSorted(){
   let list = activeTab==="전체" ? vendors.slice() : vendors.filter(v=>v.category===activeTab);
-  const hideChk = document.getElementById('hideUndecidedChk');
-  if(hideChk && hideChk.checked){
-    const finalCats = new Set(vendors.filter(v=>v.isFinal).map(v=>v.category));
-    list = list.filter(v=> !finalCats.has(v.category) || v.isFinal);
+  const showChk = document.getElementById('showHiddenChk');
+  if(!showChk || !showChk.checked){
+    list = list.filter(v=>!v.hidden);
   }
   const sort = document.getElementById('sortSel').value;
-  if(sort==='fav'){
-    list.sort((a,b)=> (b.favorite?1:0)-(a.favorite?1:0) || b.createdAt-a.createdAt);
-  } else if(sort==='price'){
+  if(sort==='price'){
     list.sort((a,b)=> minPrice(a)-minPrice(b));
   } else if(sort==='hasdate'){
     list.sort((a,b)=> (vendorHasAvailability(b)?1:0)-(vendorHasAvailability(a)?1:0) || b.createdAt-a.createdAt);
@@ -1018,7 +1028,6 @@ function filteredSorted(){
   } else {
     list.sort((a,b)=> b.createdAt-a.createdAt);
   }
-  list.sort((a,b)=> (b.favorite?1:0)-(a.favorite?1:0));
   list.sort((a,b)=> (b.isFinal?1:0)-(a.isFinal?1:0));
   return list;
 }
@@ -1236,10 +1245,10 @@ function shootDateSummaryHTML(v){
   const dt = new Date(d+'T00:00:00');
   if(isNaN(dt.getTime())) return '';
   const week = ['일','월','화','수','목','금','토'][dt.getDay()];
-  return `<div class="hallsummary">✓ 촬영일 확정: ${dt.getMonth()+1}/${dt.getDate()}(${week})</div>`;
+  return `<div class="shootsummary">✓ 촬영일 확정: ${dt.getMonth()+1}/${dt.getDate()}(${week})</div>`;
 }
 function weddingHallSummaryHTML(v){
-  if(v.category !== '웨딩홀') return '';
+  if(v.category !== '본식') return '';
   const extra = (v.sections && v.sections.hallinfo && v.sections.hallinfo.extra) || {};
   const parts = [];
   if(extra.ceremonyDate) parts.push(formatKoreanDateDisplay(extra.ceremonyDate));
@@ -1251,15 +1260,17 @@ function weddingHallSummaryHTML(v){
 
 function cardHTML(v){
   const open = expandedIds.has(v.id);
-  const hasDate = vendorHasAvailability(v);
   const cmpOn = selectedCompare.has(v.id);
   const finalBadge = v.isFinal ? `<span class="finalbadge">★ 최종 선택</span>` : '';
   const isSingle = SINGLE_ENTRY_CATS.includes(v.category);
   const showDates = v.category === '야외스냅';
   const hallSummary = weddingHallSummaryHTML(v);
   const shootSummary = shootDateSummaryHTML(v);
+  const datesInHeader = showDates && !v.isFinal;
+  const datesInBody = showDates && v.isFinal;
   const body = open ? `<div class="cardbody"><div class="cardbody-inner">
       ${(!isSingle && v.link)? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
+      ${datesInBody ? dateChipsHTML(v) : ''}
       ${vendorSectionsHTML(v, true)}
       ${galleryHTML(v.images, v.images&&v.images.length? '레퍼런스 사진':'')}
       ${instaEmbedsHTML(v.instaLinks)}
@@ -1267,30 +1278,29 @@ function cardHTML(v){
       ${v.memo? `<div class="vendorrow"><div class="prow full"><div class="k">기타사항</div><div class="v">${esc(v.memo)}</div></div></div>`:''}
     </div></div>` : '';
 
-  return `<div class="card ${v.isFinal?'isfinal':''}" data-id="${v.id}">
+  return `<div class="card ${v.isFinal?'isfinal':''}${v.hidden?' vendorhidden':''}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
       <div class="cardheadtop">
-        <button class="stamp ${v.favorite?'on':''}" data-fav="${v.id}">찜</button>
         <div class="cardmain">
           <div class="topline">
             <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(v.category)}</span>
             ${finalBadge}
-            ${showDates ? `<span class="availbadge"><span class="availdot ${hasDate?'':'none'}"></span>${hasDate? '가능 날짜 있음':'가능 날짜 없음'}</span>` : ''}
           </div>
           <h3>${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</h3>
         </div>
         <div class="headactions">
           <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
           ${isSingle ? `<button class="headbtn ${v.isFinal?'finalon':''}" data-finalvendor="${v.id}">${v.isFinal?'★ 확정됨':'이 업체로 확정'}</button>` : ''}
+          <button class="headbtn" data-hide="${v.id}">${v.hidden?'숨김 해제':'숨기기'}</button>
           <button class="headbtn danger" data-del="${v.id}">삭제</button>
           <button class="headbtn" data-edit="${v.id}">수정</button>
         </div>
         <span class="draghandle" data-drag="${v.id}" title="드래그해서 순서 바꾸기">⠿</span>
         <span class="chev">▾</span>
       </div>
-      ${(showDates || hallSummary || shootSummary) ? `<div class="cardheadbottom">
+      ${(datesInHeader || hallSummary || shootSummary) ? `<div class="cardheadbottom">
         ${shootSummary}
-        ${showDates ? dateChipsHTML(v) : ''}
+        ${datesInHeader ? dateChipsHTML(v) : ''}
         ${hallSummary}
       </div>` : ''}
     </div>
@@ -1398,11 +1408,12 @@ function renderContent(){
       renderContent();
     };
   });
-  container.querySelectorAll('[data-fav]').forEach(btn=>{
+  container.querySelectorAll('[data-hide]').forEach(btn=>{
     btn.onclick = async (e)=>{
       e.stopPropagation();
-      const v = vendors.find(x=>x.id===btn.dataset.fav);
-      v.favorite = !v.favorite;
+      const v = vendors.find(x=>x.id===btn.dataset.hide);
+      if(!v) return;
+      v.hidden = !v.hidden;
       await saveVendors();
       renderContent();
     };
@@ -1558,6 +1569,8 @@ function openPayment(vendorId){
   document.getElementById('pm_balanceAmount').value = pay.balanceAmount||'';
   document.getElementById('pm_balanceDueDate').value = pay.balanceDueDate||'';
   document.getElementById('pm_balancePayer').value = pay.balancePayer||'';
+  document.getElementById('pm_balancePaid').checked = pay.balancePaid==='true';
+  document.getElementById('pm_paymentMethod').value = pay.paymentMethod||'';
   document.getElementById('pm_note').value = pay.note||'';
   document.getElementById('paymentOverlay').classList.add('show');
 }
@@ -1572,6 +1585,8 @@ document.getElementById('savePayment').onclick = async ()=>{
     balanceAmount: document.getElementById('pm_balanceAmount').value.trim(),
     balanceDueDate: document.getElementById('pm_balanceDueDate').value,
     balancePayer: document.getElementById('pm_balancePayer').value.trim(),
+    balancePaid: document.getElementById('pm_balancePaid').checked ? 'true' : 'false',
+    paymentMethod: document.getElementById('pm_paymentMethod').value,
     note: document.getElementById('pm_note').value.trim()
   };
   await saveVendors();
@@ -1641,9 +1656,9 @@ function renderBudgetPage(){
     let v = null;
     let detailRows = [];
 
-    if(cat === '웨딩홀' || cat === '스냅준비'){
+    if(cat === '본식' || cat === '스냅준비'){
       v = vendors.find(x=>x.category===cat);
-      if(v) detailRows = cat==='웨딩홀' ? budgetRowsForWeddingHall(v) : budgetRowsForSnapPrep(v);
+      if(v) detailRows = cat==='본식' ? budgetRowsForWeddingHall(v) : budgetRowsForSnapPrep(v);
     } else {
       v = vendors.find(x=>x.category===cat && x.isFinal);
       if(v){
@@ -1662,7 +1677,7 @@ function renderBudgetPage(){
       grandTotal += r.total;
       addPayer(depositByPayer, r.depositPayer, r.deposit);
       addPayer(balanceByPayer, r.balancePayer, r.balance);
-      bodyHTML += `<tr data-vendorid="${v.id}" data-cat="${esc(cat)}">
+      bodyHTML += `<tr data-cat="${esc(cat)}">
         <td style="white-space:nowrap;">${i===0? esc(cat) : ''}</td>
         <td>${esc(r.label)}</td>
         <td>${r.deposit? r.deposit.toLocaleString()+'만원':'-'}</td>
@@ -1681,6 +1696,16 @@ function renderBudgetPage(){
     }
   });
 
+  const paymentStatusRows = [];
+  CATS.forEach(cat=>{
+    if(cat==='본식' || cat==='스냅준비') return;
+    const v = vendors.find(x=>x.category===cat && x.isFinal);
+    if(!v || !v.payment) return;
+    const pay = v.payment;
+    if(!pay.depositAmount && !pay.balanceAmount) return;
+    paymentStatusRows.push({ cat, name:v.name, pay });
+  });
+
   container.innerHTML = `
     <div class="budgetheader">
       <h2 style="margin:0;font-size:16px;">♥ 결혼식 준비 총 비용</h2>
@@ -1693,27 +1718,27 @@ function renderBudgetPage(){
       <tbody>${bodyHTML}</tbody>
     </table></div>
     <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${grandTotal.toLocaleString()}만원</div>
+    <h3 style="margin:18px 0 8px;font-size:13px;">결제 현황</h3>
+    <div class="paystatuslist">
+      ${paymentStatusRows.length===0 ? '<div class="hint">아직 결제 정보가 입력된 곳이 없어요.</div>' : paymentStatusRows.map(({cat,name,pay})=>{
+        const dep = moneyToManwon(pay.depositAmount);
+        const bal = moneyToManwon(pay.balanceAmount);
+        const paidLabel = pay.balancePaid==='true' ? '✓ 지불 완료' : '지불 안 함';
+        return `<div class="paystatuscard">
+          <div class="paystatushead">${esc(cat)} · ${esc(name)}</div>
+          <div class="prow"><div class="k">계약금</div><div class="v">${dep? dep.toLocaleString()+'만원':'-'} (${esc(pay.depositPayer)||'-'})</div></div>
+          <div class="prow"><div class="k">잔금</div><div class="v">${bal? bal.toLocaleString()+'만원':'-'} (${esc(pay.balancePayer)||'-'})</div></div>
+          <div class="prow"><div class="k">잔금일</div><div class="v">${pay.balanceDueDate||'-'}</div></div>
+          <div class="prow"><div class="k">지불 여부</div><div class="v">${paidLabel}</div></div>
+          <div class="prow"><div class="k">결제 수단</div><div class="v">${esc(pay.paymentMethod)||'-'}</div></div>
+        </div>`;
+      }).join('')}
+    </div>
   `;
 
   document.getElementById('thDepositPayer').onclick = ()=> showPayerSummary('계약금 지불인별 합계', depositByPayer);
   document.getElementById('thBalancePayer').onclick = ()=> showPayerSummary('잔금 지불인별 합계', balanceByPayer);
 
-  container.querySelectorAll('tr[data-vendorid]').forEach(tr=>{
-    tr.style.cursor = 'pointer';
-    tr.onclick = ()=>{
-      const vid = tr.dataset.vendorid;
-      const cat = tr.dataset.cat;
-      showBudget = false;
-      activeTab = cat;
-      expandedIds.add(vid);
-      renderTabs();
-      renderContent();
-      setTimeout(()=>{
-        const el = document.querySelector(`.card[data-id="${vid}"]`);
-        if(el && typeof el.scrollIntoView === 'function') el.scrollIntoView({behavior:'smooth', block:'start'});
-      }, 50);
-    };
-  });
   document.getElementById('exportDataBtn').onclick = exportData;
   document.getElementById('importDataFile').onchange = importDataFile;
 }
@@ -2205,8 +2230,8 @@ function syncSectionsFromDOM(schemaOverride){
     editingSections[sec.key] = { extra, items, images: prevImages, instaLinks: prevInsta };
   });
 }
-const GALLERY_TOP_CATS = ['야외스냅','정장','한복'];
-const SINGLE_ENTRY_CATS = ['웨딩홀','스냅준비'];
+const GALLERY_TOP_CATS = ['야외스냅','한복'];
+const SINGLE_ENTRY_CATS = ['본식','스냅준비'];
 const NO_GALLERY_CATS = ['스냅준비'];
 function repositionGallery(){
   const cat = document.getElementById('f_category').value;
@@ -2247,7 +2272,7 @@ function openEdit(id){
   const v = id ? vendors.find(x=>x.id===id) : null;
   document.getElementById('editTitle').textContent = v ? '업체 수정' : '업체 추가';
   document.getElementById('editId').value = v ? v.id : '';
-  const cat = v ? v.category : (activeTab!=="전체" ? activeTab : "웨딩홀");
+  const cat = v ? v.category : (activeTab!=="전체" ? activeTab : "본식");
   document.getElementById('f_category').value = cat;
   document.getElementById('f_name').value = v ? v.name : '';
   document.getElementById('f_link').value = v ? v.link : '';
@@ -2448,7 +2473,7 @@ document.getElementById('confirmImport').onclick = async ()=>{
 };
 
 document.getElementById('sortSel').onchange = renderContent;
-document.getElementById('hideUndecidedChk').onchange = renderContent;
+document.getElementById('showHiddenChk').onchange = renderContent;
 document.getElementById('viewSel').onchange = renderContent;
 
 [document.getElementById('editOverlay'), importOverlay, document.getElementById('compareOverlay'), document.getElementById('paymentOverlay'), document.getElementById('jsonTemplateOverlay'), document.getElementById('payerSummaryOverlay')].forEach(ov=>{
