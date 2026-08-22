@@ -380,6 +380,10 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
       <label>카테고리</label>
       <select id="f_category"></select>
     </div>
+    <div class="field" id="subtypeFieldBox" style="display:none;">
+      <label>종류</label>
+      <select id="f_subtype"></select>
+    </div>
     <div id="basicFieldsBox">
       <div class="field"><label>업체명</label><input id="f_name"></div>
       <div class="field"><label>인스타 / 링크</label><input id="f_link" placeholder="https://instagram.com/..."></div>
@@ -550,109 +554,6 @@ const DEFAULT_SCHEMA = { sections: [
   ], itemHasPhoto:false }
 ]};
 const CATEGORY_SCHEMA = {
-  "본식": { sections: [
-    { key:'hallinfo', label:'홀 정보', card:'웨딩홀', hasMedia:true, extraFields:[
-        {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
-        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'},
-        {key:'note', label:'참고사항', long:true, type:'textarea'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'screen', label:'스크린', card:'웨딩홀', extraFields:[
-        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'staging', label:'연출도우미', card:'웨딩홀', extraFields:[
-        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'dressHelper', label:'드레스헬퍼', card:'웨딩홀', extraFields:[
-        {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'catering', label:'식대', card:'웨딩홀', extraFields:[
-        {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true},{key:'liquor', label:'주류비 (병)', money:true},{key:'beverage', label:'음료비 (병)', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'},
-        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3},
-        {key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'ceremonyDress', label:'본식 드레스', card:'본식 드레스', extraFields:[
-      ], itemsLabel:'브랜드별 비교', itemFields:[
-        {key:'brand', label:'브랜드명', long:true},{key:'price', label:'추가금', long:true, money:true},
-        {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
-        {key:'desc', label:'참고사항', long:true, type:'textarea'}
-      ], itemHasPhoto:true },
-    { key:'groomSuitCustom', label:'맞춤정장', card:'본식 정장', extraFields:[
-        {key:'vendor', label:'업체명'},
-        {key:'shirtCount', label:'셔츠 수량'},{key:'tieCount', label:'넥타이 수량'},{key:'shoesInfo', label:'수제화 구성'},
-        {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true}
-      ], itemsLabel:'원단별 가격', itemFields:[
-        {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
-      ], itemHasPhoto:false },
-    { key:'groomSuitRental', label:'대여정장', card:'본식 정장', extraFields:[
-        {key:'vendor', label:'업체명'}
-      ], itemsLabel:'원단별 대여가격', itemFields:[
-        {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
-      ], itemHasPhoto:false },
-    { key:'hairMakeup', label:'헤어메이크업', card:'헤어메이크업', extraFields:[
-        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
-        {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'},
-        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true},
-        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
-    { key:'mainPhoto', label:'본식 스냅', card:'본식 스냅', extraFields:[
-        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
-        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'iphoneSnap', label:'아이폰스냅', card:'아이폰스냅', extraFields:[
-        {key:'vendor', label:'업체', long:true},{key:'composition', label:'구성', long:true},{key:'provided', label:'참고사항', long:true, type:'textarea'},{key:'price', label:'가격', money:true},
-        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
-    { key:'dvd', label:'DVD촬영', card:'DVD촬영', extraFields:[
-        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
-        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'bouquet', label:'부케', card:'부케', extraFields:[
-        {key:'vendor', label:'업체'},{key:'extraPrice', label:'추가금', money:true},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'},
-        {key:'composition', label:'구성', long:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
-    { key:'mc', label:'사회자', card:'사회자', extraFields:[
-        {key:'name', label:'이름'},{key:'price', label:'가격', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'flowerCracker', label:'플라워폭죽', card:'플라워폭죽', extraFields:[
-        {key:'option', label:'옵션'},{key:'price', label:'가격', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'etc', label:'기타', card:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
-        {key:'note', label:'내역'},{key:'amount', label:'금액', money:true},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
-      ], itemHasPhoto:false }
-  ]},
-  "스냅준비": { sections: [
-    { key:'dress', label:'드레스', extraFields:[], itemsLabel:'드레스별 추가금', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'price', label:'추가금', money:true},
-        {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
-        {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-      ], itemHasPhoto:true },
-    { key:'suit', label:'정장', extraFields:[], itemsLabel:'정장별 추가금', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'price', label:'추가금', money:true},
-        {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
-        {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-      ], itemHasPhoto:true },
-    { key:'hair', label:'헤어', extraFields:[], itemsLabel:'헤어 옵션', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-      ], itemHasPhoto:true },
-    { key:'makeup', label:'메이크업', extraFields:[], itemsLabel:'메이크업 옵션', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-      ], itemHasPhoto:true },
-    { key:'bouquet', label:'부케', extraFields:[], itemsLabel:'부케 옵션', itemFields:[
-        {key:'vendor', label:'업체명'},{key:'name', label:'구성'},{key:'price', label:'추가금', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-      ], itemHasPhoto:true },
-    { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 항목', itemFields:[
-        {key:'name', label:'항목명'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-      ], itemHasPhoto:true }
-  ]},
   "야외스냅": { sections: [
     { key:'main', label:'구성별 상세', extraFields:[
       ], itemsLabel:'구성별 상세', itemFields:[
@@ -678,7 +579,140 @@ const CATEGORY_SCHEMA = {
       ], itemHasPhoto:false }
   ]}
 };
-function getSchema(category){ return CATEGORY_SCHEMA[category] || DEFAULT_SCHEMA; }
+const SUBTYPE_SCHEMAS = {
+  "본식": {
+    "웨딩홀": { sections: [
+      { key:'hallinfo', label:'홀 정보', hasMedia:true, extraFields:[
+          {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
+          {key:'note', label:'참고사항', long:true, type:'textarea'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+      { key:'screen', label:'스크린', extraFields:[
+          {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+      { key:'staging', label:'연출도우미', extraFields:[
+          {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+      { key:'dressHelper', label:'드레스헬퍼', extraFields:[
+          {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+      { key:'catering', label:'식대', extraFields:[
+          {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true, noBudgetSum:true},{key:'liquor', label:'주류비 (병)', money:true, noBudgetSum:true},{key:'beverage', label:'음료비 (병)', money:true, noBudgetSum:true},{key:'note', label:'참고사항', long:true, type:'textarea'},
+          {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "본식 드레스": { sections: [
+      { key:'ceremonyDress', label:'본식 드레스', extraFields:[], itemsLabel:'브랜드별 비교', itemFields:[
+          {key:'brand', label:'브랜드명', long:true},{key:'price', label:'추가금', long:true, money:true},
+          {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
+          {key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:true }
+    ]},
+    "본식 정장": { sections: [
+      { key:'groomSuitCustom', label:'맞춤정장', extraFields:[
+          {key:'shirtCount', label:'셔츠 수량'},{key:'tieCount', label:'넥타이 수량'},{key:'shoesInfo', label:'수제화 구성'},
+          {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true}
+        ], itemsLabel:'원단별 가격', itemFields:[
+          {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
+        ], itemHasPhoto:false },
+      { key:'groomSuitRental', label:'대여정장', extraFields:[], itemsLabel:'원단별 대여가격', itemFields:[
+          {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
+        ], itemHasPhoto:false }
+    ]},
+    "헤어메이크업": { sections: [
+      { key:'hairMakeup', label:'헤어메이크업', hasMedia:true, extraFields:[
+          {key:'note', label:'참고사항', long:true, type:'textarea'},
+          {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'},
+          {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "본식 스냅": { sections: [
+      { key:'mainPhoto', label:'본식 스냅', extraFields:[
+          {key:'note', label:'참고사항', long:true, type:'textarea'},
+          {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "아이폰스냅": { sections: [
+      { key:'iphoneSnap', label:'아이폰스냅', hasMedia:true, extraFields:[
+          {key:'composition', label:'구성', long:true},{key:'provided', label:'참고사항', long:true, type:'textarea'},{key:'price', label:'가격', money:true}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "DVD촬영": { sections: [
+      { key:'dvd', label:'DVD촬영', extraFields:[
+          {key:'note', label:'참고사항', long:true, type:'textarea'},
+          {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "부케": { sections: [
+      { key:'bouquet', label:'부케', hasMedia:true, extraFields:[
+          {key:'extraPrice', label:'추가금', money:true},
+          {key:'composition', label:'구성', long:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "사회자": { sections: [
+      { key:'mc', label:'사회자', extraFields:[
+          {key:'price', label:'가격', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "플라워폭죽": { sections: [
+      { key:'flowerCracker', label:'플라워폭죽', extraFields:[
+          {key:'option', label:'옵션'},{key:'price', label:'가격', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "기타": { sections: [
+      { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
+          {key:'note', label:'내역'},{key:'amount', label:'금액', money:true}
+        ], itemHasPhoto:false }
+    ]}
+  },
+  "스냅준비": {
+    "드레스": { sections: [
+      { key:'dress', label:'드레스', extraFields:[], itemsLabel:'드레스별 추가금', itemFields:[
+          {key:'price', label:'추가금', money:true},
+          {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
+          {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:true }
+    ]},
+    "정장": { sections: [
+      { key:'suit', label:'정장', extraFields:[], itemsLabel:'정장별 추가금', itemFields:[
+          {key:'price', label:'추가금', money:true},
+          {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
+          {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:true }
+    ]},
+    "헤어": { sections: [
+      { key:'hair', label:'헤어', extraFields:[], itemsLabel:'헤어 옵션', itemFields:[
+          {key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:true }
+    ]},
+    "메이크업": { sections: [
+      { key:'makeup', label:'메이크업', extraFields:[], itemsLabel:'메이크업 옵션', itemFields:[
+          {key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:true }
+    ]},
+    "부케": { sections: [
+      { key:'bouquet', label:'부케', extraFields:[], itemsLabel:'부케 옵션', itemFields:[
+          {key:'name', label:'구성'},{key:'price', label:'추가금', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:true }
+    ]},
+    "기타": { sections: [
+      { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 항목', itemFields:[
+          {key:'name', label:'항목명'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:true }
+    ]}
+  }
+};
+const SUBTYPE_OPTIONS = {
+  "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","플라워폭죽","기타"],
+  "스냅준비": ["드레스","정장","헤어","메이크업","부케","기타"]
+};
+function getSchema(category, subtype){
+  if(SUBTYPE_SCHEMAS[category]){
+    const opts = SUBTYPE_OPTIONS[category];
+    const key = (subtype && SUBTYPE_SCHEMAS[category][subtype]) ? subtype : opts[0];
+    return SUBTYPE_SCHEMAS[category][key];
+  }
+  return CATEGORY_SCHEMA[category] || DEFAULT_SCHEMA;
+}
 
 // ===== 공유 저장소 설정 =====
 // 1. https://jsonbin.io 무료 가입 후 대시보드에서 Master Key 복사 → 아래 MASTER_KEY 자리에 붙여넣기
@@ -709,6 +743,208 @@ let selectedItems = new Set(); // "vendorId::sectionKey::itemIndex"
 let paymentVendorId = null;
 let showBudget = false;
 
+function emptyPayment(){
+  return {depositAmount:'',depositDate:'',depositPayer:'',balanceAmount:'',balanceDueDate:'',balancePayer:'',balancePaid:'false',paymentMethod:'',note:'',shootDate:''};
+}
+function migrateOldBonsikVendors(list){
+  const out = [];
+  list.forEach(v=>{
+    const isOldBonsik = v.category === '본식' && !v.subtype && v.sections &&
+      (v.sections.hallinfo || v.sections.ceremonyDress || v.sections.mainPhoto || v.sections.groomSuitCustom);
+    const isOldSnapPrep = v.category === '스냅준비' && !v.subtype && v.sections &&
+      (v.sections.dress || v.sections.suit || v.sections.hair || v.sections.makeup);
+    if(!isOldBonsik && !isOldSnapPrep){ out.push(v); return; }
+
+    const s = v.sections || {};
+    const base = { favorite:false, createdAt: v.createdAt||Date.now(), hidden: !!v.hidden };
+
+    if(isOldBonsik){
+      const hi = (s.hallinfo && s.hallinfo.extra) || {};
+      const scr = (s.screen && s.screen.extra) || {};
+      const stg = (s.staging && s.staging.extra) || {};
+      const dh = (s.dressHelper && s.dressHelper.extra) || {};
+      const ct = (s.catering && s.catering.extra) || {};
+      const hasHallData = hi.hallName || hi.ceremonyDate || hi.note || scr.price || stg.price || dh.price || ct.unitPrice || ct.minGuests || hi.depositAmount || ct.depositAmount || hi.balanceAmount || ct.balanceAmount;
+      if(hasHallData){
+        const dep = (parseFloat(hi.depositAmount)||0) + (parseFloat(ct.depositAmount)||0);
+        const bal = (parseFloat(hi.balanceAmount)||0) + (parseFloat(ct.balanceAmount)||0);
+        out.push({
+          id: uid(), category:'본식', subtype:'웨딩홀',
+          name: hi.hallName || '웨딩홀', link:'', location:'', memo: v.memo||'',
+          dates:[], images:(v.images||[]).slice(), contractImages:(v.contractImages||[]).slice(), instaLinks:(v.instaLinks||[]).slice(),
+          sections:{
+            hallinfo:{ extra:{ ceremonyDate:hi.ceremonyDate||'', ceremonyTime:hi.ceremonyTime||'', hallName:hi.hallName||'', note:hi.note||'' }, items:[], images:(s.hallinfo&&s.hallinfo.images)||[], instaLinks:(s.hallinfo&&s.hallinfo.instaLinks)||[] },
+            screen:{ extra:{ price:scr.price||'', svc:scr.svc||'false' }, items:[] },
+            staging:{ extra:{ price:stg.price||'', svc:stg.svc||'false' }, items:[] },
+            dressHelper:{ extra:{ price:dh.price||'', svc:dh.svc||'false' }, items:[] },
+            catering:{ extra:{ minGuests:ct.minGuests||'', unitPrice:ct.unitPrice||'', liquor:ct.liquor||'', beverage:ct.beverage||'', note:ct.note||'', finalGuests:ct.finalGuests||'', finalLiquor:ct.finalLiquor||'' }, items:[] }
+          },
+          isFinal: !!v.isFinal, finalRef:null, finalRefs:[],
+          payment: Object.assign(emptyPayment(), {
+            depositAmount: dep?String(dep):'', depositPayer: hi.depositPayer||ct.depositPayer||'',
+            balanceAmount: bal?String(bal):'', balanceDueDate: hi.balanceDueDate||ct.balanceDueDate||'', balancePayer: hi.balancePayer||ct.balancePayer||'',
+            balancePaid: (hi.balancePaid==='true'||ct.balancePaid==='true') ? 'true':'false'
+          }),
+          ...base
+        });
+      }
+
+      if(s.ceremonyDress && Array.isArray(s.ceremonyDress.items) && s.ceremonyDress.items.length){
+        const finalRefs = (v.finalRefs||[]).filter(r=>r.sectionKey==='ceremonyDress');
+        out.push({
+          id: uid(), category:'본식', subtype:'본식 드레스',
+          name:'본식 드레스', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{ ceremonyDress:{ extra:{}, items:s.ceremonyDress.items, images:[], instaLinks:[] } },
+          isFinal: finalRefs.length>0, finalRef: finalRefs[0]||null, finalRefs,
+          payment: emptyPayment(), ...base
+        });
+      }
+
+      const gsc = (s.groomSuitCustom && s.groomSuitCustom.extra) || {};
+      const gsr = (s.groomSuitRental && s.groomSuitRental.extra) || {};
+      const gscItems = (s.groomSuitCustom && s.groomSuitCustom.items) || [];
+      const gsrItems = (s.groomSuitRental && s.groomSuitRental.items) || [];
+      if(gsc.shirtCount || gsc.tieCount || gsc.shoesInfo || gsc.makingPeriod || gscItems.length || gsrItems.length){
+        const finalRefs = (v.finalRefs||[]).filter(r=>r.sectionKey==='groomSuitCustom'||r.sectionKey==='groomSuitRental');
+        out.push({
+          id: uid(), category:'본식', subtype:'본식 정장',
+          name: gsc.vendor || gsr.vendor || '본식 정장', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{
+            groomSuitCustom:{ extra:{ shirtCount:gsc.shirtCount||'', tieCount:gsc.tieCount||'', shoesInfo:gsc.shoesInfo||'', makingPeriod:gsc.makingPeriod||'', propRental:gsc.propRental||'' }, items:gscItems, images:[], instaLinks:[] },
+            groomSuitRental:{ extra:{}, items:gsrItems, images:[], instaLinks:[] }
+          },
+          isFinal: finalRefs.length>0, finalRef: finalRefs[0]||null, finalRefs,
+          payment: emptyPayment(), ...base
+        });
+      }
+
+      const hm = (s.hairMakeup && s.hairMakeup.extra) || {};
+      if(hm.vendor || hm.note || hm.parentsPrice || hm.extraPrice){
+        out.push({
+          id: uid(), category:'본식', subtype:'헤어메이크업',
+          name: hm.vendor || '헤어메이크업', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{ hairMakeup:{ extra:{ note:hm.note||'', parentsPrice:hm.parentsPrice||'', svc:hm.svc||'false', extraNote:hm.extraNote||'', extraPrice:hm.extraPrice||'' }, items:[], images:(s.hairMakeup&&s.hairMakeup.images)||[], instaLinks:(s.hairMakeup&&s.hairMakeup.instaLinks)||[] } },
+          isFinal: !!(hm.depositAmount||hm.balanceAmount), finalRef:null, finalRefs:[],
+          payment: Object.assign(emptyPayment(), {
+            depositAmount:hm.depositAmount||'', depositPayer:hm.depositPayer||'',
+            balanceAmount:hm.balanceAmount||'', balanceDueDate:hm.balanceDueDate||'', balancePayer:hm.balancePayer||'',
+            balancePaid: hm.balancePaid==='true' ? 'true':'false'
+          }),
+          ...base
+        });
+      }
+
+      const mp = (s.mainPhoto && s.mainPhoto.extra) || {};
+      if(mp.vendor || mp.note || mp.extraPrice){
+        out.push({
+          id: uid(), category:'본식', subtype:'본식 스냅',
+          name: mp.vendor || '본식 스냅', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{ mainPhoto:{ extra:{ note:mp.note||'', extraNote:mp.extraNote||'', extraPrice:mp.extraPrice||'' }, items:[], images:[], instaLinks:[] } },
+          isFinal:false, finalRef:null, finalRefs:[], payment: emptyPayment(), ...base
+        });
+      }
+
+      const ip = (s.iphoneSnap && s.iphoneSnap.extra) || {};
+      if(ip.vendor || ip.composition || ip.price){
+        out.push({
+          id: uid(), category:'본식', subtype:'아이폰스냅',
+          name: ip.vendor || '아이폰스냅', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{ iphoneSnap:{ extra:{ composition:ip.composition||'', provided:ip.provided||'', price:ip.price||'' }, items:[], images:(s.iphoneSnap&&s.iphoneSnap.images)||[], instaLinks:(s.iphoneSnap&&s.iphoneSnap.instaLinks)||[] } },
+          isFinal: !!(ip.depositAmount||ip.balanceAmount), finalRef:null, finalRefs:[],
+          payment: Object.assign(emptyPayment(), {
+            depositAmount:ip.depositAmount||'', depositPayer:ip.depositPayer||'',
+            balanceAmount:ip.balanceAmount||'', balanceDueDate:ip.balanceDueDate||'', balancePayer:ip.balancePayer||'',
+            balancePaid: ip.balancePaid==='true' ? 'true':'false'
+          }),
+          ...base
+        });
+      }
+
+      const dvd = (s.dvd && s.dvd.extra) || {};
+      if(dvd.vendor || dvd.note || dvd.extraPrice){
+        out.push({
+          id: uid(), category:'본식', subtype:'DVD촬영',
+          name: dvd.vendor || 'DVD촬영', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{ dvd:{ extra:{ note:dvd.note||'', extraNote:dvd.extraNote||'', extraPrice:dvd.extraPrice||'' }, items:[], images:[], instaLinks:[] } },
+          isFinal:false, finalRef:null, finalRefs:[], payment: emptyPayment(), ...base
+        });
+      }
+
+      const bq = (s.bouquet && s.bouquet.extra) || {};
+      if(bq.vendor || bq.composition || bq.extraPrice){
+        out.push({
+          id: uid(), category:'본식', subtype:'부케',
+          name: bq.vendor || '부케', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{ bouquet:{ extra:{ extraPrice:bq.extraPrice||'', composition:bq.composition||'', note:bq.note||'' }, items:[], images:(s.bouquet&&s.bouquet.images)||[], instaLinks:(s.bouquet&&s.bouquet.instaLinks)||[] } },
+          isFinal: !!(bq.balanceAmount), finalRef:null, finalRefs:[],
+          payment: Object.assign(emptyPayment(), {
+            balanceDueDate:bq.balanceDueDate||'', balancePayer:bq.balancePayer||'',
+            balancePaid: bq.balancePaid==='true' ? 'true':'false'
+          }),
+          ...base
+        });
+      }
+
+      const mc = (s.mc && s.mc.extra) || {};
+      if(mc.name || mc.price || mc.note){
+        out.push({
+          id: uid(), category:'본식', subtype:'사회자',
+          name: mc.name || '사회자', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{ mc:{ extra:{ price:mc.price||'', note:mc.note||'' }, items:[], images:[], instaLinks:[] } },
+          isFinal:false, finalRef:null, finalRefs:[], payment: emptyPayment(), ...base
+        });
+      }
+
+      const fc = (s.flowerCracker && s.flowerCracker.extra) || {};
+      if(fc.option || fc.price || fc.note){
+        out.push({
+          id: uid(), category:'본식', subtype:'플라워폭죽',
+          name: fc.option || '플라워폭죽', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{ flowerCracker:{ extra:{ option:fc.option||'', price:fc.price||'', note:fc.note||'' }, items:[], images:[], instaLinks:[] } },
+          isFinal:false, finalRef:null, finalRefs:[], payment: emptyPayment(), ...base
+        });
+      }
+
+      const etcItems = (s.etc && s.etc.items) || [];
+      if(etcItems.length){
+        out.push({
+          id: uid(), category:'본식', subtype:'기타',
+          name:'기타', link:'', location:'', memo:'',
+          dates:[], images:[], contractImages:[], instaLinks:[],
+          sections:{ etc:{ extra:{}, items: etcItems.map(it=>({note:it.note||'', amount:it.amount||''})), images:[], instaLinks:[] } },
+          isFinal:false, finalRef:null, finalRefs:[], payment: emptyPayment(), ...base
+        });
+      }
+    } else if(isOldSnapPrep){
+      [['dress','드레스'],['suit','정장'],['hair','헤어'],['makeup','메이크업'],['bouquet','부케'],['etc','기타']].forEach(([key,label])=>{
+        const items = (s[key] && s[key].items) || [];
+        items.forEach((it,idx)=>{
+          const isFinalItem = (v.finalRefs||[]).some(r=>r.sectionKey===key && r.itemIndex===idx);
+          const newItem = Object.assign({}, it);
+          delete newItem.vendor;
+          out.push({
+            id: uid(), category:'스냅준비', subtype:label,
+            name: it.vendor || label, link:'', location: it.location||'', memo:'',
+            dates:[], images:[], contractImages:[], instaLinks:[],
+            sections:{ [key]:{ extra:{}, items:[newItem], images:[], instaLinks:[] } },
+            isFinal: isFinalItem, finalRef: isFinalItem?{sectionKey:key,itemIndex:0}:null, finalRefs: isFinalItem?[{sectionKey:key,itemIndex:0}]:[],
+            payment: emptyPayment(), ...base
+          });
+        });
+      });
+    }
+  });
+  return out;
+}
 async function loadVendors(){
   if(SETUP_NEEDED){ vendors = []; showSetupBanner(); return; }
   if(!CONFIG.BIN_ID){ vendors = []; return; }
@@ -722,6 +958,7 @@ async function loadVendors(){
   }catch(e){
     vendors = [];
   }
+  vendors = migrateOldBonsikVendors(vendors);
   vendors.forEach(v=>{
     if(v.category === '스냅촬영') v.category = '야외스냅';
     if(v.category === '웨딩홀') v.category = '본식';
@@ -734,7 +971,7 @@ async function loadVendors(){
     if(!Array.isArray(v.contractImages)) v.contractImages = [];
     if(!Array.isArray(v.instaLinks)) v.instaLinks = [];
     if(!v.sections || typeof v.sections !== 'object'){
-      const schema = getSchema(v.category);
+      const schema = getSchema(v.category, v.subtype);
       const firstKey = schema.sections[0].key;
       v.sections = {};
       v.sections[firstKey] = {
@@ -742,7 +979,7 @@ async function loadVendors(){
         items: Array.isArray(v.items) ? v.items : (Array.isArray(v.products) ? v.products : [])
       };
     }
-    const schema = getSchema(v.category);
+    const schema = getSchema(v.category, v.subtype);
     schema.sections.forEach(sec=>{
       if(!v.sections[sec.key]) v.sections[sec.key] = {extra:{}, items:[]};
       if(!v.sections[sec.key].extra || typeof v.sections[sec.key].extra!=='object') v.sections[sec.key].extra = {};
@@ -1089,81 +1326,47 @@ function moneyToManwon(raw){
   if(m) return parseFloat(m[1].replace(/,/g,''));
   return 0;
 }
-function computeWeddingHallTotal(v){
-  return budgetRowsForWeddingHall(v).reduce((a,r)=>a+r.total, 0);
-}
-function computeSnapPrepTotal(v){
-  return budgetRowsForSnapPrep(v).reduce((a,r)=>a+r.total, 0);
-}
-function budgetRowsForWeddingHall(v){
-  const s = v.sections || {};
-  const rows = [];
+function budgetRowsForSubtypeCategory(category){
+  return SUBTYPE_OPTIONS[category].map(subtype=>{
+    const v = vendors.find(x=>x.category===category && x.subtype===subtype && x.isFinal);
+    if(!v){
+      return { label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:0 };
+    }
 
-  const hi = (s.hallinfo && s.hallinfo.extra) || {};
-  const hiDep = moneyToManwon(hi.depositAmount), hiBal = moneyToManwon(hi.balanceAmount);
-  rows.push({ label:'홀', deposit:hiDep, depositPayer:hi.depositPayer, balanceDue:hi.balanceDueDate, balance:hiBal, balancePayer:hi.balancePayer, balancePaid:hi.balancePaid==='true', total:hiDep+hiBal });
-
-  const dressItems = (s.ceremonyDress && s.ceremonyDress.items) || [];
-  let dressTotal = 0;
-  (v.finalRefs||[]).forEach(r=>{
-    if(r.sectionKey==='ceremonyDress' && dressItems[r.itemIndex]) dressTotal += moneyToManwon(dressItems[r.itemIndex].price);
-  });
-  rows.push({ label:'드레스', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:dressTotal });
-
-  const mp = (s.mainPhoto && s.mainPhoto.extra) || {};
-  rows.push({ label:'본식 스냅', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(mp.extraPrice) });
-
-  const dvd = (s.dvd && s.dvd.extra) || {};
-  rows.push({ label:'DVD촬영', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(dvd.extraPrice) });
-
-  const mc = (s.mc && s.mc.extra) || {};
-  rows.push({ label:'사회자', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(mc.price) });
-
-  const fc = (s.flowerCracker && s.flowerCracker.extra) || {};
-  rows.push({ label:'플라워폭죽', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(fc.price) });
-
-  const ip = (s.iphoneSnap && s.iphoneSnap.extra) || {};
-  const ipDep = moneyToManwon(ip.depositAmount), ipBal = moneyToManwon(ip.balanceAmount);
-  rows.push({ label:'아이폰스냅', deposit:ipDep, depositPayer:ip.depositPayer, balanceDue:ip.balanceDueDate, balance:ipBal, balancePayer:ip.balancePayer, balancePaid:ip.balancePaid==='true', total:ipDep+ipBal });
-
-  const hm = (s.hairMakeup && s.hairMakeup.extra) || {};
-  const hmExtra = hm.svc==='true' ? 0 : (moneyToManwon(hm.parentsPrice) + moneyToManwon(hm.extraPrice));
-  const hmDep = hm.svc==='true' ? 0 : moneyToManwon(hm.depositAmount);
-  const hmBal = hm.svc==='true' ? 0 : moneyToManwon(hm.balanceAmount);
-  rows.push({ label:'헤어메이크업', deposit:hmDep, depositPayer:hm.depositPayer, balanceDue:hm.balanceDueDate, balance:hmBal, balancePayer:hm.balancePayer, balancePaid:hm.balancePaid==='true', total:hmExtra+hmDep+hmBal });
-
-  const bq = (s.bouquet && s.bouquet.extra) || {};
-  rows.push({ label:'부케', deposit:0, depositPayer:'', balanceDue:bq.balanceDueDate, balance:0, balancePayer:bq.balancePayer, balancePaid:bq.balancePaid==='true', total:moneyToManwon(bq.extraPrice) });
-
-  [['screen','스크린'],['staging','연출도우미'],['dressHelper','드레스헬퍼']].forEach(([key,label])=>{
-    const ex = (s[key] && s[key].extra) || {};
-    const t = ex.svc==='true' ? 0 : moneyToManwon(ex.price);
-    rows.push({ label, deposit:0, depositPayer:'', balanceDue: ex.svc==='true'?'':ex.balanceDueDate, balance:0, balancePayer: ex.svc==='true'?'':ex.balancePayer, balancePaid:ex.balancePaid==='true', total:t });
-  });
-
-  const ct = (s.catering && s.catering.extra) || {};
-  const ctDep = moneyToManwon(ct.depositAmount), ctBal = moneyToManwon(ct.balanceAmount);
-  rows.push({ label:'식대', deposit:ctDep, depositPayer:ct.depositPayer, balanceDue:ct.balanceDueDate, balance:ctBal, balancePayer:ct.balancePayer, balancePaid:ct.balancePaid==='true', total:ctDep+ctBal });
-
-  const etcItems = (s.etc && s.etc.items) || [];
-  const etcTotal = etcItems.reduce((a,it)=>a+moneyToManwon(it.amount), 0);
-  const lastEtc = etcItems[etcItems.length-1] || {};
-  rows.push({ label:'기타', deposit:0, depositPayer:'', balanceDue:lastEtc.balanceDueDate, balance:0, balancePayer:lastEtc.balancePayer, balancePaid:lastEtc.balancePaid==='true', total:etcTotal });
-
-  return rows;
-}
-function budgetRowsForSnapPrep(v){
-  const s = v.sections || {};
-  const schema = getSchema('스냅준비');
-  return schema.sections.map(sec=>{
-    let total = 0;
-    (v.finalRefs||[]).forEach(r=>{
-      if(r.sectionKey===sec.key){
-        const it = s[sec.key] && s[sec.key].items && s[sec.key].items[r.itemIndex];
-        if(it) total += moneyToManwon(it.price);
+    const schema = getSchema(category, subtype);
+    let extraTotal = 0;
+    let itemTotal = 0;
+    schema.sections.forEach(sec=>{
+      const data = (v.sections && v.sections[sec.key]) || {extra:{}, items:[]};
+      const svcOn = data.extra && data.extra.svc === 'true';
+      if(!svcOn){
+        sec.extraFields.forEach(f=>{
+          if(f.money && !f.noBudgetSum) extraTotal += moneyToManwon(data.extra[f.key]);
+        });
       }
+      (v.finalRefs||[]).forEach(r=>{
+        if(r.sectionKey===sec.key){
+          const it = (data.items||[])[r.itemIndex];
+          if(it){
+            sec.itemFields.forEach(f=>{
+              if(f.money && !f.noBudgetSum) itemTotal += moneyToManwon(it[f.key]);
+            });
+          }
+        }
+      });
     });
-    return { label:sec.label, deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total };
+
+    const pay = v.payment || {};
+    const dep = moneyToManwon(pay.depositAmount), bal = moneyToManwon(pay.balanceAmount);
+
+    return {
+      label: subtype,
+      vendorName: v.name || '',
+      deposit: dep, depositPayer: pay.depositPayer,
+      balanceDue: pay.balanceDueDate, balance: bal, balancePayer: pay.balancePayer,
+      balancePaid: pay.balancePaid === 'true',
+      total: extraTotal + itemTotal + dep + bal
+    };
   });
 }
 
@@ -1238,7 +1441,7 @@ function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls, oneCo
 }
 
 function vendorSectionsHTML(v, showControls, oneCol){
-  const schema = getSchema(v.category);
+  const schema = getSchema(v.category, v.subtype);
   const cardCounts = {};
   schema.sections.forEach(sec=>{ if(sec.card) cardCounts[sec.card] = (cardCounts[sec.card]||0)+1; });
 
@@ -1305,49 +1508,14 @@ function shootDateSummaryHTML(v){
   return `<span class="shootsummary">✓ 촬영일 확정: ${dt.getMonth()+1}/${dt.getDate()}(${week})</span>`;
 }
 function weddingHallSummaryHTML(v){
-  if(v.category !== '본식') return '';
-  const s = v.sections || {};
-  const lines = [];
-
-  const hi = (s.hallinfo && s.hallinfo.extra) || {};
-  const hallParts = [];
-  if(hi.ceremonyDate) hallParts.push(formatKoreanDateDisplay(hi.ceremonyDate));
-  if(hi.ceremonyTime) hallParts.push(hi.ceremonyTime);
-  if(hi.hallName) hallParts.push(hi.hallName);
-  if(hallParts.length) lines.push(`웨딩홀: ${esc(hallParts.join(' · '))}`);
-
-  const dressItems = (s.ceremonyDress && s.ceremonyDress.items) || [];
-  const chosenDress = (v.finalRefs||[]).find(r=>r.sectionKey==='ceremonyDress');
-  if(chosenDress && dressItems[chosenDress.itemIndex] && dressItems[chosenDress.itemIndex].brand){
-    lines.push(`드레스: ${esc(dressItems[chosenDress.itemIndex].brand)}`);
-  } else if(dressItems.length){
-    lines.push(`드레스: ${dressItems.length}개 비교중`);
-  }
-
-  const suitVendor = (s.groomSuitCustom && s.groomSuitCustom.extra && s.groomSuitCustom.extra.vendor)
-    || (s.groomSuitRental && s.groomSuitRental.extra && s.groomSuitRental.extra.vendor) || '';
-  if(suitVendor) lines.push(`정장: ${esc(suitVendor)}`);
-
-  const mpVendor = (s.mainPhoto && s.mainPhoto.extra && s.mainPhoto.extra.vendor) || '';
-  if(mpVendor) lines.push(`본식 스냅: ${esc(mpVendor)}`);
-
-  const ipVendor = (s.iphoneSnap && s.iphoneSnap.extra && s.iphoneSnap.extra.vendor) || '';
-  if(ipVendor) lines.push(`아이폰스냅: ${esc(ipVendor)}`);
-
-  const dvdVendor = (s.dvd && s.dvd.extra && s.dvd.extra.vendor) || '';
-  if(dvdVendor) lines.push(`DVD촬영: ${esc(dvdVendor)}`);
-
-  const hmVendor = (s.hairMakeup && s.hairMakeup.extra && s.hairMakeup.extra.vendor) || '';
-  if(hmVendor) lines.push(`헤어메이크업: ${esc(hmVendor)}`);
-
-  const bqVendor = (s.bouquet && s.bouquet.extra && s.bouquet.extra.vendor) || '';
-  if(bqVendor) lines.push(`부케: ${esc(bqVendor)}`);
-
-  const mcName = (s.mc && s.mc.extra && s.mc.extra.name) || '';
-  if(mcName) lines.push(`사회자: ${esc(mcName)}`);
-
-  if(lines.length===0) return '';
-  return lines.map(l=>`<div class="hallsummary">${l}</div>`).join('');
+  if(v.category !== '본식' || v.subtype !== '웨딩홀') return '';
+  const hi = (v.sections && v.sections.hallinfo && v.sections.hallinfo.extra) || {};
+  const parts = [];
+  if(hi.ceremonyDate) parts.push(formatKoreanDateDisplay(hi.ceremonyDate));
+  if(hi.ceremonyTime) parts.push(hi.ceremonyTime);
+  if(hi.hallName) parts.push(hi.hallName);
+  if(parts.length===0) return '';
+  return `<div class="hallsummary">${esc(parts.join(' · '))}</div>`;
 }
 
 function cardHTML(v){
@@ -1360,13 +1528,16 @@ function cardHTML(v){
   const shootSummary = shootDateSummaryHTML(v);
   const datesInHeader = showDates && !v.isFinal;
   const datesInBody = showDates && v.isFinal;
+  const schemaForVendor = getSchema(v.category, v.subtype);
+  const hasNoItems = schemaForVendor.sections.every(sec=>sec.itemFields.length===0);
+  const catLabel = v.subtype ? `${v.category} · ${v.subtype}` : v.category;
   const body = open ? `<div class="cardbody"><div class="cardbody-inner">
       ${(!isSingle && v.link)? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
       ${datesInBody ? dateChipsHTML(v) : ''}
       ${vendorSectionsHTML(v, true)}
       ${galleryHTML(v.images, v.images&&v.images.length? '레퍼런스 사진':'')}
       ${instaEmbedsHTML(v.instaLinks)}
-      ${v.category !== '본식' ? galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'') : ''}
+      ${galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'')}
       ${v.memo? `<div class="vendorrow"><div class="prow full"><div class="k">기타사항</div><div class="v">${esc(v.memo)}</div></div></div>`:''}
     </div></div>` : '';
 
@@ -1375,13 +1546,14 @@ function cardHTML(v){
       <div class="cardheadtop">
         <div class="cardmain">
           <div class="topline">
-            <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(v.category)}</span>
+            <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(catLabel)}</span>
             ${finalBadge}
           </div>
           <h3 class="namerow"><span class="namemain">${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
         </div>
         <div class="headactions">
           <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
+          ${hasNoItems ? `<button class="headbtn ${v.isFinal?'finalon':''}" data-vendorfinal="${v.id}">${v.isFinal?'★ 최종 선택':'최종 선택'}</button>` : ''}
           <button class="headbtn" data-hide="${v.id}">${v.hidden?'숨김 해제':'숨기기'}</button>
           <button class="headbtn danger" data-del="${v.id}">삭제</button>
           <button class="headbtn" data-edit="${v.id}">수정</button>
@@ -1406,7 +1578,7 @@ function resolveSelectedItems(){
     if(!v || !v.sections || !v.sections[sectionKey]) return;
     const item = v.sections[sectionKey].items[+idxStr];
     if(!item) return;
-    const sec = getSchema(v.category).sections.find(s=>s.key===sectionKey);
+    const sec = getSchema(v.category, v.subtype).sections.find(s=>s.key===sectionKey);
     if(!sec) return;
     out.push({ vendor:v, item, sec });
   });
@@ -1488,14 +1660,10 @@ function renderContent(){
       startCardDrag(handle.dataset.drag, e.clientY);
     });
   });
-  container.querySelectorAll('[data-finalvendor]').forEach(btn=>{
-    btn.onclick = async (e)=>{
+  container.querySelectorAll('[data-vendorfinal]').forEach(btn=>{
+    btn.onclick = (e)=>{
       e.stopPropagation();
-      const v = vendors.find(x=>x.id===btn.dataset.finalvendor);
-      if(!v) return;
-      v.isFinal = !v.isFinal;
-      await saveVendors();
-      renderContent();
+      vendorFinalClick(btn.dataset.vendorfinal);
     };
   });
   container.querySelectorAll('[data-hide]').forEach(btn=>{
@@ -1604,16 +1772,6 @@ function itemFinalClick(key){
   if(!Array.isArray(v.finalRefs)) v.finalRefs = v.finalRef ? [v.finalRef] : [];
   const existingIdx = v.finalRefs.findIndex(r=>r.sectionKey===sectionKey && r.itemIndex===idx);
 
-  if(SINGLE_ENTRY_CATS.includes(v.category)){
-    (async ()=>{
-      if(existingIdx>=0) v.finalRefs.splice(existingIdx,1);
-      else v.finalRefs.push({sectionKey, itemIndex:idx});
-      await saveVendors();
-      renderContent();
-    })();
-    return;
-  }
-
   const isThisFinal = existingIdx>=0;
   if(isThisFinal){
     (async ()=>{
@@ -1627,7 +1785,7 @@ function itemFinalClick(key){
   }
   (async ()=>{
     vendors.forEach(v2=>{
-      if(v2.category===v.category && v2.id!==v.id){ v2.isFinal=false; v2.finalRef=null; v2.finalRefs=[]; }
+      if(v2.category===v.category && v2.subtype===v.subtype && v2.id!==v.id){ v2.isFinal=false; v2.finalRef=null; v2.finalRefs=[]; }
     });
     v.finalRef = { sectionKey, itemIndex: idx };
     v.finalRefs = [{ sectionKey, itemIndex: idx }];
@@ -1637,12 +1795,38 @@ function itemFinalClick(key){
     openPayment(vid);
   })();
 }
+
+function vendorFinalClick(vid){
+  const v = vendors.find(x=>x.id===vid);
+  if(!v) return;
+  if(v.isFinal){
+    (async ()=>{
+      v.isFinal = false;
+      v.finalRef = null;
+      v.finalRefs = [];
+      await saveVendors();
+      renderContent();
+    })();
+    return;
+  }
+  (async ()=>{
+    vendors.forEach(v2=>{
+      if(v2.category===v.category && v2.subtype===v.subtype && v2.id!==v.id){ v2.isFinal=false; v2.finalRef=null; v2.finalRefs=[]; }
+    });
+    v.isFinal = true;
+    v.finalRef = null;
+    v.finalRefs = [];
+    await saveVendors();
+    renderContent();
+    openPayment(vid);
+  })();
+}
 function openPayment(vendorId){
   const v = vendors.find(x=>x.id===vendorId);
-  if(!v || !v.finalRef) return;
+  if(!v) return;
   paymentVendorId = vendorId;
-  const sec = getSchema(v.category).sections.find(s=>s.key===v.finalRef.sectionKey);
-  const item = v.sections[v.finalRef.sectionKey] ? v.sections[v.finalRef.sectionKey].items[v.finalRef.itemIndex] : null;
+  const sec = v.finalRef ? getSchema(v.category, v.subtype).sections.find(s=>s.key===v.finalRef.sectionKey) : null;
+  const item = (v.finalRef && v.sections[v.finalRef.sectionKey]) ? v.sections[v.finalRef.sectionKey].items[v.finalRef.itemIndex] : null;
   const itemLabel = item ? (item.name||item.label||item.fabric||'') : '';
   document.getElementById('paymentVendorLabel').textContent = `${v.category} · ${v.name}${sec? ' · '+sec.label:''}${itemLabel? ' · '+itemLabel:''}`;
   const pay = v.payment || {};
@@ -1748,8 +1932,8 @@ function renderBudgetPage(){
     let detailRows = [];
 
     if(cat === '본식' || cat === '스냅준비'){
-      v = vendors.find(x=>x.category===cat);
-      if(v) detailRows = cat==='본식' ? budgetRowsForWeddingHall(v) : budgetRowsForSnapPrep(v);
+      detailRows = budgetRowsForSubtypeCategory(cat);
+      v = detailRows.some(r=>r.vendorName) ? true : null;
     } else {
       v = vendors.find(x=>x.category===cat && x.isFinal);
       if(v){
@@ -1769,11 +1953,19 @@ function renderBudgetPage(){
       addPayer(depositByPayer, r.depositPayer, r.deposit);
       addPayer(balanceByPayer, r.balancePayer, r.balance);
       if(r.balance > 0 && r.balanceDue && !r.balancePaid){
-        balanceDueList.push({ cat, label:r.label, amount:r.balance, dueDate:r.balanceDue, payer:r.balancePayer });
+        const isGroupedCat = (cat==='본식' || cat==='스냅준비');
+        balanceDueList.push({
+          cat: isGroupedCat ? r.label : cat,
+          label: isGroupedCat ? (r.vendorName||'-') : r.label,
+          amount:r.balance, dueDate:r.balanceDue, payer:r.balancePayer
+        });
       }
+      const isGrouped = (cat==='본식' || cat==='스냅준비');
+      const catCell = isGrouped ? esc(r.label) : (i===0? esc(cat) : '');
+      const nameCell = isGrouped ? (esc(r.vendorName)||'-') : esc(r.label);
       bodyHTML += `<tr data-cat="${esc(cat)}">
-        <td style="white-space:nowrap;">${i===0? esc(cat) : ''}</td>
-        <td>${esc(r.label)}</td>
+        <td style="white-space:nowrap;">${catCell}</td>
+        <td>${nameCell}</td>
         <td>${r.deposit? r.deposit.toLocaleString()+'만원':'-'}</td>
         <td>${esc(r.depositPayer)||'-'}</td>
         <td>${r.balanceDue||'-'}</td>
@@ -1874,7 +2066,7 @@ function parseCSV(text){
   if(field.length || row.length){ row.push(field); rows.push(row); }
   return rows.filter(r => !(r.length===1 && r[0]===''));
 }
-const CSV_HEADERS = ['id','category','name','link','location','memo','dates','isFinal','finalRef',
+const CSV_HEADERS = ['id','category','subtype','name','link','location','memo','dates','isFinal','finalRef',
   'depositAmount','depositDate','depositPayer','balanceAmount','balanceDueDate','balancePayer','paymentNote',
   'sectionsJSON','imagesJSON','contractImagesJSON','instaLinksJSON','createdAt'];
 
@@ -1883,7 +2075,7 @@ function exportData(){
   vendors.forEach(v=>{
     const pay = v.payment || {};
     const row = [
-      v.id, v.category, v.name, v.link||'', v.location||'', v.memo||'',
+      v.id, v.category, v.subtype||'', v.name, v.link||'', v.location||'', v.memo||'',
       (v.dates||[]).join(';'),
       v.isFinal ? 'true' : 'false',
       v.finalRef ? JSON.stringify(v.finalRef) : '',
@@ -1920,7 +2112,7 @@ function normalizeLoadedVendor(v){
   if(!Array.isArray(v.contractImages)) v.contractImages = [];
     if(!Array.isArray(v.instaLinks)) v.instaLinks = [];
   if(!v.sections || typeof v.sections !== 'object'){
-    const schema = getSchema(v.category);
+    const schema = getSchema(v.category, v.subtype);
     const firstKey = schema.sections[0].key;
     v.sections = {};
     v.sections[firstKey] = {
@@ -1928,7 +2120,7 @@ function normalizeLoadedVendor(v){
       items: Array.isArray(v.items) ? v.items : (Array.isArray(v.products) ? v.products : [])
     };
   }
-  const schema = getSchema(v.category);
+  const schema = getSchema(v.category, v.subtype);
   schema.sections.forEach(sec=>{
     if(!v.sections[sec.key]) v.sections[sec.key] = {extra:{}, items:[]};
     if(!v.sections[sec.key].extra || typeof v.sections[sec.key].extra!=='object') v.sections[sec.key].extra = {};
@@ -1970,6 +2162,7 @@ async function importDataFile(e){
       let v = {
         id: get('id') || uid(),
         category: get('category'),
+        subtype: get('subtype'),
         name: get('name'),
         link: get('link'),
         location: get('location'),
@@ -2101,7 +2294,7 @@ document.getElementById('addDateBtn').onclick = ()=>{
 };
 
 // ---- Section-based item editor ----
-function currentSchema(){ return getSchema(document.getElementById('f_category').value); }
+function currentSchema(){ return getSchema(document.getElementById('f_category').value, document.getElementById('f_subtype').value); }
 
 function itemEditRowHTML(item, idx, sec){
   const laid = computeFieldLayout(sec.itemFields, f=>f.long);
@@ -2223,9 +2416,11 @@ function sectionEditorHTML(sec, data, firstInCard){
   </div>`;
 }
 let lastCategoryValue = null;
+let lastSubtypeValue = null;
 function renderSections(){
   const schema = currentSchema();
   lastCategoryValue = document.getElementById('f_category').value;
+  lastSubtypeValue = document.getElementById('f_subtype').value;
   const box = document.getElementById('sectionsBox');
   let html = '';
   let currentCard = null;
@@ -2351,7 +2546,7 @@ function syncSectionsFromDOM(schemaOverride){
   });
 }
 const GALLERY_TOP_CATS = ['야외스냅','한복'];
-const SINGLE_ENTRY_CATS = ['본식','스냅준비'];
+const SINGLE_ENTRY_CATS = [];
 const NO_GALLERY_CATS = ['스냅준비'];
 function repositionGallery(){
   const cat = document.getElementById('f_category').value;
@@ -2362,6 +2557,16 @@ function repositionGallery(){
 }
 function updateFieldVisibility(){
   const cat = document.getElementById('f_category').value;
+  const subtypeBox = document.getElementById('subtypeFieldBox');
+  const subtypeSel = document.getElementById('f_subtype');
+  if(SUBTYPE_OPTIONS[cat]){
+    subtypeBox.style.display = '';
+    const current = subtypeSel.value;
+    subtypeSel.innerHTML = SUBTYPE_OPTIONS[cat].map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    subtypeSel.value = SUBTYPE_OPTIONS[cat].includes(current) ? current : SUBTYPE_OPTIONS[cat][0];
+  } else {
+    subtypeBox.style.display = 'none';
+  }
   document.getElementById('basicFieldsBox').style.display = SINGLE_ENTRY_CATS.includes(cat) ? 'none' : '';
   document.getElementById('datesFieldBox').style.display = (cat === '야외스냅') ? '' : 'none';
   const hideGallery = NO_GALLERY_CATS.includes(cat);
@@ -2369,9 +2574,7 @@ function updateFieldVisibility(){
   document.getElementById('contractBlock').style.display = hideGallery ? 'none' : '';
 }
 
-document.getElementById('f_category').addEventListener('change', ()=>{
-  const oldSchema = lastCategoryValue ? getSchema(lastCategoryValue) : currentSchema();
-  syncSectionsFromDOM(oldSchema);
+document.getElementById('f_subtype').addEventListener('change', ()=>{
   const newSchema = currentSchema();
   const old = editingSections;
   editingSections = {};
@@ -2383,7 +2586,23 @@ document.getElementById('f_category').addEventListener('change', ()=>{
   });
   renderSections();
   repositionGallery();
+});
+
+document.getElementById('f_category').addEventListener('change', ()=>{
+  const oldSchema = lastCategoryValue ? getSchema(lastCategoryValue, lastSubtypeValue) : currentSchema();
+  syncSectionsFromDOM(oldSchema);
   updateFieldVisibility();
+  const newSchema = currentSchema();
+  const old = editingSections;
+  editingSections = {};
+  newSchema.sections.forEach(sec=>{
+    editingSections[sec.key] = old[sec.key] ? old[sec.key] : {extra:{}, items: sec.itemFields.length ? [{}] : [], images:[], instaLinks:[]};
+    if(sec.itemFields.length && editingSections[sec.key].items.length===0){
+      editingSections[sec.key].items = [{}];
+    }
+  });
+  renderSections();
+  repositionGallery();
 });
 
 // ---- Edit modal ----
@@ -2394,6 +2613,11 @@ function openEdit(id){
   document.getElementById('editId').value = v ? v.id : '';
   const cat = v ? v.category : (activeTab!=="전체" ? activeTab : "본식");
   document.getElementById('f_category').value = cat;
+  if(SUBTYPE_OPTIONS[cat]){
+    const sub = (v && v.subtype && SUBTYPE_OPTIONS[cat].includes(v.subtype)) ? v.subtype : SUBTYPE_OPTIONS[cat][0];
+    document.getElementById('f_subtype').innerHTML = SUBTYPE_OPTIONS[cat].map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    document.getElementById('f_subtype').value = sub;
+  }
   document.getElementById('f_name').value = v ? v.name : '';
   document.getElementById('f_link').value = v ? v.link : '';
   document.getElementById('f_location').value = v ? v.location : '';
@@ -2401,7 +2625,7 @@ function openEdit(id){
   document.getElementById('f_memo').value = v ? v.memo : '';
   document.getElementById('deleteEdit').style.display = v ? 'inline-flex' : 'none';
 
-  const schema = getSchema(cat);
+  const schema = getSchema(cat, v ? v.subtype : document.getElementById('f_subtype').value);
   editingSections = {};
   schema.sections.forEach(sec=>{
     const existing = v && v.sections && v.sections[sec.key];
@@ -2446,9 +2670,11 @@ document.getElementById('saveEdit').onclick = async ()=>{
   });
   const dates = editingDates.slice();
   const cat = document.getElementById('f_category').value;
+  const subtype = SUBTYPE_OPTIONS[cat] ? document.getElementById('f_subtype').value : '';
   const single = SINGLE_ENTRY_CATS.includes(cat);
   const data = {
     category: cat,
+    subtype,
     name: single ? cat : document.getElementById('f_name').value.trim(),
     link: single ? '' : document.getElementById('f_link').value.trim(),
     location: single ? '' : document.getElementById('f_location').value.trim(),
@@ -2496,7 +2722,9 @@ function normalizeImportVendor(p){
   let category = (p.category||'').toString().trim();
   if(category === '스냅촬영') category = '야외스냅';
   if(!CATS.includes(category)) category = '기타';
-  const schema = getSchema(category);
+  let subtype = (p.subtype||'').toString().trim();
+  if(SUBTYPE_OPTIONS[category] && !SUBTYPE_OPTIONS[category].includes(subtype)) subtype = SUBTYPE_OPTIONS[category][0];
+  const schema = getSchema(category, subtype);
   const sectionsRaw = (p.sections && typeof p.sections==='object') ? p.sections : null;
   const sections = {};
   schema.sections.forEach(sec=>{
@@ -2518,6 +2746,7 @@ function normalizeImportVendor(p){
   });
   return {
     category,
+    subtype: SUBTYPE_OPTIONS[category] ? subtype : '',
     name: (p.name||'').toString().trim(),
     link: (p.link||'').toString().trim(),
     location: (p.location||'').toString().trim(),
