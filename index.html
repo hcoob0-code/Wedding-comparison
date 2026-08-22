@@ -90,7 +90,7 @@ select.viewsel{
 .topline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;}
 .card .catchip{
   display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ink-soft);
-  background:var(--paper-deep);padding:3px 9px;border-radius:999px;
+  background:var(--paper-deep);padding:3px 9px;border-radius:999px;white-space:nowrap;flex:0 0 auto;
 }
 .card .catchip .dot{width:6px;height:6px;border-radius:50%;}
 .finalbadge{display:inline-block;font-size:10.5px;font-weight:800;color:#fff;background:var(--gold);padding:3px 8px;border-radius:999px;}
@@ -1215,8 +1215,13 @@ function galleryHTML(imgs, label){
 
 function instaEmbedsHTML(links){
   if(!links || links.length===0) return '';
-  const items = links.map(url=>`<blockquote class="instagram-media" data-instgrm-permalink="${esc(url)}" data-instgrm-version="14" style="margin:8px auto;max-width:400px;min-width:280px;width:100%;"></blockquote>`).join('');
-  return `<div class="gallerylabel">인스타 포스트</div><div class="instaEmbeds">${items}</div>`;
+  const postRe = /instagram\.com\/(p|reel|tv)\//;
+  const valid = links.filter(url=>postRe.test(url));
+  const invalid = links.filter(url=>!postRe.test(url));
+  if(valid.length===0 && invalid.length===0) return '';
+  const items = valid.map(url=>`<blockquote class="instagram-media" data-instgrm-permalink="${esc(url)}" data-instgrm-version="14" style="margin:8px auto;max-width:400px;min-width:280px;width:100%;"></blockquote>`).join('');
+  const invalidHint = invalid.length ? `<div class="hint" style="margin-top:4px;">⚠ 게시물 링크가 아니라 미리보기가 안 떠요: ${invalid.map(u=>esc(u)).join(', ')}</div>` : '';
+  return `<div class="gallerylabel">인스타 포스트</div><div class="instaEmbeds">${items}</div>${invalidHint}`;
 }
 function processInstagramEmbeds(){
   if(window.instgrm && window.instgrm.Embeds && window.instgrm.Embeds.process){
@@ -1937,7 +1942,7 @@ document.getElementById('addInstaLinkBtn').onclick = ()=>{
   const input = document.getElementById('f_instaLinkInput');
   const url = input.value.trim();
   if(!url) return;
-  if(!/instagram\.com/.test(url)){ alert('인스타그램 게시물 링크만 추가할 수 있어요.'); return; }
+  if(!/instagram\.com\/(p|reel|tv)\//.test(url)){ alert('게시물 링크만 임베드할 수 있어요. 예: instagram.com/p/... 또는 /reel/...\n(프로필 링크는 미리보기가 안 떠요)'); return; }
   if(editingInstaLinks.length >= 6){ alert('인스타 링크는 최대 6개까지 추가할 수 있어요.'); return; }
   editingInstaLinks.push(url);
   input.value = '';
@@ -2162,7 +2167,7 @@ function renderSections(){
       const input = box.querySelector(`.sectionInstaInput[data-sec="${sk}"]`);
       const url = input.value.trim();
       if(!url) return;
-      if(!/instagram\.com/.test(url)){ alert('인스타그램 게시물 링크만 추가할 수 있어요.'); return; }
+      if(!/instagram\.com\/(p|reel|tv)\//.test(url)){ alert('게시물 링크만 임베드할 수 있어요. 예: instagram.com/p/... 또는 /reel/...\n(프로필 링크는 미리보기가 안 떠요)'); return; }
       syncSectionsFromDOM();
       if(!editingSections[sk].instaLinks) editingSections[sk].instaLinks = [];
       if(editingSections[sk].instaLinks.length >= 4){ alert('인스타 링크는 최대 4개까지 추가할 수 있어요.'); return; }
