@@ -274,6 +274,8 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .checkrow{display:flex;gap:16px;align-items:center;grid-column:1/-1;}
 .checkrow .checkfield{padding:8px 0;}
 .quadrow{display:flex;gap:6px;grid-column:1/-1;}
+.paygrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;}
+.paygrid.full{grid-column:1/-1;}
 .quadcell{flex:1;min-width:0;text-align:center;background:var(--card);border-radius:8px;padding:4px 2px;}
 .quadcell.wide{flex:2;}
 .quadcell .qk{font-size:9px;color:var(--ink-soft);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -557,12 +559,15 @@ const SUBTYPE_SCHEMAS = {
     "웨딩홀": { sections: [
       { key:'hallinfo', label:'홀 정보', hasMedia:true, extraFields:[
           {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
-          {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-          {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemsLabel:'패키지 비교', itemFields:[
-          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-        ], itemHasPhoto:false },
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+      { key:'package', label:'패키지', extraFields:[
+          {key:'info', label:'패키지 정보', long:true, type:'textarea'},
+          {key:'depositAmount', label:'계약금', money:true, payGroup:1},{key:'depositPayer', label:'계약금 지불자', payGroup:1},
+          {key:'balanceAmount', label:'잔금', money:true, payGroup:2},{key:'balancePayer', label:'잔금 지불자', payGroup:2},
+          {key:'balanceDueDate', label:'잔금일', type:'date', payGroup:3},{key:'paymentMethod', label:'결제 수단', type:'select', options:['현금','카드 일시불','카드 할부'], payGroup:3},
+          {key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'screen', label:'스크린', extraFields:[
           {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
@@ -574,9 +579,11 @@ const SUBTYPE_SCHEMAS = {
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'catering', label:'식대', extraFields:[
           {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true, noBudgetSum:true},{key:'liquor', label:'주류비 (병)', money:true, noBudgetSum:true},{key:'beverage', label:'음료비 (병)', money:true, noBudgetSum:true},{key:'note', label:'참고사항', long:true, type:'textarea'},
-          {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
           {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3},
-          {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
+          {key:'depositAmount', label:'계약금', money:true, payGroup:1},{key:'depositPayer', label:'계약금 지불자', payGroup:1},
+          {key:'balanceAmount', label:'잔금', money:true, payGroup:2},{key:'balancePayer', label:'잔금 지불자', payGroup:2},
+          {key:'balanceDueDate', label:'잔금일', type:'date', payGroup:3},{key:'paymentMethod', label:'결제 수단', type:'select', options:['현금','카드 일시불','카드 할부'], payGroup:3},
+          {key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "본식 드레스": { sections: [
@@ -771,18 +778,46 @@ function migrateSnapAndHonjuVendors(list){
       return { ...v, category:'혼주', subtype:'한복' };
     }
     if(v.category === '본식' && v.subtype === '웨딩홀' && v.payment && (v.payment.depositAmount || v.payment.balanceAmount)){
-      const hi = (v.sections && v.sections.hallinfo && v.sections.hallinfo.extra) || {};
-      if(!hi.depositAmount && !hi.balanceAmount){
-        const newHi = Object.assign({}, hi, {
+      const pkg = (v.sections && v.sections.package && v.sections.package.extra) || {};
+      if(!pkg.depositAmount && !pkg.balanceAmount){
+        const newPkg = Object.assign({}, pkg, {
           depositAmount: v.payment.depositAmount || '',
           depositPayer: v.payment.depositPayer || '',
           balanceDueDate: v.payment.balanceDueDate || '',
           balanceAmount: v.payment.balanceAmount || '',
           balancePayer: v.payment.balancePayer || '',
-          balancePaid: v.payment.balancePaid || 'false'
+          balancePaid: v.payment.balancePaid || 'false',
+          paymentMethod: v.payment.paymentMethod || ''
         });
+        const existingPkgSection = v.sections.package || {extra:{}, items:[]};
         const newSections = Object.assign({}, v.sections, {
-          hallinfo: Object.assign({}, v.sections.hallinfo, { extra: newHi })
+          package: Object.assign({}, existingPkgSection, { extra: newPkg })
+        });
+        return { ...v, sections: newSections };
+      }
+    }
+    // also recover from the older migration that may have stranded data in hallinfo directly
+    if(v.category === '본식' && v.subtype === '웨딩홀' && v.sections && v.sections.hallinfo && v.sections.hallinfo.extra &&
+       (v.sections.hallinfo.extra.depositAmount || v.sections.hallinfo.extra.balanceAmount)){
+      const hi = v.sections.hallinfo.extra;
+      const pkg = (v.sections.package && v.sections.package.extra) || {};
+      if(!pkg.depositAmount && !pkg.balanceAmount){
+        const newPkg = Object.assign({}, pkg, {
+          depositAmount: hi.depositAmount || '',
+          depositPayer: hi.depositPayer || '',
+          balanceDueDate: hi.balanceDueDate || '',
+          balanceAmount: hi.balanceAmount || '',
+          balancePayer: hi.balancePayer || '',
+          balancePaid: hi.balancePaid || 'false'
+        });
+        const cleanedHi = Object.assign({}, hi);
+        delete cleanedHi.depositAmount; delete cleanedHi.depositPayer;
+        delete cleanedHi.balanceDueDate; delete cleanedHi.balanceAmount;
+        delete cleanedHi.balancePayer; delete cleanedHi.balancePaid;
+        const existingPkgSection = v.sections.package || {extra:{}, items:[]};
+        const newSections = Object.assign({}, v.sections, {
+          hallinfo: Object.assign({}, v.sections.hallinfo, { extra: cleanedHi }),
+          package: Object.assign({}, existingPkgSection, { extra: newPkg })
         });
         return { ...v, sections: newSections };
       }
@@ -1423,7 +1458,7 @@ function budgetRowsForSubtypeCategory(category){
     }
 
     if(category === '본식' && subtype === '웨딩홀'){
-      const hallCalc = computeForSections(['hallinfo','screen','staging','dressHelper']);
+      const hallCalc = computeForSections(['hallinfo','package','screen','staging','dressHelper']);
       const cateringCalc = computeForSections(['catering']);
       return [
         {
@@ -1501,13 +1536,25 @@ function quadCellHTML(f, val){
 }
 function fieldsToHTML(fields, valuesObj, oneCol){
   const quadFields = fields.filter(f=>f.quad);
-  const normalFields = fields.filter(f=>!f.quad);
+  const payFields = fields.filter(f=>f.payGroup);
+  const normalFields = fields.filter(f=>!f.quad && !f.payGroup);
   const present = normalFields.filter(f=> f.type==='checkbox' ? (f.alwaysShow || valuesObj[f.key]==='true') : !!valuesObj[f.key]);
   const laid = oneCol ? present.map(item=>({item, full:true})) : computeFieldLayout(present, f=>f.long);
   let html = laid.map(({item,full})=> fieldRow(item, valuesObj[item.key], full)).join('');
   const anyQuadVal = quadFields.some(f=> f.type==='checkbox' ? valuesObj[f.key]==='true' : !!valuesObj[f.key]);
   if(anyQuadVal){
     html += `<div class="quadrow full">${quadFields.map(f=>quadCellHTML(f, valuesObj[f.key])).join('')}</div>`;
+  }
+  if(payFields.length){
+    const anyPayVal = payFields.some(f=>!!valuesObj[f.key]);
+    if(anyPayVal){
+      const groups = {};
+      payFields.forEach(f=>{ (groups[f.payGroup] = groups[f.payGroup]||[]).push(f); });
+      const rows = Object.keys(groups).sort((a,b)=>a-b).map(g=>
+        groups[g].map(f=>fieldRow(f, valuesObj[f.key], false)).join('')
+      ).join('');
+      html += `<div class="paygrid full">${rows}</div>`;
+    }
   }
   return html;
 }
@@ -2364,6 +2411,13 @@ function extraFieldHTML(f, sec, val, full){
   if(f.type==='textarea'){
     return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><textarea data-sec="${sec.key}" data-exkey="${f.key}"${fullStyle}>${esc(val||'')}</textarea></div>`;
   }
+  if(f.type==='select'){
+    const opts = ['<option value="">선택 안 함</option>'].concat((f.options||[]).map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`));
+    return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><select data-sec="${sec.key}" data-exkey="${f.key}"${fullStyle}>${opts.join('')}</select></div>`;
+  }
+  if(f.type==='date'){
+    return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input type="date" data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}></div>`;
+  }
   return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}${maxAttr}${placeholderAttr}></div>`;
 }
 function quadEditCellHTML(f, sec, val){
@@ -2394,11 +2448,20 @@ function sectionMediaHTML(sec, data){
 }
 function sectionEditorHTML(sec, data, firstInCard){
   const quadFields = sec.extraFields.filter(f=>f.quad);
-  const normalFields = sec.extraFields.filter(f=>!f.quad);
+  const payFields = sec.extraFields.filter(f=>f.payGroup);
+  const normalFields = sec.extraFields.filter(f=>!f.quad && !f.payGroup);
   const laidExtra = computeFieldLayout(normalFields, f=>f.long);
   let extraHTML = laidExtra.map(({item:f, full})=> extraFieldHTML(f, sec, data.extra[f.key], full)).join('');
   if(quadFields.length){
     extraHTML += `<div class="quadrow full">${quadFields.map(f=>quadEditCellHTML(f, sec, data.extra[f.key])).join('')}</div>`;
+  }
+  if(payFields.length){
+    const groups = {};
+    payFields.forEach(f=>{ (groups[f.payGroup] = groups[f.payGroup]||[]).push(f); });
+    const rows = Object.keys(groups).sort((a,b)=>a-b).map(g=>
+      groups[g].map(f=>extraFieldHTML(f, sec, data.extra[f.key], false)).join('')
+    ).join('');
+    extraHTML += `<div class="paygrid full">${rows}</div>`;
   }
   const extraWrapped = extraHTML ? `<div class="exgrid">${extraHTML}</div>` : '';
   const mediaHTML = sectionMediaHTML(sec, data);
