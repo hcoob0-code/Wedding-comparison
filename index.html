@@ -79,6 +79,10 @@ select.viewsel{
   background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
 }
 .card.isfinal{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
+.card.notfinal{border-color:#E4E0D6;}
+.card.notfinal .namemain, .card.notfinal .nameloc{color:#B8B4AA;}
+.placeholdercard{background:transparent;border-style:dashed;}
+.placeholdercard .cardhead{cursor:default;}
 .card.vendorhidden{opacity:.5;}
 .cardhead{padding:11px 14px;cursor:pointer;}
 .cardheadtop{display:flex;align-items:flex-start;gap:8px;}
@@ -384,6 +388,10 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
       <label>종류</label>
       <select id="f_subtype"></select>
     </div>
+    <div class="field" id="cardNoteFieldBox" style="display:none;">
+      <label>카드 노트 (카드 접었을 때 바로 보여요)</label>
+      <input id="f_cardNote" placeholder="예: 베이직 패키지 · 30만원">
+    </div>
     <div id="basicFieldsBox">
       <div class="field"><label>업체명</label><input id="f_name"></div>
       <div class="field"><label>인스타 / 링크</label><input id="f_link" placeholder="https://instagram.com/..."></div>
@@ -585,7 +593,9 @@ const SUBTYPE_SCHEMAS = {
       { key:'hallinfo', label:'홀 정보', hasMedia:true, extraFields:[
           {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+        ], itemsLabel:'패키지 비교', itemFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false },
       { key:'screen', label:'스크린', extraFields:[
           {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
@@ -621,42 +631,50 @@ const SUBTYPE_SCHEMAS = {
     "헤어메이크업": { sections: [
       { key:'hairMakeup', label:'헤어메이크업', hasMedia:true, extraFields:[
           {key:'note', label:'참고사항', long:true, type:'textarea'},
-          {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'},
-          {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+          {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'}
+        ], itemsLabel:'패키지 비교', itemFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false }
     ]},
     "본식 스냅": { sections: [
       { key:'mainPhoto', label:'본식 스냅', extraFields:[
-          {key:'note', label:'참고사항', long:true, type:'textarea'},
-          {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+          {key:'note', label:'참고사항', long:true, type:'textarea'}
+        ], itemsLabel:'패키지 비교', itemFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false }
     ]},
     "아이폰스냅": { sections: [
       { key:'iphoneSnap', label:'아이폰스냅', hasMedia:true, extraFields:[
-          {key:'composition', label:'구성', long:true},{key:'provided', label:'참고사항', long:true, type:'textarea'},{key:'price', label:'가격', money:true}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+          {key:'composition', label:'구성', long:true}
+        ], itemsLabel:'패키지 비교', itemFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false }
     ]},
     "DVD촬영": { sections: [
       { key:'dvd', label:'DVD촬영', extraFields:[
-          {key:'note', label:'참고사항', long:true, type:'textarea'},
-          {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+          {key:'note', label:'참고사항', long:true, type:'textarea'}
+        ], itemsLabel:'패키지 비교', itemFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false }
     ]},
     "부케": { sections: [
       { key:'bouquet', label:'부케', hasMedia:true, extraFields:[
-          {key:'extraPrice', label:'추가금', money:true},
-          {key:'composition', label:'구성', long:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+          {key:'composition', label:'구성', long:true}
+        ], itemsLabel:'패키지 비교', itemFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false }
     ]},
     "사회자": { sections: [
       { key:'mc', label:'사회자', extraFields:[
-          {key:'price', label:'가격', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+        ], itemsLabel:'패키지 비교', itemFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false }
     ]},
     "플라워폭죽": { sections: [
       { key:'flowerCracker', label:'플라워폭죽', extraFields:[
-          {key:'option', label:'옵션'},{key:'price', label:'가격', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+        ], itemsLabel:'옵션 비교', itemFields:[
+          {key:'name', label:'옵션명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false }
     ]},
     "기타": { sections: [
       { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
@@ -1518,18 +1536,47 @@ function weddingHallSummaryHTML(v){
   return `<div class="hallsummary">${esc(parts.join(' · '))}</div>`;
 }
 
+function subtypeItemSummaryHTML(v){
+  if(v.category !== '본식' || v.subtype === '웨딩홀' || !v.subtype) return '';
+  if(!v.cardNote) return '';
+  return `<div class="hallsummary">${esc(v.cardNote)}</div>`;
+}
+
+function placeholderCardHTML(category, subtype){
+  return `<div class="card notfinal placeholdercard">
+    <div class="cardhead">
+      <div class="cardheadtop">
+        <div class="cardmain">
+          <div class="topline">
+            <span class="catchip"><span class="dot" style="background:${CAT_COLOR[category]||'#8A8A82'}"></span>${esc(category)} · ${esc(subtype)}</span>
+          </div>
+          <h3 class="namerow"><span class="namemain" style="color:#D8D4C8;font-weight:600;">아직 추가 안 함</span></h3>
+        </div>
+        <button class="btn small" data-addplaceholder="${esc(category)}::${esc(subtype)}">+ 추가</button>
+      </div>
+    </div>
+  </div>`;
+}
+function openAddForSubtype(category, subtype){
+  openEdit(null);
+  const catSel = document.getElementById('f_category');
+  catSel.value = category;
+  catSel.dispatchEvent(new Event('change'));
+  const subSel = document.getElementById('f_subtype');
+  subSel.value = subtype;
+  subSel.dispatchEvent(new Event('change'));
+}
+
 function cardHTML(v){
   const open = expandedIds.has(v.id);
   const cmpOn = selectedCompare.has(v.id);
-  const finalBadge = v.isFinal ? `<span class="finalbadge">★ 최종 선택</span>` : '';
   const isSingle = SINGLE_ENTRY_CATS.includes(v.category);
   const showDates = v.category === '야외스냅';
   const hallSummary = weddingHallSummaryHTML(v);
+  const itemSummary = subtypeItemSummaryHTML(v);
   const shootSummary = shootDateSummaryHTML(v);
   const datesInHeader = showDates && !v.isFinal;
   const datesInBody = showDates && v.isFinal;
-  const schemaForVendor = getSchema(v.category, v.subtype);
-  const hasNoItems = schemaForVendor.sections.every(sec=>sec.itemFields.length===0);
   const catLabel = v.subtype ? `${v.category} · ${v.subtype}` : v.category;
   const body = open ? `<div class="cardbody"><div class="cardbody-inner">
       ${(!isSingle && v.link)? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
@@ -1541,19 +1588,18 @@ function cardHTML(v){
       ${v.memo? `<div class="vendorrow"><div class="prow full"><div class="k">기타사항</div><div class="v">${esc(v.memo)}</div></div></div>`:''}
     </div></div>` : '';
 
-  return `<div class="card ${v.isFinal?'isfinal':''}${v.hidden?' vendorhidden':''}" data-id="${v.id}">
+  const notFinalCls = (v.category==='본식' && !v.isFinal) ? ' notfinal' : '';
+  return `<div class="card ${v.isFinal?'isfinal':''}${notFinalCls}${v.hidden?' vendorhidden':''}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
       <div class="cardheadtop">
         <div class="cardmain">
           <div class="topline">
             <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(catLabel)}</span>
-            ${finalBadge}
           </div>
           <h3 class="namerow"><span class="namemain">${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
         </div>
         <div class="headactions">
           <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
-          ${hasNoItems ? `<button class="headbtn ${v.isFinal?'finalon':''}" data-vendorfinal="${v.id}">${v.isFinal?'★ 최종 선택':'최종 선택'}</button>` : ''}
           <button class="headbtn" data-hide="${v.id}">${v.hidden?'숨김 해제':'숨기기'}</button>
           <button class="headbtn danger" data-del="${v.id}">삭제</button>
           <button class="headbtn" data-edit="${v.id}">수정</button>
@@ -1561,9 +1607,10 @@ function cardHTML(v){
         <span class="draghandle" data-drag="${v.id}" title="드래그해서 순서 바꾸기">⠿</span>
         <span class="chev">▾</span>
       </div>
-      ${(datesInHeader || hallSummary) ? `<div class="cardheadbottom">
+      ${(datesInHeader || hallSummary || itemSummary) ? `<div class="cardheadbottom">
         ${datesInHeader ? dateChipsHTML(v) : ''}
         ${hallSummary}
+        ${itemSummary}
       </div>` : ''}
     </div>
     ${body}
@@ -1635,7 +1682,7 @@ function renderContent(){
     return;
   }
 
-  if(list.length===0){
+  if(list.length===0 && activeTab !== '본식'){
     container.innerHTML = `<div class="empty">
       <div class="mark">◌</div>
       아직 등록된 업체가 없어요.<br>업체를 추가하거나 JSON으로 불러와보세요.
@@ -1644,7 +1691,24 @@ function renderContent(){
     return;
   }
 
-  container.innerHTML = `<div class="grid">${list.map(cardHTML).join('')}</div>`;
+  let cardsHTML;
+  if(activeTab === '본식'){
+    cardsHTML = SUBTYPE_OPTIONS['본식'].map(subtype=>{
+      const matches = list.filter(v=>v.category==='본식' && v.subtype===subtype);
+      if(matches.length) return matches.map(cardHTML).join('');
+      return placeholderCardHTML('본식', subtype);
+    }).join('');
+  } else {
+    cardsHTML = list.map(cardHTML).join('');
+  }
+  container.innerHTML = `<div class="grid">${cardsHTML}</div>`;
+
+  container.querySelectorAll('[data-addplaceholder]').forEach(el=>{
+    el.onclick = ()=>{
+      const [cat, subtype] = el.dataset.addplaceholder.split('::');
+      openAddForSubtype(cat, subtype);
+    };
+  });
 
   container.querySelectorAll('[data-toggle]').forEach(el=>{
     el.onclick = ()=>{
@@ -1659,12 +1723,6 @@ function renderContent(){
       e.stopPropagation();
       startCardDrag(handle.dataset.drag, e.clientY);
     });
-  });
-  container.querySelectorAll('[data-vendorfinal]').forEach(btn=>{
-    btn.onclick = (e)=>{
-      e.stopPropagation();
-      vendorFinalClick(btn.dataset.vendorfinal);
-    };
   });
   container.querySelectorAll('[data-hide]').forEach(btn=>{
     btn.onclick = async (e)=>{
@@ -1796,31 +1854,6 @@ function itemFinalClick(key){
   })();
 }
 
-function vendorFinalClick(vid){
-  const v = vendors.find(x=>x.id===vid);
-  if(!v) return;
-  if(v.isFinal){
-    (async ()=>{
-      v.isFinal = false;
-      v.finalRef = null;
-      v.finalRefs = [];
-      await saveVendors();
-      renderContent();
-    })();
-    return;
-  }
-  (async ()=>{
-    vendors.forEach(v2=>{
-      if(v2.category===v.category && v2.subtype===v.subtype && v2.id!==v.id){ v2.isFinal=false; v2.finalRef=null; v2.finalRefs=[]; }
-    });
-    v.isFinal = true;
-    v.finalRef = null;
-    v.finalRefs = [];
-    await saveVendors();
-    renderContent();
-    openPayment(vid);
-  })();
-}
 function openPayment(vendorId){
   const v = vendors.find(x=>x.id===vendorId);
   if(!v) return;
@@ -2568,6 +2601,7 @@ function updateFieldVisibility(){
     subtypeBox.style.display = 'none';
   }
   document.getElementById('basicFieldsBox').style.display = SINGLE_ENTRY_CATS.includes(cat) ? 'none' : '';
+  document.getElementById('cardNoteFieldBox').style.display = (cat === '본식') ? '' : 'none';
   document.getElementById('datesFieldBox').style.display = (cat === '야외스냅') ? '' : 'none';
   const hideGallery = NO_GALLERY_CATS.includes(cat);
   document.getElementById('galleryBlock').style.display = hideGallery ? 'none' : '';
@@ -2623,6 +2657,7 @@ function openEdit(id){
   document.getElementById('f_location').value = v ? v.location : '';
   editingDates = v ? (v.dates||[]).slice() : [];
   document.getElementById('f_memo').value = v ? v.memo : '';
+  document.getElementById('f_cardNote').value = v ? (v.cardNote||'') : '';
   document.getElementById('deleteEdit').style.display = v ? 'inline-flex' : 'none';
 
   const schema = getSchema(cat, v ? v.subtype : document.getElementById('f_subtype').value);
@@ -2679,6 +2714,7 @@ document.getElementById('saveEdit').onclick = async ()=>{
     link: single ? '' : document.getElementById('f_link').value.trim(),
     location: single ? '' : document.getElementById('f_location').value.trim(),
     memo: document.getElementById('f_memo').value.trim(),
+    cardNote: document.getElementById('f_cardNote').value.trim(),
     dates: cat === '야외스냅' ? dates : [],
     sections,
     images: NO_GALLERY_CATS.includes(cat) ? [] : editingImages.slice(),
