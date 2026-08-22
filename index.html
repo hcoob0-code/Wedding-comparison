@@ -358,20 +358,10 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
       <option value="hasdate">날짜순</option>
       <option value="manual">직접 정렬</option>
     </select>
-    <select class="viewsel" id="viewSel">
-      <option value="card">카드 형</option>
-      <option value="table">표 형</option>
-    </select>
   </div>
 
   <div id="content"></div>
 
-</div>
-
-<div class="comparebar" id="compareBar">
-  <div class="names" id="compareNames"></div>
-  <button class="btn small" id="compareClear">선택 해제</button>
-  <button class="btn small primary" id="compareGo" disabled>한눈에 비교하기</button>
 </div>
 
 <!-- Add/Edit Modal -->
@@ -466,15 +456,6 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
   </div>
 </div>
 
-<!-- Compare Modal -->
-<div class="overlay" id="compareOverlay">
-  <div class="modal wide">
-    <div class="closebtn"><button id="closeCompare">✕</button></div>
-    <h2>한눈에 비교하기</h2>
-    <div class="comparegrid" id="compareGrid"></div>
-  </div>
-</div>
-
 <!-- Payment Modal -->
 <div class="overlay" id="paymentOverlay">
   <div class="modal">
@@ -551,9 +532,9 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 </div>
 
 <script>
-const CATS = ["본식","야외스냅","스냅준비","반지","한복","기타"];
+const CATS = ["본식","야외스냅","반지","혼주","기타"];
 const CAT_COLOR = {
-  "본식":"#4A5568","야외스냅":"#5F8575","스냅준비":"#9C8AA5","반지":"#B4933C","한복":"#B6462F","기타":"#8A8A82"
+  "본식":"#4A5568","야외스냅":"#5F8575","반지":"#B4933C","혼주":"#B6462F","기타":"#8A8A82"
 };
 
 const DEFAULT_SCHEMA = { sections: [
@@ -562,15 +543,6 @@ const DEFAULT_SCHEMA = { sections: [
   ], itemHasPhoto:false }
 ]};
 const CATEGORY_SCHEMA = {
-  "야외스냅": { sections: [
-    { key:'main', label:'구성별 상세', extraFields:[
-      ], itemsLabel:'구성별 상세', itemFields:[
-        {key:'name', label:'구성명', long:true},{key:'time', label:'촬영 시간', unit:'시간'},{key:'place', label:'장소', unit:'장소'},
-        {key:'outfits', label:'의상 수', unit:'벌'},{key:'hairChanges', label:'헤어 변형 횟수', unit:'회'},{key:'video', label:'영상 제공 여부'},
-        {key:'rawCount', label:'원본 제공 수량'},{key:'editedCount', label:'보정본 제공 수량', unit:'장'},
-        {key:'price', label:'가격', money:true},{key:'memo', label:'기타사항', long:true, type:'textarea'}
-      ], itemHasPhoto:false }
-  ]},
   "반지": { sections: [
     { key:'main', label:'반지', extraFields:[
         {key:'leadTime', label:'예상 소요일'},{key:'timeEvent', label:'타임이벤트'},
@@ -578,13 +550,6 @@ const CATEGORY_SCHEMA = {
       ], itemsLabel:'참고 사진과 가격', itemFields:[
         {key:'name', label:'이름'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true }
-  ]},
-  "한복": { sections: [
-    { key:'main', label:'대여한복', extraFields:[
-        {key:'customPrice', label:'맞춤한복 가격', money:true},{key:'fittingLimit', label:'피팅비 / 벌수제한'},{key:'propRental', label:'소품 대여', long:true}
-      ], itemsLabel:'대여한복 가격 (라벨별)', itemFields:[
-        {key:'label', label:'라벨'},{key:'price', label:'가격', money:true}
-      ], itemHasPhoto:false }
   ]}
 };
 const SUBTYPE_SCHEMAS = {
@@ -682,7 +647,16 @@ const SUBTYPE_SCHEMAS = {
         ], itemHasPhoto:false }
     ]}
   },
-  "스냅준비": {
+  "야외스냅": {
+    "스냅업체": { sections: [
+      { key:'main', label:'구성별 상세', extraFields:[
+        ], itemsLabel:'구성별 상세', itemFields:[
+          {key:'name', label:'구성명', long:true},{key:'time', label:'촬영 시간', unit:'시간'},{key:'place', label:'장소', unit:'장소'},
+          {key:'outfits', label:'의상 수', unit:'벌'},{key:'hairChanges', label:'헤어 변형 횟수', unit:'회'},{key:'video', label:'영상 제공 여부'},
+          {key:'rawCount', label:'원본 제공 수량'},{key:'editedCount', label:'보정본 제공 수량', unit:'장'},
+          {key:'price', label:'가격', money:true},{key:'memo', label:'기타사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false }
+    ]},
     "드레스": { sections: [
       { key:'dress', label:'드레스', extraFields:[], itemsLabel:'드레스별 추가금', itemFields:[
           {key:'price', label:'추가금', money:true},
@@ -717,12 +691,30 @@ const SUBTYPE_SCHEMAS = {
           {key:'name', label:'항목명'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true }
     ]}
+  },
+  "혼주": {
+    "한복": { sections: [
+      { key:'main', label:'대여한복', extraFields:[
+          {key:'customPrice', label:'맞춤한복 가격', money:true},{key:'fittingLimit', label:'피팅비 / 벌수제한'},{key:'propRental', label:'소품 대여', long:true}
+        ], itemsLabel:'대여한복 가격 (라벨별)', itemFields:[
+          {key:'label', label:'라벨'},{key:'price', label:'가격', money:true}
+        ], itemHasPhoto:false }
+    ]},
+    "정장": { sections: [
+      { key:'main', label:'정장', extraFields:[
+          {key:'propRental', label:'소품 대여', long:true}
+        ], itemsLabel:'가격 비교', itemFields:[
+          {key:'name', label:'품목'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false }
+    ]}
   }
 };
 const SUBTYPE_OPTIONS = {
   "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","플라워폭죽","기타"],
-  "스냅준비": ["드레스","정장","헤어","메이크업","부케","기타"]
+  "야외스냅": ["스냅업체","드레스","정장","헤어","메이크업","부케","기타"],
+  "혼주": ["한복","정장"]
 };
+const BONSIK_COMPARE_SUBTYPES = ["본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","플라워폭죽","기타"];
 function getSchema(category, subtype){
   if(SUBTYPE_SCHEMAS[category]){
     const opts = SUBTYPE_OPTIONS[category];
@@ -748,7 +740,7 @@ const SETUP_NEEDED = CONFIG.MASTER_KEY === 'YOUR_JSONBIN_MASTER_KEY';
 const PHOTO_SETUP_NEEDED = CONFIG.CLOUDINARY_CLOUD_NAME === 'YOUR_CLOUDINARY_CLOUD_NAME';
 
 let vendors = [];
-let activeTab = "전체";
+let activeTab = "본식";
 let editingSections = {};
 let editingImages = [];
 let editingContractImages = [];
@@ -756,13 +748,26 @@ let editingInstaLinks = [];
 let editingDates = [];
 let editingImportBatch = [];
 let expandedIds = new Set();
-let selectedCompare = new Set();
-let selectedItems = new Set(); // "vendorId::sectionKey::itemIndex"
 let paymentVendorId = null;
 let showBudget = false;
 
 function emptyPayment(){
   return {depositAmount:'',depositDate:'',depositPayer:'',balanceAmount:'',balanceDueDate:'',balancePayer:'',balancePaid:'false',paymentMethod:'',note:'',shootDate:''};
+}
+function migrateSnapAndHonjuVendors(list){
+  return list.map(v=>{
+    if(v.category === '야외스냅' && !v.subtype){
+      return { ...v, subtype:'스냅업체' };
+    }
+    if(v.category === '스냅준비'){
+      const sub = (v.subtype && SUBTYPE_OPTIONS['야외스냅'].includes(v.subtype)) ? v.subtype : '기타';
+      return { ...v, category:'야외스냅', subtype:sub };
+    }
+    if(v.category === '한복'){
+      return { ...v, category:'혼주', subtype:'한복' };
+    }
+    return v;
+  });
 }
 function migrateOldBonsikVendors(list){
   const out = [];
@@ -977,6 +982,7 @@ async function loadVendors(){
     vendors = [];
   }
   vendors = migrateOldBonsikVendors(vendors);
+  vendors = migrateSnapAndHonjuVendors(vendors);
   vendors.forEach(v=>{
     if(v.category === '스냅촬영') v.category = '야외스냅';
     if(v.category === '웨딩홀') v.category = '본식';
@@ -1147,9 +1153,9 @@ function dateChipsHTML(v, limit){
 
 function renderTabs(){
   const tabs = document.getElementById('tabs');
-  const all = ["전체", ...CATS];
+  const all = [...CATS];
   tabs.innerHTML = all.map(c=>{
-    const color = c==="전체" ? "#23262B" : CAT_COLOR[c];
+    const color = CAT_COLOR[c];
     const active = c===activeTab ? 'active' : '';
     return `<button class="tab ${active}" data-cat="${c}">
       <span class="dot" style="background:${color}"></span>${c}
@@ -1293,7 +1299,7 @@ function minPrice(v){
 }
 
 function filteredSorted(){
-  let list = activeTab==="전체" ? vendors.slice() : vendors.filter(v=>v.category===activeTab);
+  let list = vendors.filter(v=>v.category===activeTab);
   const showChk = document.getElementById('showHiddenChk');
   if(!showChk || !showChk.checked){
     list = list.filter(v=>!v.hidden);
@@ -1447,11 +1453,9 @@ function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls, oneCo
   let controls = '';
   if(showControls){
     const key = `${vendorId}::${sectionKey}::${idx}`;
-    const cmpOn = selectedItems.has(key);
     const v = vendors.find(x=>x.id===vendorId);
     const isThisFinal = !!(v && v.finalRefs && v.finalRefs.some(r=>r.sectionKey===sectionKey && r.itemIndex===idx));
     controls = `<div class="itemctrls">
-      <button class="itemcmp ${cmpOn?'on':''}" data-itemcmp="${key}">${cmpOn?'선택됨':'비교 담기'}</button>
       <button class="itemfinal ${isThisFinal?'on':''}" data-itemfinal="${key}">${isThisFinal?'★ 최종 선택':'최종 선택'}</button>
     </div>`;
   }
@@ -1517,7 +1521,7 @@ function processInstagramEmbeds(){
 }
 
 function shootDateSummaryHTML(v){
-  if(v.category !== '야외스냅') return '';
+  if(v.category !== '야외스냅' || v.subtype !== '스냅업체') return '';
   const d = v.payment && v.payment.shootDate;
   if(!d) return '';
   const dt = new Date(d+'T00:00:00');
@@ -1537,9 +1541,27 @@ function weddingHallSummaryHTML(v){
 }
 
 function subtypeItemSummaryHTML(v){
-  if(v.category !== '본식' || v.subtype === '웨딩홀' || !v.subtype) return '';
-  if(!v.cardNote) return '';
-  return `<div class="hallsummary">${esc(v.cardNote)}</div>`;
+  if(!SUBTYPE_OPTIONS[v.category] || !v.subtype) return '';
+  if(v.category === '본식' && v.subtype === '웨딩홀') return '';
+  if(v.category === '야외스냅' && v.subtype === '스냅업체') return '';
+  const schema = getSchema(v.category, v.subtype);
+  const allNames = [];
+  let chosenName = '';
+  schema.sections.forEach(sec=>{
+    const data = (v.sections && v.sections[sec.key]) || {items:[]};
+    const items = data.items || [];
+    const finalRef = (v.finalRefs||[]).find(r=>r.sectionKey===sec.key);
+    items.forEach((it,idx)=>{
+      const name = it.brand || it.name || it.fabric || it.label || '';
+      if(!name) return;
+      allNames.push(name);
+      if(finalRef && finalRef.itemIndex===idx) chosenName = name;
+    });
+  });
+  if(chosenName) return `<div class="hallsummary">✓ ${esc(chosenName)}</div>`;
+  if(allNames.length) return `<div class="hallsummary">${esc(allNames.join(', '))}</div>`;
+  if(v.cardNote) return `<div class="hallsummary">${esc(v.cardNote)}</div>`;
+  return '';
 }
 
 function placeholderCardHTML(category, subtype){
@@ -1569,9 +1591,8 @@ function openAddForSubtype(category, subtype){
 
 function cardHTML(v){
   const open = expandedIds.has(v.id);
-  const cmpOn = selectedCompare.has(v.id);
   const isSingle = SINGLE_ENTRY_CATS.includes(v.category);
-  const showDates = v.category === '야외스냅';
+  const showDates = v.category === '야외스냅' && v.subtype === '스냅업체';
   const hallSummary = weddingHallSummaryHTML(v);
   const itemSummary = subtypeItemSummaryHTML(v);
   const shootSummary = shootDateSummaryHTML(v);
@@ -1588,7 +1609,7 @@ function cardHTML(v){
       ${v.memo? `<div class="vendorrow"><div class="prow full"><div class="k">기타사항</div><div class="v">${esc(v.memo)}</div></div></div>`:''}
     </div></div>` : '';
 
-  const notFinalCls = (v.category==='본식' && !v.isFinal) ? ' notfinal' : '';
+  const notFinalCls = (SUBTYPE_OPTIONS[v.category] && !v.isFinal) ? ' notfinal' : '';
   return `<div class="card ${v.isFinal?'isfinal':''}${notFinalCls}${v.hidden?' vendorhidden':''}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
       <div class="cardheadtop">
@@ -1599,7 +1620,6 @@ function cardHTML(v){
           <h3 class="namerow"><span class="namemain">${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
         </div>
         <div class="headactions">
-          <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
           <button class="headbtn" data-hide="${v.id}">${v.hidden?'숨김 해제':'숨기기'}</button>
           <button class="headbtn danger" data-del="${v.id}">삭제</button>
           <button class="headbtn" data-edit="${v.id}">수정</button>
@@ -1617,86 +1637,25 @@ function cardHTML(v){
   </div>`;
 }
 
-function resolveSelectedItems(){
-  const out = [];
-  selectedItems.forEach(key=>{
-    const [vid, sectionKey, idxStr] = key.split('::');
-    const v = vendors.find(x=>x.id===vid);
-    if(!v || !v.sections || !v.sections[sectionKey]) return;
-    const item = v.sections[sectionKey].items[+idxStr];
-    if(!item) return;
-    const sec = getSchema(v.category, v.subtype).sections.find(s=>s.key===sectionKey);
-    if(!sec) return;
-    out.push({ vendor:v, item, sec });
-  });
-  return out;
-}
-function itemComparisonTableHTML(){
-  const sel = resolveSelectedItems();
-  if(sel.length===0){
-    return `<div class="empty">
-      <div class="mark">◌</div>
-      비교하고 싶은 상품이 아직 없어요.<br>카드형에서 업체를 펼쳐 상품 옆의 "비교 담기"를 눌러주세요.
-    </div>`;
-  }
-  const rowLabels = [];
-  const seen = new Set();
-  sel.forEach(({sec})=>{
-    sec.itemFields.forEach(f=>{
-      if(f.label==='기타사항') return;
-      if(!seen.has(f.label)){ seen.add(f.label); rowLabels.push(f.label); }
-    });
-  });
-  const hasPhoto = sel.some(({sec})=>sec.itemHasPhoto);
-  const header = `<tr><th>항목</th>${sel.map(({vendor,item})=>`<th>${esc(vendor.name)}${item.name? ' · '+esc(item.name) : (item.label? ' · '+esc(item.label) : '')}</th>`).join('')}</tr>`;
-  const photoRow = hasPhoto ? `<tr><td>사진</td>${sel.map(({item,sec})=>`<td>${sec.itemHasPhoto && item.photo? `<img class="cmpthumb" src="${esc(item.photo)}" data-lightbox-url="${esc(item.photo)}">` : '-'}</td>`).join('')}</tr>` : '';
-  const rows = rowLabels.map(label=>{
-    const cells = sel.map(({item,sec})=>{
-      const f = sec.itemFields.find(f=>f.label===label);
-      const val = f ? item[f.key] : null;
-      return `<td>${val? esc(val) : '-'}</td>`;
-    }).join('');
-    return `<tr><td>${esc(label)}</td>${cells}</tr>`;
-  }).join('');
-  return `<div class="cmptoolbar"><button class="btn small" id="clearItemCompare">선택 해제</button><span class="hint" style="margin:0;">최대 4개까지 담을 수 있어요</span></div>
-  <div class="tablewrap"><table>
-    <thead>${header}</thead>
-    <tbody>${photoRow}${rows}</tbody>
-  </table></div>`;
-}
-
 function renderContent(){
   const container = document.getElementById('content');
   if(showBudget){ renderBudgetPage(); return; }
-  const view = document.getElementById('viewSel').value;
   const list = filteredSorted();
 
-  if(view==='table'){
-    container.innerHTML = itemComparisonTableHTML();
-    const clearBtn = document.getElementById('clearItemCompare');
-    if(clearBtn) clearBtn.onclick = ()=>{ selectedItems.clear(); renderContent(); };
-    container.querySelectorAll('[data-lightbox-url]').forEach(img=>{
-      img.onclick = ()=> openLightboxFromEl(img);
-    });
-    updateCompareBar();
-    return;
-  }
-
-  if(list.length===0 && activeTab !== '본식'){
+  if(list.length===0 && !SUBTYPE_OPTIONS[activeTab]){
     container.innerHTML = `<div class="empty">
       <div class="mark">◌</div>
       아직 등록된 업체가 없어요.<br>업체를 추가하거나 JSON으로 불러와보세요.
     </div>`;
-    updateCompareBar();
     return;
   }
 
   let cardsHTML;
-  if(activeTab === '본식'){
-    cardsHTML = SUBTYPE_OPTIONS['본식'].map(subtype=>{
-      const matches = list.filter(v=>v.category==='본식' && v.subtype===subtype);
+  if(SUBTYPE_OPTIONS[activeTab]){
+    cardsHTML = SUBTYPE_OPTIONS[activeTab].map(subtype=>{
+      const matches = list.filter(v=>v.category===activeTab && v.subtype===subtype);
       if(matches.length) return matches.map(cardHTML).join('');
-      return placeholderCardHTML('본식', subtype);
+      return placeholderCardHTML(activeTab, subtype);
     }).join('');
   } else {
     cardsHTML = list.map(cardHTML).join('');
@@ -1734,37 +1693,11 @@ function renderContent(){
       renderContent();
     };
   });
-  container.querySelectorAll('[data-cmp]').forEach(btn=>{
-    btn.onclick = (e)=>{
-      e.stopPropagation();
-      const id = btn.dataset.cmp;
-      if(selectedCompare.has(id)){
-        selectedCompare.delete(id);
-      } else {
-        if(selectedCompare.size>=3){ alert('비교는 최대 3곳까지 선택할 수 있어요.'); return; }
-        selectedCompare.add(id);
-      }
-      renderContent();
-    };
-  });
   container.querySelectorAll('[data-del]').forEach(btn=>{
     btn.onclick = (e)=>{ e.stopPropagation(); deleteVendorById(btn.dataset.del); };
   });
   container.querySelectorAll('[data-edit]').forEach(btn=>{
     btn.onclick = (e)=>{ e.stopPropagation(); openEdit(btn.dataset.edit); };
-  });
-  container.querySelectorAll('[data-itemcmp]').forEach(btn=>{
-    btn.onclick = (e)=>{
-      e.stopPropagation();
-      const key = btn.dataset.itemcmp;
-      if(selectedItems.has(key)){
-        selectedItems.delete(key);
-      } else {
-        if(selectedItems.size>=4){ alert('비교는 최대 4개 상품까지 담을 수 있어요.'); return; }
-        selectedItems.add(key);
-      }
-      renderContent();
-    };
   });
   container.querySelectorAll('[data-itemfinal]').forEach(btn=>{
     btn.onclick = (e)=>{ e.stopPropagation(); itemFinalClick(btn.dataset.itemfinal); };
@@ -1774,7 +1707,6 @@ function renderContent(){
   });
 
   processInstagramEmbeds();
-  updateCompareBar();
 }
 
 let lightboxImages = [];
@@ -1816,7 +1748,6 @@ async function deleteVendorById(id){
   const ok = await showConfirm('이 업체를 삭제할까요?');
   if(!ok) return;
   vendors = vendors.filter(x=>x.id!==id);
-  selectedCompare.delete(id);
   expandedIds.delete(id);
   await saveVendors();
   renderContent();
@@ -1864,7 +1795,7 @@ function openPayment(vendorId){
   document.getElementById('paymentVendorLabel').textContent = `${v.category} · ${v.name}${sec? ' · '+sec.label:''}${itemLabel? ' · '+itemLabel:''}`;
   const pay = v.payment || {};
   const shootDateBox = document.getElementById('pm_shootDateBox');
-  if(v.category === '야외스냅'){
+  if(v.category === '야외스냅' && v.subtype === '스냅업체'){
     shootDateBox.style.display = '';
     document.getElementById('pm_shootDate').value = pay.shootDate||'';
   } else {
@@ -1912,36 +1843,6 @@ document.getElementById('unfinalizeBtn').onclick = async ()=>{
   renderContent();
 };
 
-function updateCompareBar(){
-  const bar = document.getElementById('compareBar');
-  if(selectedCompare.size===0){ bar.classList.remove('show'); return; }
-  bar.classList.add('show');
-  const names = [...selectedCompare].map(id=>{
-    const v = vendors.find(x=>x.id===id);
-    return v? v.name : '';
-  }).filter(Boolean);
-  document.getElementById('compareNames').textContent = names.join(' · ');
-  document.getElementById('compareGo').disabled = selectedCompare.size<2;
-}
-document.getElementById('compareClear').onclick = ()=>{ selectedCompare.clear(); renderContent(); };
-document.getElementById('compareGo').onclick = ()=>{
-  const grid = document.getElementById('compareGrid');
-  grid.innerHTML = [...selectedCompare].map(id=>{
-    const v = vendors.find(x=>x.id===id);
-    if(!v) return '';
-    return `<div class="comparecol">
-      <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(v.category)}</span>
-      <h3>${esc(v.name)}${v.location? ` <span class="cmpaddr">| ${esc(v.location)}</span>`:''}</h3>
-      ${dateChipsHTML(v)}
-      ${vendorSectionsHTML(v, false, true)}
-      ${instaEmbedsHTML(v.instaLinks)}
-    </div>`;
-  }).join('');
-  document.getElementById('compareOverlay').classList.add('show');
-  processInstagramEmbeds();
-};
-document.getElementById('closeCompare').onclick = ()=> document.getElementById('compareOverlay').classList.remove('show');
-
 // ---- Budget page ----
 document.getElementById('btnBudget').onclick = ()=>{
   showBudget = !showBudget;
@@ -1964,7 +1865,7 @@ function renderBudgetPage(){
     let v = null;
     let detailRows = [];
 
-    if(cat === '본식' || cat === '스냅준비'){
+    if(SUBTYPE_OPTIONS[cat]){
       detailRows = budgetRowsForSubtypeCategory(cat);
       v = detailRows.some(r=>r.vendorName) ? true : null;
     } else {
@@ -1986,14 +1887,14 @@ function renderBudgetPage(){
       addPayer(depositByPayer, r.depositPayer, r.deposit);
       addPayer(balanceByPayer, r.balancePayer, r.balance);
       if(r.balance > 0 && r.balanceDue && !r.balancePaid){
-        const isGroupedCat = (cat==='본식' || cat==='스냅준비');
+        const isGroupedCat = !!SUBTYPE_OPTIONS[cat];
         balanceDueList.push({
           cat: isGroupedCat ? r.label : cat,
           label: isGroupedCat ? (r.vendorName||'-') : r.label,
           amount:r.balance, dueDate:r.balanceDue, payer:r.balancePayer
         });
       }
-      const isGrouped = (cat==='본식' || cat==='스냅준비');
+      const isGrouped = !!SUBTYPE_OPTIONS[cat];
       const catCell = isGrouped ? esc(r.label) : (i===0? esc(cat) : '');
       const nameCell = isGrouped ? (esc(r.vendorName)||'-') : esc(r.label);
       bodyHTML += `<tr data-cat="${esc(cat)}">
@@ -2136,6 +2037,12 @@ function exportData(){
 function normalizeLoadedVendor(v){
   if(v.category === '스냅촬영') v.category = '야외스냅';
   if(v.category === '웨딩홀') v.category = '본식';
+  if(v.category === '한복'){ v.category = '혼주'; if(!v.subtype) v.subtype = '한복'; }
+  if(v.category === '스냅준비'){
+    v.category = '야외스냅';
+    if(!v.subtype || !SUBTYPE_OPTIONS['야외스냅'].includes(v.subtype)) v.subtype = '기타';
+  }
+  if(v.category === '야외스냅' && !v.subtype) v.subtype = '스냅업체';
   if(v.category === '기타' && v.sections && (v.sections.hallinfo || v.sections.ceremonyDress || v.sections.mainPhoto)){
     v.category = '본식';
   }
@@ -2578,9 +2485,11 @@ function syncSectionsFromDOM(schemaOverride){
     editingSections[sec.key] = { extra, items, images: prevImages, instaLinks: prevInsta };
   });
 }
-const GALLERY_TOP_CATS = ['야외스냅','한복'];
+const GALLERY_TOP_CATS = ['야외스냅','혼주'];
 const SINGLE_ENTRY_CATS = [];
-const NO_GALLERY_CATS = ['스냅준비'];
+function shouldHideGallery(cat, subtype){
+  return cat === '야외스냅' && subtype && subtype !== '스냅업체';
+}
 function repositionGallery(){
   const cat = document.getElementById('f_category').value;
   const target = GALLERY_TOP_CATS.includes(cat) ? 'gallerySlotTop' : 'gallerySlotBottom';
@@ -2601,9 +2510,9 @@ function updateFieldVisibility(){
     subtypeBox.style.display = 'none';
   }
   document.getElementById('basicFieldsBox').style.display = SINGLE_ENTRY_CATS.includes(cat) ? 'none' : '';
-  document.getElementById('cardNoteFieldBox').style.display = (cat === '본식') ? '' : 'none';
-  document.getElementById('datesFieldBox').style.display = (cat === '야외스냅') ? '' : 'none';
-  const hideGallery = NO_GALLERY_CATS.includes(cat);
+  document.getElementById('cardNoteFieldBox').style.display = SUBTYPE_OPTIONS[cat] ? '' : 'none';
+  document.getElementById('datesFieldBox').style.display = (cat === '야외스냅' && subtypeSel.value === '스냅업체') ? '' : 'none';
+  const hideGallery = shouldHideGallery(cat, subtypeSel.value);
   document.getElementById('galleryBlock').style.display = hideGallery ? 'none' : '';
   document.getElementById('contractBlock').style.display = hideGallery ? 'none' : '';
 }
@@ -2620,6 +2529,7 @@ document.getElementById('f_subtype').addEventListener('change', ()=>{
   });
   renderSections();
   repositionGallery();
+  updateFieldVisibility();
 });
 
 document.getElementById('f_category').addEventListener('change', ()=>{
@@ -2645,7 +2555,7 @@ function openEdit(id){
   const v = id ? vendors.find(x=>x.id===id) : null;
   document.getElementById('editTitle').textContent = v ? '업체 수정' : '업체 추가';
   document.getElementById('editId').value = v ? v.id : '';
-  const cat = v ? v.category : (activeTab!=="전체" ? activeTab : "본식");
+  const cat = v ? v.category : activeTab;
   document.getElementById('f_category').value = cat;
   if(SUBTYPE_OPTIONS[cat]){
     const sub = (v && v.subtype && SUBTYPE_OPTIONS[cat].includes(v.subtype)) ? v.subtype : SUBTYPE_OPTIONS[cat][0];
@@ -2715,11 +2625,11 @@ document.getElementById('saveEdit').onclick = async ()=>{
     location: single ? '' : document.getElementById('f_location').value.trim(),
     memo: document.getElementById('f_memo').value.trim(),
     cardNote: document.getElementById('f_cardNote').value.trim(),
-    dates: cat === '야외스냅' ? dates : [],
+    dates: (cat === '야외스냅' && subtype === '스냅업체') ? dates : [],
     sections,
-    images: NO_GALLERY_CATS.includes(cat) ? [] : editingImages.slice(),
-    contractImages: NO_GALLERY_CATS.includes(cat) ? [] : editingContractImages.slice(),
-    instaLinks: NO_GALLERY_CATS.includes(cat) ? [] : editingInstaLinks.slice()
+    images: shouldHideGallery(cat, subtype) ? [] : editingImages.slice(),
+    contractImages: shouldHideGallery(cat, subtype) ? [] : editingContractImages.slice(),
+    instaLinks: shouldHideGallery(cat, subtype) ? [] : editingInstaLinks.slice()
   };
   if(!data.name){ alert('업체명을 입력해주세요.'); return; }
   if(id){
@@ -2729,6 +2639,13 @@ document.getElementById('saveEdit').onclick = async ()=>{
   } else {
     id = uid();
     vendors.push({ id, favorite:false, createdAt: Date.now(), isFinal:false, finalRef:null, payment:{}, ...data });
+  }
+  if(cat === '본식' && subtype && !BONSIK_COMPARE_SUBTYPES.includes(subtype)){
+    vendors.forEach(v2=>{
+      if(v2.category==='본식' && v2.subtype===subtype){
+        v2.isFinal = (v2.id === id);
+      }
+    });
   }
   await saveVendors();
   closeEdit();
@@ -2859,9 +2776,8 @@ document.getElementById('confirmImport').onclick = async ()=>{
 
 document.getElementById('sortSel').onchange = renderContent;
 document.getElementById('showHiddenChk').onchange = renderContent;
-document.getElementById('viewSel').onchange = renderContent;
 
-[document.getElementById('editOverlay'), importOverlay, document.getElementById('compareOverlay'), document.getElementById('paymentOverlay'), document.getElementById('jsonTemplateOverlay'), document.getElementById('payerSummaryOverlay')].forEach(ov=>{
+[document.getElementById('editOverlay'), importOverlay, document.getElementById('paymentOverlay'), document.getElementById('jsonTemplateOverlay'), document.getElementById('payerSummaryOverlay')].forEach(ov=>{
   ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('show'); });
 });
 
