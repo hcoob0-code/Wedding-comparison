@@ -339,6 +339,7 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
     <button class="btn primary" id="btnAdd">+ 추가</button>
     <button class="btn" id="btnImport">JSON 붙여넣기</button>
     <button class="btn heart" id="btnBudget" title="총 비용 보기">♥</button>
+    <label class="hidetoggle"><input type="checkbox" id="showHiddenChk"> 숨김보기</label>
     <div class="spacer"></div>
     <select class="viewsel" id="sortSel">
       <option value="recent">최근순</option>
@@ -350,9 +351,6 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
       <option value="card">카드 형</option>
       <option value="table">표 형</option>
     </select>
-  </div>
-  <div class="toolbar" style="margin-top:-10px;">
-    <label class="hidetoggle"><input type="checkbox" id="showHiddenChk"> 숨긴 업체 보기</label>
   </div>
 
   <div id="content"></div>
@@ -1273,13 +1271,42 @@ function shootDateSummaryHTML(v){
 }
 function weddingHallSummaryHTML(v){
   if(v.category !== '본식') return '';
-  const extra = (v.sections && v.sections.hallinfo && v.sections.hallinfo.extra) || {};
-  const parts = [];
-  if(extra.ceremonyDate) parts.push(formatKoreanDateDisplay(extra.ceremonyDate));
-  if(extra.ceremonyTime) parts.push(extra.ceremonyTime);
-  if(extra.hallName) parts.push(extra.hallName);
-  if(parts.length===0) return '';
-  return `<div class="hallsummary">${esc(parts.join(' · '))}</div>`;
+  const s = v.sections || {};
+  const lines = [];
+
+  const hi = (s.hallinfo && s.hallinfo.extra) || {};
+  const hallParts = [];
+  if(hi.ceremonyDate) hallParts.push(formatKoreanDateDisplay(hi.ceremonyDate));
+  if(hi.ceremonyTime) hallParts.push(hi.ceremonyTime);
+  if(hi.hallName) hallParts.push(hi.hallName);
+  if(hallParts.length) lines.push(`웨딩홀: ${esc(hallParts.join(' · '))}`);
+
+  const dressItems = (s.ceremonyDress && s.ceremonyDress.items) || [];
+  const chosenDress = (v.finalRefs||[]).find(r=>r.sectionKey==='ceremonyDress');
+  if(chosenDress && dressItems[chosenDress.itemIndex] && dressItems[chosenDress.itemIndex].brand){
+    lines.push(`드레스: ${esc(dressItems[chosenDress.itemIndex].brand)}`);
+  } else if(dressItems.length){
+    lines.push(`드레스: ${dressItems.length}개 비교중`);
+  }
+
+  const suitVendor = (s.groomSuitCustom && s.groomSuitCustom.extra && s.groomSuitCustom.extra.vendor)
+    || (s.groomSuitRental && s.groomSuitRental.extra && s.groomSuitRental.extra.vendor) || '';
+  if(suitVendor) lines.push(`정장: ${esc(suitVendor)}`);
+
+  const mpVendor = (s.mainPhoto && s.mainPhoto.extra && s.mainPhoto.extra.vendor) || '';
+  if(mpVendor) lines.push(`본식촬영: ${esc(mpVendor)}`);
+
+  const ipVendor = (s.iphoneSnap && s.iphoneSnap.extra && s.iphoneSnap.extra.vendor) || '';
+  if(ipVendor) lines.push(`아이폰스냅: ${esc(ipVendor)}`);
+
+  const hmVendor = (s.hairMakeup && s.hairMakeup.extra && s.hairMakeup.extra.vendor) || '';
+  if(hmVendor) lines.push(`헤어메이크업: ${esc(hmVendor)}`);
+
+  const bqVendor = (s.bouquet && s.bouquet.extra && s.bouquet.extra.vendor) || '';
+  if(bqVendor) lines.push(`부케: ${esc(bqVendor)}`);
+
+  if(lines.length===0) return '';
+  return lines.map(l=>`<div class="hallsummary">${l}</div>`).join('');
 }
 
 function cardHTML(v){
@@ -1314,7 +1341,6 @@ function cardHTML(v){
         </div>
         <div class="headactions">
           <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
-          ${isSingle ? `<button class="headbtn ${v.isFinal?'finalon':''}" data-finalvendor="${v.id}">${v.isFinal?'★ 확정됨':'이 업체로 확정'}</button>` : ''}
           <button class="headbtn" data-hide="${v.id}">${v.hidden?'숨김 해제':'숨기기'}</button>
           <button class="headbtn danger" data-del="${v.id}">삭제</button>
           <button class="headbtn" data-edit="${v.id}">수정</button>
@@ -1746,14 +1772,18 @@ function renderBudgetPage(){
     <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${grandTotal.toLocaleString()}만원</div>
 
     <h3 style="margin:18px 0 8px;font-size:13px;">잔금 내역 (빠른 순)</h3>
-    <div class="paystatuslist">
-      ${balanceDueList.length===0 ? '<div class="hint">낼 잔금이 없거나 전부 지불 완료됐어요.</div>' : balanceDueList.map(b=>`
-        <div class="paystatuscard">
-          <div class="paystatushead">${esc(b.cat)} · ${esc(b.label)}</div>
-          <div class="prow"><div class="k">금액</div><div class="v">${b.amount.toLocaleString()}만원 (${esc(b.payer)||'-'})</div></div>
-          <div class="prow"><div class="k">잔금일</div><div class="v">${esc(b.dueDate)}</div></div>
-        </div>
-      `).join('')}
+    <div class="tablewrap budgettable">
+      ${balanceDueList.length===0 ? '<div class="hint">낼 잔금이 없거나 전부 지불 완료됐어요.</div>' : `<table>
+        <thead><tr><th>카테고리</th><th>업체</th><th>금액</th><th>잔금일</th></tr></thead>
+        <tbody>
+          ${balanceDueList.map(b=>`<tr>
+            <td style="white-space:nowrap;">${esc(b.cat)}</td>
+            <td>${esc(b.label)}</td>
+            <td class="budgettotal">${b.amount.toLocaleString()}만원</td>
+            <td style="white-space:nowrap;">${esc(b.dueDate)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`}
     </div>
 
     <h3 style="margin:18px 0 8px;font-size:13px;">지불인별 합계</h3>
