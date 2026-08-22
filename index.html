@@ -147,8 +147,10 @@ select.viewsel{
 .nodates{font-size:10px;color:var(--ink-soft);margin-top:6px;}
 
 .sectionblock{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);}
-.sectiongroup{margin-top:16px;font-size:14px;font-weight:800;color:var(--ink);background:var(--paper-deep);padding:8px 12px;border-radius:10px;}
-.sectionblock.grouped{margin-top:6px;padding:10px 12px;border-top:none;background:var(--paper-deep);border-radius:10px;}
+.groupcard{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px 14px 14px;}
+.groupcardtitle{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+.sectionblock.incard{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);}
+.sectionblock.incard.firstincard{margin-top:0;padding-top:0;border-top:none;}
 .sectionblock:first-of-type{margin-top:10px;}
 .sectionlabel{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:6px;}
 .products{margin-top:8px;display:flex;flex-direction:column;gap:8px;}
@@ -194,6 +196,9 @@ td.fav{text-align:center;}
 .budgettable th{font-size:6.5px;padding:5px 4px;}
 .budgettable td{padding:5px 4px;font-size:7px;}
 .budgetsubtotal td{font-weight:700;background:var(--paper-deep);color:var(--ink-soft);border-top:1px dashed var(--line);}
+.duetable table{font-size:12px;min-width:100%;}
+.duetable th{font-size:11px;padding:7px 6px;}
+.duetable td{padding:7px 6px;font-size:12px;}
 .paystatuslist{display:flex;flex-direction:column;gap:8px;}
 .paystatuscard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
 .paystatushead{font-weight:800;font-size:12.5px;margin-bottom:6px;}
@@ -240,6 +245,8 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .modal-actions .btn{flex:1;justify-content:center;}
 
 .editsection{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px;background:#fff;}
+.groupcard .editsection{border:none;border-top:1px dashed var(--line);border-radius:0;padding:12px 0 0;margin-bottom:0;background:transparent;}
+.groupcard .editsection.firstincard{border-top:none;padding-top:0;}
 .editsection h4{margin:0 0 10px;}
 .productRow{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--paper);}
 .prow-head{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
@@ -544,69 +551,80 @@ const DEFAULT_SCHEMA = { sections: [
 ]};
 const CATEGORY_SCHEMA = {
   "본식": { sections: [
-    { key:'hallinfo', label:'홀 정보', group:'웨딩홀', extraFields:[
+    { key:'hallinfo', label:'홀 정보', card:'웨딩홀', hasMedia:true, extraFields:[
         {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
         {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'},
+        {key:'note', label:'참고사항', long:true, type:'textarea'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'screen', label:'스크린', group:'웨딩홀', extraFields:[
+    { key:'screen', label:'스크린', card:'웨딩홀', extraFields:[
         {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
         {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'staging', label:'연출도우미', group:'웨딩홀', extraFields:[
+    { key:'staging', label:'연출도우미', card:'웨딩홀', extraFields:[
         {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
         {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'dressHelper', label:'드레스헬퍼', group:'웨딩홀', extraFields:[
+    { key:'dressHelper', label:'드레스헬퍼', card:'웨딩홀', extraFields:[
         {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'},
         {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'catering', label:'식대', group:'웨딩홀', extraFields:[
+    { key:'catering', label:'식대', card:'웨딩홀', extraFields:[
         {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true},{key:'liquor', label:'주류비 (병)', money:true},{key:'beverage', label:'음료비 (병)', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'},
         {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
         {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3},
         {key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'ceremonyDress', label:'본식 드레스', extraFields:[
+    { key:'ceremonyDress', label:'본식 드레스', card:'본식 드레스', extraFields:[
       ], itemsLabel:'브랜드별 비교', itemFields:[
         {key:'brand', label:'브랜드명', long:true},{key:'price', label:'추가금', long:true, money:true},
         {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
         {key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true },
-    { key:'groomSuitCustom', label:'맞춤정장', extraFields:[
+    { key:'groomSuitCustom', label:'맞춤정장', card:'본식 정장', extraFields:[
         {key:'vendor', label:'업체명'},
         {key:'shirtCount', label:'셔츠 수량'},{key:'tieCount', label:'넥타이 수량'},{key:'shoesInfo', label:'수제화 구성'},
         {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true}
       ], itemsLabel:'원단별 가격', itemFields:[
         {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
       ], itemHasPhoto:false },
-    { key:'groomSuitRental', label:'대여정장', extraFields:[
+    { key:'groomSuitRental', label:'대여정장', card:'본식 정장', extraFields:[
         {key:'vendor', label:'업체명'}
       ], itemsLabel:'원단별 대여가격', itemFields:[
         {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
       ], itemHasPhoto:false },
-    { key:'mainPhoto', label:'본식촬영', extraFields:[
-        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
-        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-    { key:'iphoneSnap', label:'아이폰스냅', extraFields:[
-        {key:'vendor', label:'업체', long:true},{key:'composition', label:'구성', long:true},{key:'provided', label:'참고사항', long:true, type:'textarea'},{key:'price', label:'가격', money:true},
-        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
-        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
-      ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
-    { key:'hairMakeup', label:'헤어메이크업', extraFields:[
+    { key:'hairMakeup', label:'헤어메이크업', card:'헤어메이크업', extraFields:[
         {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
         {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'},
         {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true},
         {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
         {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
-    { key:'bouquet', label:'부케', extraFields:[
+    { key:'mainPhoto', label:'본식 스냅', card:'본식 스냅', extraFields:[
+        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
+        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'iphoneSnap', label:'아이폰스냅', card:'아이폰스냅', extraFields:[
+        {key:'vendor', label:'업체', long:true},{key:'composition', label:'구성', long:true},{key:'provided', label:'참고사항', long:true, type:'textarea'},{key:'price', label:'가격', money:true},
+        {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
+        {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
+    { key:'dvd', label:'DVD촬영', card:'DVD촬영', extraFields:[
+        {key:'vendor', label:'업체'},{key:'note', label:'참고사항', long:true, type:'textarea'},
+        {key:'extraNote', label:'추가내역'},{key:'extraPrice', label:'추가금', money:true}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'bouquet', label:'부케', card:'부케', extraFields:[
         {key:'vendor', label:'업체'},{key:'extraPrice', label:'추가금', money:true},
         {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'},
         {key:'composition', label:'구성', long:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
       ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true },
-    { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
+    { key:'mc', label:'사회자', card:'사회자', extraFields:[
+        {key:'name', label:'이름'},{key:'price', label:'가격', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'flowerCracker', label:'플라워폭죽', card:'플라워폭죽', extraFields:[
+        {key:'option', label:'옵션'},{key:'price', label:'가격', money:true},{key:'note', label:'참고사항', long:true, type:'textarea'}
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+    { key:'etc', label:'기타', card:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
         {key:'note', label:'내역'},{key:'amount', label:'금액', money:true},
         {key:'balanceDueDate', label:'잔금일'},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
       ], itemHasPhoto:false }
@@ -1093,7 +1111,16 @@ function budgetRowsForWeddingHall(v){
   rows.push({ label:'드레스', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:dressTotal });
 
   const mp = (s.mainPhoto && s.mainPhoto.extra) || {};
-  rows.push({ label:'본식촬영', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(mp.extraPrice) });
+  rows.push({ label:'본식 스냅', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(mp.extraPrice) });
+
+  const dvd = (s.dvd && s.dvd.extra) || {};
+  rows.push({ label:'DVD촬영', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(dvd.extraPrice) });
+
+  const mc = (s.mc && s.mc.extra) || {};
+  rows.push({ label:'사회자', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(mc.price) });
+
+  const fc = (s.flowerCracker && s.flowerCracker.extra) || {};
+  rows.push({ label:'플라워폭죽', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:moneyToManwon(fc.price) });
 
   const ip = (s.iphoneSnap && s.iphoneSnap.extra) || {};
   const ipDep = moneyToManwon(ip.depositAmount), ipBal = moneyToManwon(ip.balanceAmount);
@@ -1212,17 +1239,21 @@ function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls, oneCo
 
 function vendorSectionsHTML(v, showControls, oneCol){
   const schema = getSchema(v.category);
+  const cardCounts = {};
+  schema.sections.forEach(sec=>{ if(sec.card) cardCounts[sec.card] = (cardCounts[sec.card]||0)+1; });
+
   let html = '';
-  let currentGroup = null;
+  let currentCard = null;
+  let justOpenedCard = false;
   schema.sections.forEach(sec=>{
-    if(sec.group !== currentGroup){
-      if(currentGroup === '웨딩홀'){
+    if(sec.card !== currentCard){
+      if(currentCard === '웨딩홀'){
         html += galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'');
       }
-      if(sec.group){
-        html += `<div class="sectiongroup">${esc(sec.group)}</div>`;
-      }
-      currentGroup = sec.group || null;
+      if(currentCard) html += `</div>`;
+      if(sec.card) html += `<div class="groupcard"><div class="groupcardtitle">${esc(sec.card)}</div>`;
+      currentCard = sec.card || null;
+      justOpenedCard = !!sec.card;
     }
     const data = (v.sections && v.sections[sec.key]) || {extra:{}, items:[]};
     const rows = fieldsToHTML(sec.extraFields, data.extra, oneCol);
@@ -1230,11 +1261,15 @@ function vendorSectionsHTML(v, showControls, oneCol){
     const items = data.items || [];
     const itemsHTML = items.length ? `<div class="products">${items.map((it,idx)=>itemBlockHTML(it,sec,v.id,sec.key,idx,showControls,oneCol)).join('')}</div>` : '';
     const mediaHTML = sec.hasMedia ? (galleryHTML(data.images, '') + instaEmbedsHTML(data.instaLinks)) : '';
-    html += `<div class="sectionblock${sec.group?' grouped':''}"><div class="sectionlabel">${esc(sec.label)}</div>${extraHTML}${itemsHTML}${mediaHTML}</div>`;
+    const skipInnerLabel = sec.card && cardCounts[sec.card] === 1;
+    const innerLabel = skipInnerLabel ? '' : `<div class="sectionlabel">${esc(sec.label)}</div>`;
+    html += `<div class="sectionblock${sec.card?' incard':''}${justOpenedCard?' firstincard':''}">${innerLabel}${extraHTML}${itemsHTML}${mediaHTML}</div>`;
+    justOpenedCard = false;
   });
-  if(currentGroup === '웨딩홀'){
+  if(currentCard === '웨딩홀'){
     html += galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'');
   }
+  if(currentCard) html += `</div>`;
   return html;
 }
 
@@ -1294,16 +1329,22 @@ function weddingHallSummaryHTML(v){
   if(suitVendor) lines.push(`정장: ${esc(suitVendor)}`);
 
   const mpVendor = (s.mainPhoto && s.mainPhoto.extra && s.mainPhoto.extra.vendor) || '';
-  if(mpVendor) lines.push(`본식촬영: ${esc(mpVendor)}`);
+  if(mpVendor) lines.push(`본식 스냅: ${esc(mpVendor)}`);
 
   const ipVendor = (s.iphoneSnap && s.iphoneSnap.extra && s.iphoneSnap.extra.vendor) || '';
   if(ipVendor) lines.push(`아이폰스냅: ${esc(ipVendor)}`);
+
+  const dvdVendor = (s.dvd && s.dvd.extra && s.dvd.extra.vendor) || '';
+  if(dvdVendor) lines.push(`DVD촬영: ${esc(dvdVendor)}`);
 
   const hmVendor = (s.hairMakeup && s.hairMakeup.extra && s.hairMakeup.extra.vendor) || '';
   if(hmVendor) lines.push(`헤어메이크업: ${esc(hmVendor)}`);
 
   const bqVendor = (s.bouquet && s.bouquet.extra && s.bouquet.extra.vendor) || '';
   if(bqVendor) lines.push(`부케: ${esc(bqVendor)}`);
+
+  const mcName = (s.mc && s.mc.extra && s.mc.extra.name) || '';
+  if(mcName) lines.push(`사회자: ${esc(mcName)}`);
 
   if(lines.length===0) return '';
   return lines.map(l=>`<div class="hallsummary">${l}</div>`).join('');
@@ -1772,7 +1813,7 @@ function renderBudgetPage(){
     <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${grandTotal.toLocaleString()}만원</div>
 
     <h3 style="margin:18px 0 8px;font-size:13px;">잔금 내역 (빠른 순)</h3>
-    <div class="tablewrap budgettable">
+    <div class="tablewrap duetable">
       ${balanceDueList.length===0 ? '<div class="hint">낼 잔금이 없거나 전부 지불 완료됐어요.</div>' : `<table>
         <thead><tr><th>카테고리</th><th>업체</th><th>금액</th><th>잔금일</th></tr></thead>
         <tbody>
@@ -2153,7 +2194,7 @@ function sectionMediaHTML(sec, data){
     ${links}
   </div>`;
 }
-function sectionEditorHTML(sec, data){
+function sectionEditorHTML(sec, data, firstInCard){
   const quadFields = sec.extraFields.filter(f=>f.quad);
   const normalFields = sec.extraFields.filter(f=>!f.quad);
   const laidExtra = computeFieldLayout(normalFields, f=>f.long);
@@ -2163,15 +2204,16 @@ function sectionEditorHTML(sec, data){
   }
   const extraWrapped = extraHTML ? `<div class="exgrid">${extraHTML}</div>` : '';
   const mediaHTML = sectionMediaHTML(sec, data);
+  const firstCls = firstInCard ? ' firstincard' : '';
   if(sec.itemFields.length===0){
-    return `<div class="editsection">
+    return `<div class="editsection${firstCls}">
       <h4>${esc(sec.label)}</h4>
       ${extraWrapped}
       ${mediaHTML}
     </div>`;
   }
   const itemsHTML = data.items.map((item,idx)=>itemEditRowHTML(item,idx,sec)).join('') || '<div class="hint">등록된 항목이 없어요.</div>';
-  return `<div class="editsection">
+  return `<div class="editsection${firstCls}">
     <h4>${esc(sec.label)}</h4>
     ${extraWrapped}
     ${mediaHTML}
@@ -2185,11 +2227,21 @@ function renderSections(){
   const schema = currentSchema();
   lastCategoryValue = document.getElementById('f_category').value;
   const box = document.getElementById('sectionsBox');
-  box.innerHTML = schema.sections.map((sec,i)=>{
-    const prevGroup = i>0 ? schema.sections[i-1].group : null;
-    const groupHeader = (sec.group && sec.group !== prevGroup) ? `<div class="sectiongroup">${esc(sec.group)}</div>` : '';
-    return groupHeader + sectionEditorHTML(sec, editingSections[sec.key]||{extra:{},items:[]});
-  }).join('');
+  let html = '';
+  let currentCard = null;
+  let justOpenedCard = false;
+  schema.sections.forEach(sec=>{
+    if(sec.card !== currentCard){
+      if(currentCard) html += `</div>`;
+      if(sec.card) html += `<div class="groupcard"><div class="groupcardtitle">${esc(sec.card)}</div>`;
+      currentCard = sec.card || null;
+      justOpenedCard = !!sec.card;
+    }
+    html += sectionEditorHTML(sec, editingSections[sec.key]||{extra:{},items:[]}, justOpenedCard);
+    justOpenedCard = false;
+  });
+  if(currentCard) html += `</div>`;
+  box.innerHTML = html;
 
   box.querySelectorAll('.rowDel').forEach(btn=>{
     btn.onclick = ()=>{
