@@ -48,6 +48,8 @@ body::before{
 .tab.active .dot{filter:brightness(2);}
 
 .toolbar{display:flex;flex-wrap:nowrap;gap:4px;margin-bottom:14px;}
+.hidetoggle{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-soft);font-weight:600;cursor:pointer;}
+.hidetoggle input{width:14px;height:14px;}
 .btn{
   appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
   padding:6px 8px;border-radius:10px;font-size:11.5px;font-weight:600;cursor:pointer;transition:.15s;
@@ -124,6 +126,7 @@ select.viewsel{
   font-size:10px;font-weight:700;color:var(--ink-soft);cursor:pointer;white-space:nowrap;
 }
 .headbtn.danger{color:var(--persimmon);border-color:#EAD3CC;background:#FBF3F0;}
+.headbtn.finalon{color:#fff;background:var(--gold);border-color:var(--gold);}
 
 .cardbody{padding:0 16px 16px;border-top:1px solid var(--line);}
 .cardbody-inner{padding-top:12px;}
@@ -339,6 +342,9 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
       <option value="table">표 형</option>
     </select>
   </div>
+  <div class="toolbar" style="margin-top:-10px;">
+    <label class="hidetoggle"><input type="checkbox" id="hideUndecidedChk"> 결정된 곳은 안 고른 업체 숨기기</label>
+  </div>
 
   <div id="content"></div>
 
@@ -449,6 +455,7 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
     <div class="closebtn"><button id="closePayment">✕</button></div>
     <h2>결제 정보</h2>
     <div class="sub" id="paymentVendorLabel" style="margin-bottom:12px;"></div>
+    <div class="field" id="pm_shootDateBox" style="display:none;"><label>촬영일 (확정)</label><input id="pm_shootDate" type="date"></div>
     <div class="field"><label>계약금 (만원)</label><input id="pm_depositAmount" type="number" placeholder="예: 50"></div>
     <div class="field"><label>계약금 낸 날짜</label><input id="pm_depositDate" type="date"></div>
     <div class="field"><label>계약금 낸 사람</label><input id="pm_depositPayer" placeholder="예: 신랑"></div>
@@ -994,6 +1001,11 @@ function minPrice(v){
 
 function filteredSorted(){
   let list = activeTab==="전체" ? vendors.slice() : vendors.filter(v=>v.category===activeTab);
+  const hideChk = document.getElementById('hideUndecidedChk');
+  if(hideChk && hideChk.checked){
+    const finalCats = new Set(vendors.filter(v=>v.isFinal).map(v=>v.category));
+    list = list.filter(v=> !finalCats.has(v.category) || v.isFinal);
+  }
   const sort = document.getElementById('sortSel').value;
   if(sort==='fav'){
     list.sort((a,b)=> (b.favorite?1:0)-(a.favorite?1:0) || b.createdAt-a.createdAt);
@@ -1212,6 +1224,15 @@ function processInstagramEmbeds(){
   }
 }
 
+function shootDateSummaryHTML(v){
+  if(v.category !== '야외스냅') return '';
+  const d = v.payment && v.payment.shootDate;
+  if(!d) return '';
+  const dt = new Date(d+'T00:00:00');
+  if(isNaN(dt.getTime())) return '';
+  const week = ['일','월','화','수','목','금','토'][dt.getDay()];
+  return `<div class="hallsummary">✓ 촬영일 확정: ${dt.getMonth()+1}/${dt.getDate()}(${week})</div>`;
+}
 function weddingHallSummaryHTML(v){
   if(v.category !== '웨딩홀') return '';
   const extra = (v.sections && v.sections.hallinfo && v.sections.hallinfo.extra) || {};
@@ -1231,6 +1252,7 @@ function cardHTML(v){
   const isSingle = SINGLE_ENTRY_CATS.includes(v.category);
   const showDates = v.category === '야외스냅';
   const hallSummary = weddingHallSummaryHTML(v);
+  const shootSummary = shootDateSummaryHTML(v);
   const body = open ? `<div class="cardbody"><div class="cardbody-inner">
       ${(!isSingle && v.link)? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
       ${vendorSectionsHTML(v, true)}
@@ -1254,13 +1276,15 @@ function cardHTML(v){
         </div>
         <div class="headactions">
           <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
+          ${isSingle ? `<button class="headbtn ${v.isFinal?'finalon':''}" data-finalvendor="${v.id}">${v.isFinal?'★ 확정됨':'이 업체로 확정'}</button>` : ''}
           <button class="headbtn danger" data-del="${v.id}">삭제</button>
           <button class="headbtn" data-edit="${v.id}">수정</button>
         </div>
         <span class="draghandle" data-drag="${v.id}" title="드래그해서 순서 바꾸기">⠿</span>
         <span class="chev">▾</span>
       </div>
-      ${(showDates || hallSummary) ? `<div class="cardheadbottom">
+      ${(showDates || hallSummary || shootSummary) ? `<div class="cardheadbottom">
+        ${shootSummary}
         ${showDates ? dateChipsHTML(v) : ''}
         ${hallSummary}
       </div>` : ''}
@@ -1358,6 +1382,16 @@ function renderContent(){
       e.stopPropagation();
       startCardDrag(handle.dataset.drag, e.clientY);
     });
+  });
+  container.querySelectorAll('[data-finalvendor]').forEach(btn=>{
+    btn.onclick = async (e)=>{
+      e.stopPropagation();
+      const v = vendors.find(x=>x.id===btn.dataset.finalvendor);
+      if(!v) return;
+      v.isFinal = !v.isFinal;
+      await saveVendors();
+      renderContent();
+    };
   });
   container.querySelectorAll('[data-fav]').forEach(btn=>{
     btn.onclick = async (e)=>{
@@ -1468,7 +1502,6 @@ function itemFinalClick(key){
     (async ()=>{
       if(existingIdx>=0) v.finalRefs.splice(existingIdx,1);
       else v.finalRefs.push({sectionKey, itemIndex:idx});
-      v.isFinal = v.finalRefs.length>0;
       await saveVendors();
       renderContent();
     })();
@@ -1507,6 +1540,13 @@ function openPayment(vendorId){
   const itemLabel = item ? (item.name||item.label||item.fabric||'') : '';
   document.getElementById('paymentVendorLabel').textContent = `${v.category} · ${v.name}${sec? ' · '+sec.label:''}${itemLabel? ' · '+itemLabel:''}`;
   const pay = v.payment || {};
+  const shootDateBox = document.getElementById('pm_shootDateBox');
+  if(v.category === '야외스냅'){
+    shootDateBox.style.display = '';
+    document.getElementById('pm_shootDate').value = pay.shootDate||'';
+  } else {
+    shootDateBox.style.display = 'none';
+  }
   document.getElementById('pm_depositAmount').value = pay.depositAmount||'';
   document.getElementById('pm_depositDate').value = pay.depositDate||'';
   document.getElementById('pm_depositPayer').value = pay.depositPayer||'';
@@ -1520,6 +1560,7 @@ document.getElementById('savePayment').onclick = async ()=>{
   const v = vendors.find(x=>x.id===paymentVendorId);
   if(!v) return;
   v.payment = {
+    shootDate: document.getElementById('pm_shootDate').value,
     depositAmount: document.getElementById('pm_depositAmount').value.trim(),
     depositDate: document.getElementById('pm_depositDate').value,
     depositPayer: document.getElementById('pm_depositPayer').value.trim(),
@@ -2402,6 +2443,7 @@ document.getElementById('confirmImport').onclick = async ()=>{
 };
 
 document.getElementById('sortSel').onchange = renderContent;
+document.getElementById('hideUndecidedChk').onchange = renderContent;
 document.getElementById('viewSel').onchange = renderContent;
 
 [document.getElementById('editOverlay'), importOverlay, document.getElementById('compareOverlay'), document.getElementById('paymentOverlay'), document.getElementById('jsonTemplateOverlay'), document.getElementById('payerSummaryOverlay')].forEach(ov=>{
