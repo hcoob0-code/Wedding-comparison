@@ -91,15 +91,16 @@ select.viewsel{
 .topline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;}
 .card .catchip{
   display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ink-soft);
-  background:var(--paper-deep);padding:3px 9px;border-radius:999px;white-space:nowrap;flex:0 0 auto;
+  background:var(--paper-deep);padding:5px 9px;border-radius:999px;white-space:nowrap;flex:0 0 auto;
 }
 .card .catchip .dot{width:6px;height:6px;border-radius:50%;}
 .finalbadge{display:inline-block;font-size:10.5px;font-weight:800;color:#fff;background:var(--gold);padding:3px 8px;border-radius:999px;}
 .availbadge{font-size:10.5px;font-weight:600;color:var(--ink-soft);display:inline-flex;align-items:center;gap:4px;}
 .card h3{margin:0;font-size:15.5px;font-weight:800;letter-spacing:-.01em;}
+.card h3.namerow{display:flex;align-items:baseline;justify-content:space-between;gap:6px;flex-wrap:wrap;}
 .nameloc{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
 .hallsummary{font-size:11.5px;font-weight:600;color:var(--celadon);margin-top:3px;}
-.shootsummary{font-size:11.5px;font-weight:700;color:var(--gold);margin-top:3px;text-align:right;}
+.shootsummary{font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap;flex:0 0 auto;}
 .availdot{width:7px;height:7px;border-radius:50%;background:var(--celadon);display:inline-block;}
 .availdot.none{background:var(--line);}
 
@@ -555,12 +556,14 @@ const CATEGORY_SCHEMA = {
         {key:'desc', label:'참고사항', long:true, type:'textarea'}
       ], itemHasPhoto:true },
     { key:'groomSuitCustom', label:'맞춤정장', extraFields:[
+        {key:'vendor', label:'업체명'},
         {key:'shirtCount', label:'셔츠 수량'},{key:'tieCount', label:'넥타이 수량'},{key:'shoesInfo', label:'수제화 구성'},
         {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true}
       ], itemsLabel:'원단별 가격', itemFields:[
         {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
       ], itemHasPhoto:false },
     { key:'groomSuitRental', label:'대여정장', extraFields:[
+        {key:'vendor', label:'업체명'}
       ], itemsLabel:'원단별 대여가격', itemFields:[
         {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
       ], itemHasPhoto:false },
@@ -703,6 +706,10 @@ async function loadVendors(){
   }
   vendors.forEach(v=>{
     if(v.category === '스냅촬영') v.category = '야외스냅';
+    if(v.category === '웨딩홀') v.category = '본식';
+    if(v.category === '기타' && v.sections && (v.sections.hallinfo || v.sections.ceremonyDress || v.sections.mainPhoto)){
+      v.category = '본식';
+    }
     if(!CATS.includes(v.category)) v.category = '기타';
     if(!Array.isArray(v.dates)) v.dates = [];
     if(!Array.isArray(v.images)) v.images = [];
@@ -1245,7 +1252,7 @@ function shootDateSummaryHTML(v){
   const dt = new Date(d+'T00:00:00');
   if(isNaN(dt.getTime())) return '';
   const week = ['일','월','화','수','목','금','토'][dt.getDay()];
-  return `<div class="shootsummary">✓ 촬영일 확정: ${dt.getMonth()+1}/${dt.getDate()}(${week})</div>`;
+  return `<span class="shootsummary">✓ 촬영일 확정: ${dt.getMonth()+1}/${dt.getDate()}(${week})</span>`;
 }
 function weddingHallSummaryHTML(v){
   if(v.category !== '본식') return '';
@@ -1286,7 +1293,7 @@ function cardHTML(v){
             <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(v.category)}</span>
             ${finalBadge}
           </div>
-          <h3>${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</h3>
+          <h3 class="namerow"><span class="namemain">${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
         </div>
         <div class="headactions">
           <button class="cmp ${cmpOn?'on':''}" data-cmp="${v.id}">비교</button>
@@ -1298,8 +1305,7 @@ function cardHTML(v){
         <span class="draghandle" data-drag="${v.id}" title="드래그해서 순서 바꾸기">⠿</span>
         <span class="chev">▾</span>
       </div>
-      ${(datesInHeader || hallSummary || shootSummary) ? `<div class="cardheadbottom">
-        ${shootSummary}
+      ${(datesInHeader || hallSummary) ? `<div class="cardheadbottom">
         ${datesInHeader ? dateChipsHTML(v) : ''}
         ${hallSummary}
       </div>` : ''}
@@ -1809,6 +1815,10 @@ function exportData(){
 }
 function normalizeLoadedVendor(v){
   if(v.category === '스냅촬영') v.category = '야외스냅';
+  if(v.category === '웨딩홀') v.category = '본식';
+  if(v.category === '기타' && v.sections && (v.sections.hallinfo || v.sections.ceremonyDress || v.sections.mainPhoto)){
+    v.category = '본식';
+  }
   if(!CATS.includes(v.category)) v.category = '기타';
   if(!Array.isArray(v.dates)) v.dates = [];
   if(!Array.isArray(v.images)) v.images = [];
