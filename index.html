@@ -557,6 +557,8 @@ const SUBTYPE_SCHEMAS = {
     "웨딩홀": { sections: [
       { key:'hallinfo', label:'홀 정보', hasMedia:true, extraFields:[
           {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
+          {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
+          {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
         ], itemsLabel:'패키지 비교', itemFields:[
           {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
@@ -572,7 +574,9 @@ const SUBTYPE_SCHEMAS = {
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'catering', label:'식대', extraFields:[
           {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true, noBudgetSum:true},{key:'liquor', label:'주류비 (병)', money:true, noBudgetSum:true},{key:'beverage', label:'음료비 (병)', money:true, noBudgetSum:true},{key:'note', label:'참고사항', long:true, type:'textarea'},
-          {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3}
+          {key:'depositAmount', label:'계약금', money:true},{key:'depositPayer', label:'계약금 지불자'},
+          {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3},
+          {key:'balanceDueDate', label:'잔금일'},{key:'balanceAmount', label:'잔금', money:true},{key:'balancePayer', label:'잔금 지불자'},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "본식 드레스": { sections: [
@@ -765,6 +769,23 @@ function migrateSnapAndHonjuVendors(list){
     }
     if(v.category === '한복'){
       return { ...v, category:'혼주', subtype:'한복' };
+    }
+    if(v.category === '본식' && v.subtype === '웨딩홀' && v.payment && (v.payment.depositAmount || v.payment.balanceAmount)){
+      const hi = (v.sections && v.sections.hallinfo && v.sections.hallinfo.extra) || {};
+      if(!hi.depositAmount && !hi.balanceAmount){
+        const newHi = Object.assign({}, hi, {
+          depositAmount: v.payment.depositAmount || '',
+          depositPayer: v.payment.depositPayer || '',
+          balanceDueDate: v.payment.balanceDueDate || '',
+          balanceAmount: v.payment.balanceAmount || '',
+          balancePayer: v.payment.balancePayer || '',
+          balancePaid: v.payment.balancePaid || 'false'
+        });
+        const newSections = Object.assign({}, v.sections, {
+          hallinfo: Object.assign({}, v.sections.hallinfo, { extra: newHi })
+        });
+        return { ...v, sections: newSections };
+      }
     }
     return v;
   });
@@ -1351,46 +1372,90 @@ function moneyToManwon(raw){
   return 0;
 }
 function budgetRowsForSubtypeCategory(category){
-  return SUBTYPE_OPTIONS[category].map(subtype=>{
+  return SUBTYPE_OPTIONS[category].flatMap(subtype=>{
     const v = vendors.find(x=>x.category===category && x.subtype===subtype && x.isFinal);
     if(!v){
-      return { label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:0 };
+      if(category === '본식' && subtype === '웨딩홀'){
+        return [
+          { label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:0 },
+          { label:'식대', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:0 }
+        ];
+      }
+      return [{ label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:0 }];
     }
 
     const schema = getSchema(category, subtype);
-    let extraTotal = 0;
-    let itemTotal = 0;
-    schema.sections.forEach(sec=>{
-      const data = (v.sections && v.sections[sec.key]) || {extra:{}, items:[]};
-      const svcOn = data.extra && data.extra.svc === 'true';
-      if(!svcOn){
-        sec.extraFields.forEach(f=>{
-          if(f.money && !f.noBudgetSum) extraTotal += moneyToManwon(data.extra[f.key]);
-        });
-      }
-      (v.finalRefs||[]).forEach(r=>{
-        if(r.sectionKey===sec.key){
-          const it = (data.items||[])[r.itemIndex];
-          if(it){
-            sec.itemFields.forEach(f=>{
-              if(f.money && !f.noBudgetSum) itemTotal += moneyToManwon(it[f.key]);
-            });
+
+    function computeForSections(sectionKeys){
+      let extraTotal = 0, itemTotal = 0;
+      let dep=0, depPayer='', balDue='', bal=0, balPayer='', balPaid=false;
+      schema.sections.forEach(sec=>{
+        if(!sectionKeys.includes(sec.key)) return;
+        const data = (v.sections && v.sections[sec.key]) || {extra:{}, items:[]};
+        const svcOn = data.extra && data.extra.svc === 'true';
+        if(!svcOn){
+          sec.extraFields.forEach(f=>{
+            if(f.money && !f.noBudgetSum && f.key!=='depositAmount' && f.key!=='balanceAmount'){
+              extraTotal += moneyToManwon(data.extra[f.key]);
+            }
+          });
+          if(data.extra){
+            if(data.extra.depositAmount) dep += moneyToManwon(data.extra.depositAmount);
+            if(data.extra.depositPayer) depPayer = depPayer || data.extra.depositPayer;
+            if(data.extra.balanceAmount) bal += moneyToManwon(data.extra.balanceAmount);
+            if(data.extra.balancePayer) balPayer = balPayer || data.extra.balancePayer;
+            if(data.extra.balanceDueDate) balDue = balDue || data.extra.balanceDueDate;
+            if(data.extra.balancePaid === 'true') balPaid = true;
           }
         }
+        (v.finalRefs||[]).forEach(r=>{
+          if(r.sectionKey===sec.key){
+            const it = (data.items||[])[r.itemIndex];
+            if(it){
+              sec.itemFields.forEach(f=>{
+                if(f.money && !f.noBudgetSum) itemTotal += moneyToManwon(it[f.key]);
+              });
+            }
+          }
+        });
       });
-    });
+      return { extraTotal, itemTotal, dep, depPayer, bal, balPayer, balDue, balPaid };
+    }
 
+    if(category === '본식' && subtype === '웨딩홀'){
+      const hallCalc = computeForSections(['hallinfo','screen','staging','dressHelper']);
+      const cateringCalc = computeForSections(['catering']);
+      return [
+        {
+          label: subtype, vendorName: v.name || '',
+          deposit: hallCalc.dep, depositPayer: hallCalc.depPayer,
+          balanceDue: hallCalc.balDue, balance: hallCalc.bal, balancePayer: hallCalc.balPayer,
+          balancePaid: hallCalc.balPaid,
+          total: hallCalc.extraTotal + hallCalc.itemTotal + hallCalc.dep + hallCalc.bal
+        },
+        {
+          label: '식대', vendorName: v.name || '',
+          deposit: cateringCalc.dep, depositPayer: cateringCalc.depPayer,
+          balanceDue: cateringCalc.balDue, balance: cateringCalc.bal, balancePayer: cateringCalc.balPayer,
+          balancePaid: cateringCalc.balPaid,
+          total: cateringCalc.extraTotal + cateringCalc.itemTotal + cateringCalc.dep + cateringCalc.bal
+        }
+      ];
+    }
+
+    const allKeys = schema.sections.map(s=>s.key);
+    const calc = computeForSections(allKeys);
     const pay = v.payment || {};
-    const dep = moneyToManwon(pay.depositAmount), bal = moneyToManwon(pay.balanceAmount);
-
-    return {
+    const dep = calc.dep || moneyToManwon(pay.depositAmount);
+    const bal = calc.bal || moneyToManwon(pay.balanceAmount);
+    return [{
       label: subtype,
       vendorName: v.name || '',
-      deposit: dep, depositPayer: pay.depositPayer,
-      balanceDue: pay.balanceDueDate, balance: bal, balancePayer: pay.balancePayer,
-      balancePaid: pay.balancePaid === 'true',
-      total: extraTotal + itemTotal + dep + bal
-    };
+      deposit: dep, depositPayer: calc.depPayer || pay.depositPayer,
+      balanceDue: calc.balDue || pay.balanceDueDate, balance: bal, balancePayer: calc.balPayer || pay.balancePayer,
+      balancePaid: calc.balPaid || pay.balancePaid === 'true',
+      total: calc.extraTotal + calc.itemTotal + dep + bal
+    }];
   });
 }
 
