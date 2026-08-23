@@ -2057,7 +2057,7 @@ function renderBudgetPage(){
     });
     if(detailRows.length > 1){
       bodyHTML += `<tr class="budgetsubtotal">
-        <td></td><td>소계</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+        <td></td><td></td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
         <td class="budgettotal">${catTotal? catTotal.toLocaleString()+'만원':'-'}</td>
       </tr>`;
     }
@@ -2081,7 +2081,7 @@ function renderBudgetPage(){
       <label class="btn small" id="importDataLabel">불러오기<input type="file" id="importDataFile" accept=".csv,text/csv" style="display:none;"></label>
     </div>
     <div class="tablewrap budgettable"><table>
-      <thead><tr><th>카테고리</th><th>업체명</th><th>계약금</th><th>계약금 지불인</th><th>잔금일</th><th>잔금</th><th>잔금 지불인</th><th>총액</th></tr></thead>
+      <thead><tr><th>카테고리</th><th>업체명</th><th>계약금</th><th>지불인</th><th>잔금일</th><th>잔금</th><th>지불인</th><th>총액</th></tr></thead>
       <tbody>${bodyHTML}</tbody>
     </table></div>
     <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${grandTotal.toLocaleString()}만원</div>
