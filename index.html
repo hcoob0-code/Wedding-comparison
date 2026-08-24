@@ -183,6 +183,14 @@ select.viewsel{
 .instalinkrow button{border:none;background:none;color:var(--persimmon);font-size:13px;cursor:pointer;flex:0 0 auto;}
 .instaEmbeds{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px;}
 .gallery{display:flex;gap:8px;overflow-x:auto;margin-top:8px;}
+.snaprefcard{overflow:hidden;}
+.snaprefstrip{display:flex;gap:6px;overflow-x:auto;}
+.snaprefstrip img{flex:0 0 auto;width:60px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;}
+.snaprefstrip.snaprefstrip-collapsed img{width:52px;height:52px;}
+.snaprefstrip.snaprefstrip-picker img.selected{border-color:var(--gold);}
+.snaprefmainwrap{position:relative;margin-bottom:10px;}
+.snaprefmain{width:100%;max-height:340px;object-fit:contain;border-radius:12px;background:#f0efe9;display:block;}
+.snapreffull{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.55);color:#fff;border:none;}
 .gallery.first{padding-top:10px;border-top:1px dashed var(--line);}
 .gallery img{width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:pointer;flex:0 0 auto;}
 
@@ -593,18 +601,13 @@ const SUBTYPE_SCHEMAS = {
           ...paymentFields(),
           {key:'extraBalanceAmount', label:'추가 잔금', money:true, payGroup:4},{key:'extraBalancePayer', label:'추가 잔금 지불자', payGroup:4}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-      { key:'screen', label:'스크린', extraFields:[
-          {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-      { key:'staging', label:'연출도우미', extraFields:[
-          {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-      { key:'dressHelper', label:'드레스헬퍼', extraFields:[
-          {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-      { key:'flowerCracker', label:'플라워폭죽', extraFields:[
-          {key:'composition', label:'구성'},{key:'price', label:'가격', money:true},
-          {key:'note', label:'참고사항', long:true, type:'textarea'}
+      { key:'extras', label:'홀 부대비용', extraFields:[
+          {key:'screenPrice', label:'스크린 비용', money:true, svcKey:'screenSvc'},{key:'screenSvc', label:'스크린 SVC', type:'checkbox'},
+          {key:'stagingPrice', label:'연출도우미 비용', money:true, svcKey:'stagingSvc'},{key:'stagingSvc', label:'연출도우미 SVC', type:'checkbox'},
+          {key:'dressHelperPrice', label:'드레스헬퍼 비용', money:true, svcKey:'dressHelperSvc'},{key:'dressHelperSvc', label:'드레스헬퍼 SVC', type:'checkbox'},
+          {key:'flowerComposition', label:'플라워폭죽 구성'},{key:'flowerPrice', label:'플라워폭죽 가격', money:true},
+          {key:'flowerNote', label:'플라워폭죽 참고사항', long:true, type:'textarea'},
+          ...paymentFields()
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "본식 드레스": { sections: [
@@ -804,6 +807,8 @@ const PHOTO_SETUP_NEEDED = CONFIG.CLOUDINARY_CLOUD_NAME === 'YOUR_CLOUDINARY_CLO
 let vendors = [];
 let budgetExtras = {};
 let honeymoonInfo = {};
+let snapRefPhotos = [];
+let snapRefSelectedIndex = 0;
 let activeTab = "본식";
 let editingSections = {};
 let editingImages = [];
@@ -820,6 +825,25 @@ function emptyPayment(){
 }
 function migrateSnapAndHonjuVendors(list){
   return list.map(v=>{
+    if(v.category === '본식' && v.subtype === '웨딩홀' && v.sections &&
+       (v.sections.screen || v.sections.staging || v.sections.dressHelper || v.sections.flowerCracker) && !v.sections.extras){
+      const scr = (v.sections.screen && v.sections.screen.extra) || {};
+      const stg = (v.sections.staging && v.sections.staging.extra) || {};
+      const dh = (v.sections.dressHelper && v.sections.dressHelper.extra) || {};
+      const fc = (v.sections.flowerCracker && v.sections.flowerCracker.extra) || {};
+      const newExtras = {
+        extra: {
+          screenPrice: scr.price||'', screenSvc: scr.svc||'false',
+          stagingPrice: stg.price||'', stagingSvc: stg.svc||'false',
+          dressHelperPrice: dh.price||'', dressHelperSvc: dh.svc||'false',
+          flowerComposition: fc.composition||'', flowerPrice: fc.price||'', flowerNote: fc.note||''
+        },
+        items: []
+      };
+      const newSections = Object.assign({}, v.sections, { extras: newExtras });
+      delete newSections.screen; delete newSections.staging; delete newSections.dressHelper; delete newSections.flowerCracker;
+      v = { ...v, sections: newSections };
+    }
     if(v.category === '본식' && v.subtype === '플라워폭죽'){
       return { ...v, subtype:'기타' };
     }
@@ -1092,6 +1116,7 @@ async function loadVendors(){
     vendors = (json.record && json.record.vendors) ? json.record.vendors : [];
     budgetExtras = (json.record && json.record.budgetExtras) ? json.record.budgetExtras : {};
     honeymoonInfo = (json.record && json.record.honeymoonInfo) ? json.record.honeymoonInfo : {};
+    snapRefPhotos = (json.record && Array.isArray(json.record.snapRefPhotos)) ? json.record.snapRefPhotos : [];
   }catch(e){
     vendors = [];
   }
@@ -1136,7 +1161,7 @@ async function saveVendors(){
       const res = await fetch('https://api.jsonbin.io/v3/b', {
         method:'POST',
         headers:{ 'Content-Type':'application/json', 'X-Master-Key':CONFIG.MASTER_KEY, 'X-Bin-Name':'wedding-vendor-compare' },
-        body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo })
+        body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo, snapRefPhotos })
       });
       if(!res.ok) throw new Error('create failed');
       const json = await res.json();
@@ -1147,7 +1172,7 @@ async function saveVendors(){
     const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}`, {
       method:'PUT',
       headers:{ 'Content-Type':'application/json', 'X-Master-Key':CONFIG.MASTER_KEY },
-      body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo })
+      body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo, snapRefPhotos })
     });
     if(!res.ok) throw new Error('save failed');
   }catch(e){
@@ -1489,12 +1514,13 @@ function budgetRowsForSubtypeCategory(category){
         if(!sectionKeys.includes(sec.key)) return;
         const data = (v.sections && v.sections[sec.key]) || {extra:{}, items:[]};
         const svcOn = data.extra && data.extra.svc === 'true';
+        sec.extraFields.forEach(f=>{
+          if(f.money && !f.noBudgetSum && f.key!=='depositAmount' && f.key!=='balanceAmount'){
+            const excludedByFieldSvc = f.svcKey && data.extra && data.extra[f.svcKey] === 'true';
+            if(!svcOn && !excludedByFieldSvc) extraTotal += moneyToManwon(data.extra[f.key]);
+          }
+        });
         if(!svcOn){
-          sec.extraFields.forEach(f=>{
-            if(f.money && !f.noBudgetSum && f.key!=='depositAmount' && f.key!=='balanceAmount'){
-              extraTotal += moneyToManwon(data.extra[f.key]);
-            }
-          });
           if(data.extra){
             if(data.extra.depositAmount) dep += moneyToManwon(data.extra.depositAmount);
             if(data.extra.depositPayer) depPayer = depPayer || data.extra.depositPayer;
@@ -1523,7 +1549,7 @@ function budgetRowsForSubtypeCategory(category){
       const hallCalc = computeForSections(['hallinfo']);
       const packageCalc = computeForSections(['package']);
       const cateringCalc = computeForSections(['catering']);
-      const extrasCalc = computeForSections(['screen','staging','dressHelper','flowerCracker']);
+      const extrasCalc = computeForSections(['extras']);
       const cateringExtra = (v.sections && v.sections.catering && v.sections.catering.extra) || {};
       const extraBal = moneyToManwon(cateringExtra.extraBalanceAmount);
       const extraBalPayer = cateringExtra.extraBalancePayer || '';
@@ -1571,6 +1597,8 @@ function budgetRowsForSubtypeCategory(category){
     const pay = v.payment || {};
     const dep = calc.dep || moneyToManwon(pay.depositAmount);
     const bal = calc.bal || moneyToManwon(pay.balanceAmount);
+    const paymentTotal = dep + bal;
+    const priceOrPayment = paymentTotal > 0 ? paymentTotal : calc.itemTotal;
     return [{
       label: subtype,
       vendorName: v.name || '',
@@ -1578,7 +1606,7 @@ function budgetRowsForSubtypeCategory(category){
       balanceDue: calc.balDue || pay.balanceDueDate, balance: bal, balancePayer: calc.balPayer || pay.balancePayer,
       balancePaid: calc.balPaid || pay.balancePaid === 'true',
       paymentMethod: calc.payMethod || pay.paymentMethod || '',
-      total: calc.extraTotal + calc.itemTotal + dep + bal
+      total: calc.extraTotal + priceOrPayment
     }];
   });
 }
@@ -1780,6 +1808,84 @@ function subtypeItemSummaryHTML(v){
   return '';
 }
 
+function snapReferenceCardHTML(){
+  const open = expandedIds.has('snapref-card');
+  const photos = snapRefPhotos || [];
+  const collapsedStrip = photos.length
+    ? `<div class="snaprefstrip snaprefstrip-collapsed">${photos.map(src=>`<img src="${esc(src)}">`).join('')}</div>`
+    : '';
+
+  let body = '';
+  if(open){
+    if(photos.length){
+      if(snapRefSelectedIndex >= photos.length) snapRefSelectedIndex = 0;
+      const mainSrc = photos[snapRefSelectedIndex];
+      body = `<div class="cardbody"><div class="cardbody-inner">
+        <div class="snaprefmainwrap">
+          <img class="snaprefmain" src="${esc(mainSrc)}" data-snaprefmain>
+          <button type="button" class="btn small snapreffull" id="snaprefFullscreenBtn">전체화면</button>
+        </div>
+        <div class="snaprefstrip snaprefstrip-picker">${photos.map((src,idx)=>`<img src="${esc(src)}" class="${idx===snapRefSelectedIndex?'selected':''}" data-snaprefpick="${idx}">`).join('')}</div>
+        <label class="imgpicker small"><input type="file" accept="image/*" id="snaprefAddInput">+</label>
+      </div></div>`;
+    } else {
+      body = `<div class="cardbody"><div class="cardbody-inner">
+        <div class="hint">아직 사진이 없어요.</div>
+        <label class="imgpicker small"><input type="file" accept="image/*" id="snaprefAddInput">+</label>
+      </div></div>`;
+    }
+  }
+
+  return `<div class="card snaprefcard">
+    <div class="cardhead ${open?'open':''}" data-toggle="snapref-card">
+      <div class="cardheadtop">
+        <div class="cardmain">
+          <div class="topline"><span class="catchip"><span class="dot" style="background:${CAT_COLOR['야외스냅']}"></span>레퍼런스 사진</span></div>
+          <h3 class="namerow"><span class="namemain">레퍼런스 사진</span></h3>
+        </div>
+        <span class="chev">▾</span>
+      </div>
+      ${(!open && collapsedStrip) ? `<div class="cardheadbottom">${collapsedStrip}</div>` : ''}
+    </div>
+    ${body}
+  </div>`;
+}
+
+function bindSnapReferenceHandlers(){
+  const addInput = document.getElementById('snaprefAddInput');
+  if(addInput){
+    addInput.addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      try{
+        const url = await uploadToCloudinary(file);
+        snapRefPhotos.push(url);
+        snapRefSelectedIndex = snapRefPhotos.length - 1;
+        await saveVendors();
+        renderContent();
+      }catch(err){
+        alert('사진 업로드에 실패했어요.');
+      }
+    });
+  }
+  document.querySelectorAll('[data-snaprefpick]').forEach(img=>{
+    img.onclick = ()=>{
+      snapRefSelectedIndex = +img.dataset.snaprefpick;
+      renderContent();
+    };
+  });
+  const fullscreenBtn = document.getElementById('snaprefFullscreenBtn');
+  if(fullscreenBtn){
+    fullscreenBtn.onclick = ()=>{
+      openLightbox(snapRefPhotos.slice(), snapRefSelectedIndex);
+    };
+  }
+  const mainImg = document.querySelector('[data-snaprefmain]');
+  if(mainImg){
+    mainImg.onclick = ()=> openLightbox(snapRefPhotos.slice(), snapRefSelectedIndex);
+  }
+}
+
 function honeymoonInfoCardHTML(){
   const start = honeymoonInfo.startDate || '';
   const end = honeymoonInfo.endDate || '';
@@ -1966,12 +2072,18 @@ function renderContent(){
     if(activeTab === '신혼여행'){
       cardsHTML = honeymoonInfoCardHTML() + cardsHTML;
     }
+    if(activeTab === '야외스냅'){
+      cardsHTML = snapReferenceCardHTML() + cardsHTML;
+    }
   } else {
     cardsHTML = list.map(cardHTML).join('');
   }
   container.innerHTML = `<div class="grid">${cardsHTML}</div>`;
   if(activeTab === '신혼여행'){
     bindHoneymoonInfoHandlers();
+  }
+  if(activeTab === '야외스냅'){
+    bindSnapReferenceHandlers();
   }
 
   container.querySelectorAll('[data-addplaceholder]').forEach(el=>{
