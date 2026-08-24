@@ -165,6 +165,7 @@ select.viewsel{
 .prow{display:flex;gap:8px;font-size:12.5px;line-height:1.4;min-width:0;}
 .prow .k{flex:0 0 62px;color:var(--ink-soft);font-weight:600;font-size:9.5px;padding-top:1px;white-space:normal;line-height:1.25;}
 .prow .v{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;}
+.prow.nowrapval .v{white-space:nowrap;overflow:visible;}
 .prow.full{grid-column:1/-1;}
 .prow.stacked{flex-direction:column;gap:2px;}
 .prow.stacked .k{flex:0 0 auto;}
@@ -397,8 +398,10 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
     </div>
     <div id="basicFieldsBox">
       <div class="field"><label>업체명</label><input id="f_name"></div>
-      <div class="field"><label>인스타 / 링크</label><input id="f_link" placeholder="https://instagram.com/..."></div>
-      <div class="field"><label>주소</label><input id="f_location"></div>
+      <div id="linkLocationBox">
+        <div class="field"><label>인스타 / 링크</label><input id="f_link" placeholder="https://instagram.com/..."></div>
+        <div class="field"><label>주소</label><input id="f_location"></div>
+      </div>
     </div>
     <div id="datesFieldBox">
       <div class="field">
@@ -565,25 +568,30 @@ const CATEGORY_SCHEMA = {
       ], itemHasPhoto:true }
   ]}
 };
+function paymentFields(){
+  return [
+    {key:'depositAmount', label:'계약금', money:true, payGroup:1},{key:'depositPayer', label:'계약금 지불자', payGroup:1},
+    {key:'balanceAmount', label:'잔금', money:true, payGroup:2},{key:'balancePayer', label:'잔금 지불자', payGroup:2},
+    {key:'balanceDueDate', label:'잔금일', type:'date', payGroup:3},{key:'paymentMethod', label:'결제 수단', type:'select', options:['현금','카드 일시불','카드 할부'], payGroup:3},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox', payGroup:3}
+  ];
+}
 const SUBTYPE_SCHEMAS = {
   "본식": {
     "웨딩홀": { sections: [
       { key:'hallinfo', label:'홀', hasMedia:true, extraFields:[
           {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
-          {key:'note', label:'참고사항', long:true, type:'textarea'}
+          {key:'note', label:'참고사항', long:true, type:'textarea'},
+          ...paymentFields()
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'package', label:'패키지', extraFields:[
           {key:'info', label:'패키지 정보', long:true, type:'textarea'},
-          {key:'depositAmount', label:'계약금', money:true, payGroup:1},{key:'depositPayer', label:'계약금 지불자', payGroup:1},
-          {key:'balanceAmount', label:'잔금', money:true, payGroup:2},{key:'balancePayer', label:'잔금 지불자', payGroup:2},
-          {key:'balanceDueDate', label:'잔금일', type:'date', payGroup:3},{key:'paymentMethod', label:'결제 수단', type:'select', options:['현금','카드 일시불','카드 할부'], payGroup:3},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox', payGroup:3}
+          ...paymentFields()
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'catering', label:'식대', extraFields:[
           {key:'minGuests', label:'최소 보증인원'},{key:'unitPrice', label:'단가', money:true, noBudgetSum:true},{key:'liquor', label:'주류비 (병)', money:true, noBudgetSum:true},{key:'beverage', label:'음료비 (병)', money:true, noBudgetSum:true},{key:'note', label:'참고사항', long:true, type:'textarea'},
-          {key:'finalGuests', label:'최종 인원', maxLength:3},{key:'finalLiquor', label:'최종 주류 수량', maxLength:3},
-          {key:'depositAmount', label:'계약금', money:true, payGroup:1},{key:'depositPayer', label:'계약금 지불자', payGroup:1},
-          {key:'balanceAmount', label:'잔금', money:true, payGroup:2},{key:'balancePayer', label:'잔금 지불자', payGroup:2},
-          {key:'balanceDueDate', label:'잔금일', type:'date', payGroup:3},{key:'paymentMethod', label:'결제 수단', type:'select', options:['현금','카드 일시불','카드 할부'], payGroup:3},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox', payGroup:3}
+          {key:'finalGuests', label:'추가 인원', maxLength:3},{key:'finalLiquor', label:'추가 주류', maxLength:3},
+          ...paymentFields(),
+          {key:'extraBalanceAmount', label:'추가 잔금', money:true, payGroup:4},{key:'extraBalancePayer', label:'추가 잔금 지불자', payGroup:4}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'screen', label:'스크린', extraFields:[
           {key:'price', label:'비용', money:true},{key:'svc', label:'SVC', type:'checkbox'}
@@ -600,7 +608,7 @@ const SUBTYPE_SCHEMAS = {
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "본식 드레스": { sections: [
-      { key:'ceremonyDress', label:'본식 드레스', extraFields:[], itemsLabel:'브랜드별 비교', itemFields:[
+      { key:'ceremonyDress', label:'본식 드레스', extraFields:[...paymentFields()], itemsLabel:'브랜드별 비교', itemFields:[
           {key:'brand', label:'브랜드명', long:true},{key:'price', label:'추가금', long:true, money:true},
           {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
           {key:'desc', label:'참고사항', long:true, type:'textarea'}
@@ -609,58 +617,65 @@ const SUBTYPE_SCHEMAS = {
     "본식 정장": { sections: [
       { key:'groomSuitCustom', label:'맞춤정장', extraFields:[
           {key:'shirtCount', label:'셔츠 수량'},{key:'tieCount', label:'넥타이 수량'},{key:'shoesInfo', label:'수제화 구성'},
-          {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true}
+          {key:'makingPeriod', label:'제작 기간'},{key:'propRental', label:'소품 대여', long:true},
+          ...paymentFields()
         ], itemsLabel:'원단별 가격', itemFields:[
           {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
         ], itemHasPhoto:false },
-      { key:'groomSuitRental', label:'대여정장', extraFields:[], itemsLabel:'원단별 대여가격', itemFields:[
+      { key:'groomSuitRental', label:'대여정장', extraFields:[...paymentFields()], itemsLabel:'원단별 대여가격', itemFields:[
           {key:'fabric', label:'원단'},{key:'price', label:'가격', money:true}
         ], itemHasPhoto:false }
     ]},
     "헤어메이크업": { sections: [
       { key:'hairMakeup', label:'헤어메이크업', hasMedia:true, extraFields:[
           {key:'note', label:'참고사항', long:true, type:'textarea'},
-          {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'}
+          {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'},
+          ...paymentFields()
         ], itemsLabel:'패키지 비교', itemFields:[
           {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:false }
     ]},
     "본식 스냅": { sections: [
       { key:'mainPhoto', label:'본식 스냅', extraFields:[
-          {key:'note', label:'참고사항', long:true, type:'textarea'}
+          {key:'note', label:'참고사항', long:true, type:'textarea'},
+          ...paymentFields()
         ], itemsLabel:'패키지 비교', itemFields:[
           {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:false }
     ]},
     "아이폰스냅": { sections: [
       { key:'iphoneSnap', label:'아이폰스냅', hasMedia:true, extraFields:[
-          {key:'composition', label:'구성', long:true}
+          {key:'composition', label:'구성', long:true},
+          ...paymentFields()
         ], itemsLabel:'패키지 비교', itemFields:[
           {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:false }
     ]},
     "DVD촬영": { sections: [
       { key:'dvd', label:'DVD촬영', extraFields:[
-          {key:'note', label:'참고사항', long:true, type:'textarea'}
+          {key:'note', label:'참고사항', long:true, type:'textarea'},
+          ...paymentFields()
         ], itemsLabel:'패키지 비교', itemFields:[
           {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:false }
     ]},
     "부케": { sections: [
       { key:'bouquet', label:'부케', hasMedia:true, extraFields:[
-          {key:'composition', label:'구성', long:true}
+          {key:'composition', label:'구성', long:true},
+          ...paymentFields()
         ], itemsLabel:'패키지 비교', itemFields:[
           {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:false }
     ]},
     "사회자": { sections: [
       { key:'mc', label:'사회자', extraFields:[
+          ...paymentFields()
         ], itemsLabel:'패키지 비교', itemFields:[
           {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:false }
     ]},
     "기타": { sections: [
-      { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 지출', itemFields:[
+      { key:'etc', label:'기타', extraFields:[...paymentFields()], itemsLabel:'기타 지출', itemFields:[
           {key:'note', label:'내역'},{key:'amount', label:'금액', money:true}
         ], itemHasPhoto:false }
     ]}
@@ -1458,6 +1473,7 @@ function budgetRowsForSubtypeCategory(category){
           { label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 },
           { label:'패키지', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 },
           { label:'식대', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 },
+          { label:'식대(추가)', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 },
           { label:'홀 부대비용', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 }
         ];
       }
@@ -1508,6 +1524,9 @@ function budgetRowsForSubtypeCategory(category){
       const packageCalc = computeForSections(['package']);
       const cateringCalc = computeForSections(['catering']);
       const extrasCalc = computeForSections(['screen','staging','dressHelper','flowerCracker']);
+      const cateringExtra = (v.sections && v.sections.catering && v.sections.catering.extra) || {};
+      const extraBal = moneyToManwon(cateringExtra.extraBalanceAmount);
+      const extraBalPayer = cateringExtra.extraBalancePayer || '';
       return [
         {
           label: subtype, vendorName: v.name || '',
@@ -1529,6 +1548,13 @@ function budgetRowsForSubtypeCategory(category){
           balanceDue: cateringCalc.balDue, balance: cateringCalc.bal, balancePayer: cateringCalc.balPayer,
           balancePaid: cateringCalc.balPaid, paymentMethod: cateringCalc.payMethod,
           total: cateringCalc.extraTotal + cateringCalc.itemTotal + cateringCalc.dep + cateringCalc.bal
+        },
+        {
+          label: '식대(추가)', vendorName: v.name || '',
+          deposit: 0, depositPayer: '',
+          balanceDue: '', balance: extraBal, balancePayer: extraBalPayer,
+          balancePaid: false, paymentMethod: '',
+          total: extraBal
         },
         {
           label: '홀 부대비용', vendorName: v.name || '',
@@ -1573,6 +1599,15 @@ function formatKoreanDateDisplay(raw){
   const week = ['일','월','화','수','목','금','토'][dt.getDay()];
   return `${y}/${m}/${day}(${week})`;
 }
+function formatISODateDisplay(raw){
+  if(!raw) return raw;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if(!m) return raw;
+  const dt = new Date(`${raw}T00:00:00`);
+  if(isNaN(dt.getTime())) return raw;
+  const week = ['일','월','화','수','목','금','토'][dt.getDay()];
+  return `${+m[1]}/${+m[2]}/${+m[3]}(${week})`;
+}
 
 function fieldRow(f, val, full){
   if(f.type==='checkbox'){
@@ -1587,9 +1622,11 @@ function fieldRow(f, val, full){
   let shown = val;
   if(f.money) shown = formatMoney(val);
   else if(f.dateFormat) shown = formatKoreanDateDisplay(val);
+  else if(f.type==='date') shown = formatISODateDisplay(val);
   else if(f.unit && /^\d+$/.test(String(val).trim())) shown = `${val}${f.unit}`;
   const stacked = f.type==='textarea' ? ' stacked' : '';
-  return `<div class="prow${full?' full':''}${stacked}"><div class="k">${esc(f.label)}</div><div class="v">${esc(shown)}</div></div>`;
+  const nowrapCls = f.type==='date' ? ' nowrapval' : '';
+  return `<div class="prow${full?' full':''}${stacked}${nowrapCls}"><div class="k">${esc(f.label)}</div><div class="v">${esc(shown)}</div></div>`;
 }
 function quadCellHTML(f, val){
   let shown = f.type==='checkbox' ? (val==='true' ? '✓' : '-') : (val || '-');
@@ -1719,8 +1756,10 @@ function weddingHallSummaryHTML(v){
 
 function subtypeItemSummaryHTML(v){
   if(!SUBTYPE_OPTIONS[v.category] || !v.subtype) return '';
-  if(v.category === '본식' && v.subtype === '웨딩홀') return '';
-  if(v.category === '야외스냅' && v.subtype === '스냅업체') return '';
+  const skipAutoSummary = (v.category === '본식' && v.subtype === '웨딩홀') || (v.category === '야외스냅' && v.subtype === '스냅업체');
+  if(skipAutoSummary){
+    return v.cardNote ? `<div class="hallsummary">${esc(v.cardNote)}</div>` : '';
+  }
   const schema = getSchema(v.category, v.subtype);
   const allNames = [];
   let chosenName = '';
@@ -2847,6 +2886,7 @@ function updateFieldVisibility(){
     subtypeBox.style.display = 'none';
   }
   document.getElementById('basicFieldsBox').style.display = SINGLE_ENTRY_CATS.includes(cat) ? 'none' : '';
+  document.getElementById('linkLocationBox').style.display = (cat==='본식' && subtypeSel.value==='웨딩홀') ? 'none' : '';
   document.getElementById('cardNoteFieldBox').style.display = SUBTYPE_OPTIONS[cat] ? '' : 'none';
   document.getElementById('datesFieldBox').style.display = (cat === '야외스냅' && subtypeSel.value === '스냅업체') ? '' : 'none';
   const hideGallery = shouldHideGallery(cat, subtypeSel.value);
@@ -2954,12 +2994,13 @@ document.getElementById('saveEdit').onclick = async ()=>{
   const cat = document.getElementById('f_category').value;
   const subtype = SUBTYPE_OPTIONS[cat] ? document.getElementById('f_subtype').value : '';
   const single = SINGLE_ENTRY_CATS.includes(cat);
+  const noLinkLoc = single || (cat==='본식' && subtype==='웨딩홀');
   const data = {
     category: cat,
     subtype,
     name: single ? cat : document.getElementById('f_name').value.trim(),
-    link: single ? '' : document.getElementById('f_link').value.trim(),
-    location: single ? '' : document.getElementById('f_location').value.trim(),
+    link: noLinkLoc ? '' : document.getElementById('f_link').value.trim(),
+    location: noLinkLoc ? '' : document.getElementById('f_location').value.trim(),
     memo: document.getElementById('f_memo').value.trim(),
     cardNote: document.getElementById('f_cardNote').value.trim(),
     dates: (cat === '야외스냅' && subtype === '스냅업체') ? dates : [],
