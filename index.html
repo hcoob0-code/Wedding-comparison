@@ -573,7 +573,7 @@ const SUBTYPE_SCHEMAS = {
     "웨딩홀": { sections: [
       { key:'hallinfo', label:'홀', hasMedia:true, extraFields:[
           {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
-          {key:'affiliateLink', label:'제휴업체 리스트 (노션 링크)', long:true, isLink:true},
+          {key:'affiliateLink', label:'제휴리스트', long:true, isLink:true, autoShorten:true},
           {key:'note', label:'참고사항', long:true, type:'textarea'},
           ...paymentFields()
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
@@ -617,55 +617,50 @@ const SUBTYPE_SCHEMAS = {
     ]},
     "헤어메이크업": { sections: [
       { key:'hairMakeup', label:'헤어메이크업', hasMedia:true, extraFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', money:true},
           {key:'note', label:'참고사항', long:true, type:'textarea'},
           ...paymentFields()
-        ], itemsLabel:'패키지 비교', itemFields:[
-          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-        ], itemHasPhoto:false }
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "본식 스냅": { sections: [
       { key:'mainPhoto', label:'본식 스냅', extraFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', money:true},
           {key:'note', label:'참고사항', long:true, type:'textarea'},
           ...paymentFields()
-        ], itemsLabel:'패키지 비교', itemFields:[
-          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-        ], itemHasPhoto:false }
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "아이폰스냅": { sections: [
       { key:'iphoneSnap', label:'아이폰스냅', hasMedia:true, extraFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', money:true},
           {key:'composition', label:'구성', long:true, type:'textarea'},
           ...paymentFields()
-        ], itemsLabel:'패키지 비교', itemFields:[
-          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-        ], itemHasPhoto:false }
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "DVD촬영": { sections: [
       { key:'dvd', label:'DVD촬영', extraFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', money:true},
           {key:'note', label:'참고사항', long:true, type:'textarea'},
           ...paymentFields()
-        ], itemsLabel:'패키지 비교', itemFields:[
-          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-        ], itemHasPhoto:false }
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "부케": { sections: [
       { key:'bouquet', label:'부케', hasMedia:true, extraFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', money:true},
           {key:'composition', label:'구성', long:true},
           ...paymentFields()
-        ], itemsLabel:'패키지 비교', itemFields:[
-          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-        ], itemHasPhoto:false }
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "사회자": { sections: [
       { key:'mc', label:'사회자', extraFields:[
+          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', money:true},
           ...paymentFields()
-        ], itemsLabel:'패키지 비교', itemFields:[
-          {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
-        ], itemHasPhoto:false }
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "기타": { sections: [
-      { key:'etc', label:'기타', extraFields:[...paymentFields()], itemsLabel:'기타 지출', itemFields:[
-          {key:'note', label:'내역'},{key:'amount', label:'금액', money:true}
-        ], itemHasPhoto:false }
+      { key:'etc', label:'기타', extraFields:[
+          {key:'note', label:'내역', long:true},{key:'amount', label:'금액', money:true},
+          ...paymentFields()
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]}
   },
   "야외스냅": {
@@ -1196,6 +1191,18 @@ function showSetupBanner(){
     <div class="mark">◌</div>
     아직 공유 저장소 설정이 안 됐어요.<br>코드 상단 CONFIG.MASTER_KEY에 jsonbin.io 키를 넣어주세요.
   </div>`;
+}
+
+async function shortenUrl(url){
+  try{
+    const res = await fetch('https://is.gd/create.php?format=simple&url=' + encodeURIComponent(url));
+    if(!res.ok) return null;
+    const short = (await res.text()).trim();
+    if(short && /^https?:\/\//.test(short)) return short;
+    return null;
+  }catch(e){
+    return null;
+  }
 }
 
 async function uploadToCloudinary(blob){
@@ -2008,6 +2015,10 @@ function cardHTML(v){
   const datesInHeader = showDates && !v.isFinal;
   const datesInBody = showDates && v.isFinal;
   const catLabel = v.subtype ? `${v.category} · ${v.subtype}` : v.category;
+  const schemaForFinalCheck = SUBTYPE_OPTIONS[v.category] ? getSchema(v.category, v.subtype) : null;
+  const hasNoItems = schemaForFinalCheck && schemaForFinalCheck.sections.every(sec=>sec.itemFields.length===0);
+  const isAutoFinalSubtype = (v.category==='본식' && v.subtype==='웨딩홀') || v.category==='신혼여행' || (v.category==='혼주' && (v.subtype==='헤어메이크업'||v.subtype==='상견례'));
+  const needsVendorFinalize = hasNoItems && !isAutoFinalSubtype && !isSingle;
   const body = open ? `<div class="cardbody"><div class="cardbody-inner">
       ${(!isSingle && v.link)? `<a class="link" href="${esc(v.link)}" target="_blank" rel="noopener">${esc(v.link)}</a>`:''}
       ${datesInBody ? dateChipsHTML(v) : ''}
@@ -2029,6 +2040,7 @@ function cardHTML(v){
           <h3 class="namerow"><span class="namemain">${esc(v.name)||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
         </div>
         <div class="headactions">
+          ${needsVendorFinalize ? `<button class="headbtn ${v.isFinal?'finalon':''}" data-vendorfinal="${v.id}">${v.isFinal?'★ 최종 선택':'최종 선택'}</button>` : ''}
           <button class="headbtn" data-hide="${v.id}">${v.hidden?'숨김 해제':'숨기기'}</button>
           <button class="headbtn danger" data-del="${v.id}">삭제</button>
           <button class="headbtn" data-edit="${v.id}">수정</button>
@@ -2103,6 +2115,12 @@ function renderContent(){
       e.stopPropagation();
       startCardDrag(handle.dataset.drag, e.clientY);
     });
+  });
+  container.querySelectorAll('[data-vendorfinal]').forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      vendorFinalClick(btn.dataset.vendorfinal);
+    };
   });
   container.querySelectorAll('[data-hide]').forEach(btn=>{
     btn.onclick = async (e)=>{
@@ -2269,6 +2287,28 @@ async function deleteVendorById(id){
   expandedIds.delete(id);
   await saveVendors();
   renderContent();
+}
+
+function vendorFinalClick(vid){
+  const v = vendors.find(x=>x.id===vid);
+  if(!v) return;
+  if(v.isFinal){
+    (async ()=>{
+      v.isFinal = false;
+      await saveVendors();
+      renderContent();
+    })();
+    return;
+  }
+  (async ()=>{
+    vendors.forEach(v2=>{
+      if(v2.category===v.category && v2.subtype===v.subtype && v2.id!==v.id){ v2.isFinal=false; }
+    });
+    v.isFinal = true;
+    await saveVendors();
+    renderContent();
+    openPayment(vid);
+  })();
 }
 
 function itemFinalClick(key){
@@ -2872,7 +2912,7 @@ function extraFieldHTML(f, sec, val, full){
   if(f.type==='date'){
     return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input type="date" data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}></div>`;
   }
-  return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}${maxAttr}${placeholderAttr}></div>`;
+  return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"${fullStyle}${maxAttr}${placeholderAttr}${f.autoShorten?' data-autoshorten="true"':''}></div>`;
 }
 function quadEditCellHTML(f, sec, val){
   if(f.type==='checkbox'){
@@ -2962,6 +3002,15 @@ function renderSections(){
   if(currentCard) html += `</div>`;
   box.innerHTML = html;
 
+  box.querySelectorAll('[data-autoshorten="true"]').forEach(inp=>{
+    inp.addEventListener('blur', async ()=>{
+      const val = inp.value.trim();
+      if(val && /^https?:\/\//.test(val) && val.length > 30 && !/^https?:\/\/(is\.gd|v\.gd)\//.test(val)){
+        const short = await shortenUrl(val);
+        if(short) inp.value = short;
+      }
+    });
+  });
   box.querySelectorAll('.rowDel').forEach(btn=>{
     btn.onclick = ()=>{
       syncSectionsFromDOM();
