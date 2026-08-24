@@ -184,7 +184,7 @@ select.viewsel{
 .instaEmbeds{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px;}
 .gallery{display:flex;gap:8px;overflow-x:auto;margin-top:8px;}
 .snaprefcard{overflow:hidden;}
-.snaprefstrip{display:flex;gap:6px;overflow-x:auto;align-items:flex-start;}
+.snaprefstrip{display:flex;gap:6px;overflow-x:auto;align-items:flex-start;padding-top:8px;}
 .snaprefstrip img{flex:0 0 auto;width:60px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;}
 .snaprefstrip.snaprefstrip-collapsed img{width:52px;height:52px;}
 .snaprefstrip.snaprefstrip-picker img.selected{border-color:var(--gold);}
@@ -659,7 +659,7 @@ const SUBTYPE_SCHEMAS = {
     ]},
     "아이폰스냅": { sections: [
       { key:'iphoneSnap', label:'아이폰스냅', hasMedia:true, extraFields:[
-          {key:'composition', label:'구성', long:true},
+          {key:'composition', label:'구성', long:true, type:'textarea'},
           ...paymentFields()
         ], itemsLabel:'패키지 비교', itemFields:[
           {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
