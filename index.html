@@ -150,13 +150,13 @@ select.viewsel{
 .datechip.past{background:transparent;border-color:var(--line);color:#B4AFA0;text-decoration:line-through;}
 .nodates{font-size:10px;color:var(--ink-soft);margin-top:6px;}
 
-.sectionblock{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);}
+.sectionblock{margin-top:16px;padding-top:12px;border-top:2px solid var(--line);}
 .groupcard{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px 14px 14px;}
 .groupcardtitle{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
 .sectionblock.incard{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);}
 .sectionblock.incard.firstincard{margin-top:0;padding-top:0;border-top:none;}
 .sectionblock:first-of-type{margin-top:10px;}
-.sectionlabel{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:6px;}
+.sectionlabel{font-size:13px;font-weight:800;color:var(--gold);margin-bottom:6px;}
 .products{margin-top:8px;display:flex;flex-direction:column;gap:8px;}
 .itemslabel{font-size:11px;font-weight:800;color:var(--celadon);margin-bottom:2px;text-transform:uppercase;letter-spacing:.03em;}
 .product{background:var(--paper-deep);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;}
@@ -299,6 +299,11 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .itemrow-flex .itemfields{flex:1 1 0;min-width:0;}
 .itemrow-flex .imgpicker.small,.itemrow-flex .thumb.small{width:100%;aspect-ratio:1/1;height:auto;}
 .hint{font-size:11px;color:var(--ink-soft);margin:-3px 0 6px;}
+.todorow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);}
+.todorow:last-child{border-bottom:none;}
+.todorow .todotext{flex:1;min-width:0;font-size:13px;word-break:break-word;}
+.todorow.done .todotext{text-decoration:line-through;color:var(--ink-soft);}
+.todorow .todoDel{flex:0 0 auto;background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;padding:2px 4px;}
 
 .imgpicker{
   width:46px;height:46px;border:1.5px dashed var(--line);border-radius:12px;
@@ -540,9 +545,9 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 </div>
 
 <script>
-const CATS = ["본식","야외스냅","반지","혼주","기타"];
+const CATS = ["본식","야외스냅","반지","혼주","신혼여행","기타"];
 const CAT_COLOR = {
-  "본식":"#4A5568","야외스냅":"#5F8575","반지":"#B4933C","혼주":"#B6462F","기타":"#8A8A82"
+  "본식":"#4A5568","야외스냅":"#5F8575","반지":"#B4933C","혼주":"#B6462F","신혼여행":"#3D7A8C","기타":"#8A8A82"
 };
 
 const DEFAULT_SCHEMA = { sections: [
@@ -563,7 +568,7 @@ const CATEGORY_SCHEMA = {
 const SUBTYPE_SCHEMAS = {
   "본식": {
     "웨딩홀": { sections: [
-      { key:'hallinfo', label:'홀 정보', hasMedia:true, extraFields:[
+      { key:'hallinfo', label:'홀', hasMedia:true, extraFields:[
           {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
@@ -720,12 +725,41 @@ const SUBTYPE_SCHEMAS = {
           {key:'name', label:'품목'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:false }
     ]}
+  },
+  "신혼여행": {
+    "항공권": { sections: [
+      { key:'main', label:'항공권', extraFields:[
+          {key:'airline', label:'항공사'},{key:'flightNo', label:'항공기'},
+          {key:'depTime', label:'출발 일정 (가는편)', long:true},{key:'arrTime', label:'도착 일정 (가는편)', long:true},
+          {key:'depTimeRet', label:'출발 일정 (오는편)', long:true},{key:'arrTimeRet', label:'도착 일정 (오는편)', long:true},
+          {key:'layover', label:'경유 일정', long:true, type:'textarea'},
+          {key:'price', label:'왕복 비용', money:true},{key:'payer', label:'지불인'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "숙소": { sections: [
+      { key:'main', label:'숙소', hasMedia:true, extraFields:[
+          {key:'area', label:'지역'},{key:'hotelName', label:'숙소명'},
+          {key:'stayDates', label:'숙박 일정', long:true},
+          {key:'price', label:'가격', money:true},{key:'payer', label:'지불인 (or 현장결제)'},
+          {key:'freeCancel', label:'무료 취소 가능', type:'checkbox'},{key:'freeCancelDeadline', label:'무료 취소 기한'},
+          {key:'note', label:'참고사항', long:true, type:'textarea'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "투어": { sections: [
+      { key:'main', label:'투어', extraFields:[
+          {key:'area', label:'지역'},{key:'vendor', label:'업체명'},
+          {key:'schedule', label:'투어 일정', long:true},
+          {key:'price', label:'가격', money:true},
+          {key:'note', label:'참고사항', long:true, type:'textarea'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]}
   }
 };
 const SUBTYPE_OPTIONS = {
   "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"],
   "야외스냅": ["스냅업체","드레스","정장","헤어","메이크업","부케","기타"],
-  "혼주": ["한복","정장"]
+  "혼주": ["한복","정장"],
+  "신혼여행": ["항공권","숙소","투어"]
 };
 const BONSIK_COMPARE_SUBTYPES = ["본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"];
 function getSchema(category, subtype){
@@ -753,6 +787,8 @@ const SETUP_NEEDED = CONFIG.MASTER_KEY === 'YOUR_JSONBIN_MASTER_KEY';
 const PHOTO_SETUP_NEEDED = CONFIG.CLOUDINARY_CLOUD_NAME === 'YOUR_CLOUDINARY_CLOUD_NAME';
 
 let vendors = [];
+let budgetExtras = {};
+let honeymoonInfo = {};
 let activeTab = "본식";
 let editingSections = {};
 let editingImages = [];
@@ -1039,6 +1075,8 @@ async function loadVendors(){
     if(!res.ok) throw new Error('load failed');
     const json = await res.json();
     vendors = (json.record && json.record.vendors) ? json.record.vendors : [];
+    budgetExtras = (json.record && json.record.budgetExtras) ? json.record.budgetExtras : {};
+    honeymoonInfo = (json.record && json.record.honeymoonInfo) ? json.record.honeymoonInfo : {};
   }catch(e){
     vendors = [];
   }
@@ -1083,7 +1121,7 @@ async function saveVendors(){
       const res = await fetch('https://api.jsonbin.io/v3/b', {
         method:'POST',
         headers:{ 'Content-Type':'application/json', 'X-Master-Key':CONFIG.MASTER_KEY, 'X-Bin-Name':'wedding-vendor-compare' },
-        body: JSON.stringify({ vendors })
+        body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo })
       });
       if(!res.ok) throw new Error('create failed');
       const json = await res.json();
@@ -1094,7 +1132,7 @@ async function saveVendors(){
     const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}`, {
       method:'PUT',
       headers:{ 'Content-Type':'application/json', 'X-Master-Key':CONFIG.MASTER_KEY },
-      body: JSON.stringify({ vendors })
+      body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo })
     });
     if(!res.ok) throw new Error('save failed');
   }catch(e){
@@ -1703,6 +1741,96 @@ function subtypeItemSummaryHTML(v){
   return '';
 }
 
+function honeymoonInfoCardHTML(){
+  const start = honeymoonInfo.startDate || '';
+  const end = honeymoonInfo.endDate || '';
+  let durationText = '';
+  if(start && end){
+    const sd = new Date(start+'T00:00:00'), ed = new Date(end+'T00:00:00');
+    const nights = Math.round((ed-sd)/86400000);
+    if(nights >= 0) durationText = `${nights}박 ${nights+1}일`;
+  }
+  const todos = honeymoonInfo.todos || [];
+  const todoHTML = todos.length ? todos.map((t,idx)=>`
+    <div class="todorow${t.done?' done':''}">
+      <input type="checkbox" data-todotoggle="${idx}" ${t.done?'checked':''}>
+      <span class="todotext">${esc(t.text)}</span>
+      <button type="button" class="todoDel" data-tododel="${idx}">✕</button>
+    </div>
+  `).join('') : '<div class="hint">할 일을 추가해보세요.</div>';
+
+  return `<div class="card honeymooninfo">
+    <div class="cardhead" style="cursor:default;">
+      <div class="cardheadtop">
+        <div class="cardmain">
+          <div class="topline"><span class="catchip"><span class="dot" style="background:${CAT_COLOR['신혼여행']}"></span>신혼여행 · 여행 정보</span></div>
+          <h3 class="namerow"><span class="namemain">여행 정보</span></h3>
+        </div>
+      </div>
+    </div>
+    <div class="cardbody"><div class="cardbody-inner">
+      <div class="sectionblock">
+        <div class="sectionlabel">여행 기간</div>
+        <div class="vendorrow">
+          <div class="paygrid full">
+            <div class="exfield"><label>출발일</label><input type="date" id="hm_startDate" value="${esc(start)}"></div>
+            <div class="exfield"><label>귀국일</label><input type="date" id="hm_endDate" value="${esc(end)}"></div>
+          </div>
+        </div>
+        ${durationText ? `<div class="hallsummary" style="margin-top:6px;">${esc(durationText)}</div>` : ''}
+      </div>
+      <div class="sectionblock">
+        <div class="sectionlabel">TO-DO List</div>
+        <div id="hm_todoList">${todoHTML}</div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <input id="hm_todoInput" placeholder="할 일 입력" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;">
+          <button type="button" class="btn small" id="hm_todoAdd">추가</button>
+        </div>
+      </div>
+      <div class="sectionblock">
+        <div class="sectionlabel">기타사항</div>
+        <textarea id="hm_note" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;min-height:70px;resize:vertical;">${esc(honeymoonInfo.note||'')}</textarea>
+      </div>
+    </div></div>
+  </div>`;
+}
+
+function bindHoneymoonInfoHandlers(){
+  const startEl = document.getElementById('hm_startDate');
+  const endEl = document.getElementById('hm_endDate');
+  const noteEl = document.getElementById('hm_note');
+  if(!startEl) return;
+  startEl.addEventListener('change', async ()=>{ honeymoonInfo.startDate = startEl.value; await saveVendors(); renderContent(); });
+  endEl.addEventListener('change', async ()=>{ honeymoonInfo.endDate = endEl.value; await saveVendors(); renderContent(); });
+  noteEl.addEventListener('change', async ()=>{ honeymoonInfo.note = noteEl.value; await saveVendors(); });
+
+  document.getElementById('hm_todoAdd').onclick = async ()=>{
+    const input = document.getElementById('hm_todoInput');
+    const text = input.value.trim();
+    if(!text) return;
+    if(!Array.isArray(honeymoonInfo.todos)) honeymoonInfo.todos = [];
+    honeymoonInfo.todos.push({ text, done:false });
+    await saveVendors();
+    renderContent();
+  };
+  document.querySelectorAll('[data-todotoggle]').forEach(cb=>{
+    cb.onchange = async ()=>{
+      const idx = +cb.dataset.todotoggle;
+      honeymoonInfo.todos[idx].done = cb.checked;
+      await saveVendors();
+      renderContent();
+    };
+  });
+  document.querySelectorAll('[data-tododel]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const idx = +btn.dataset.tododel;
+      honeymoonInfo.todos.splice(idx,1);
+      await saveVendors();
+      renderContent();
+    };
+  });
+}
+
 function placeholderCardHTML(category, subtype){
   return `<div class="card notfinal placeholdercard">
     <div class="cardhead">
@@ -1796,10 +1924,16 @@ function renderContent(){
       if(matches.length) return matches.map(cardHTML).join('');
       return placeholderCardHTML(activeTab, subtype);
     }).join('');
+    if(activeTab === '신혼여행'){
+      cardsHTML = honeymoonInfoCardHTML() + cardsHTML;
+    }
   } else {
     cardsHTML = list.map(cardHTML).join('');
   }
   container.innerHTML = `<div class="grid">${cardsHTML}</div>`;
+  if(activeTab === '신혼여행'){
+    bindHoneymoonInfoHandlers();
+  }
 
   container.querySelectorAll('[data-addplaceholder]').forEach(el=>{
     el.onclick = ()=>{
@@ -2073,6 +2207,10 @@ function renderBudgetPage(){
     return { name, dep, bal, total: dep+bal, methodBreakdown };
   }).sort((a,b)=> b.total-a.total);
 
+  const giftTotal = moneyToManwon(budgetExtras.groomGift) + moneyToManwon(budgetExtras.brideGift);
+  const expenseTotal = moneyToManwon(budgetExtras.groomExpense) + moneyToManwon(budgetExtras.brideExpense);
+  const finalTotal = grandTotal - giftTotal + expenseTotal;
+
   container.innerHTML = `
     <div class="budgetheader">
       <h2 style="margin:0;font-size:16px;">♥ 결혼식 준비 총 비용</h2>
@@ -2119,7 +2257,33 @@ function renderBudgetPage(){
       `;
       }).join('')}
     </div>
+
+    <h3 style="margin:18px 0 8px;font-size:13px;">축의금 / 청첩비</h3>
+    <div class="paystatuscard">
+      <div class="paygrid">
+        <div class="exfield"><label>신랑측 축의금 (받은 돈)</label><input id="ext_groomGift" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.groomGift||'')}"></div>
+        <div class="exfield"><label>신부측 축의금 (받은 돈)</label><input id="ext_brideGift" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.brideGift||'')}"></div>
+      </div>
+      <div class="paygrid" style="margin-top:8px;">
+        <div class="exfield"><label>신랑측 청첩비 (쓴 돈)</label><input id="ext_groomExpense" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.groomExpense||'')}"></div>
+        <div class="exfield"><label>신부측 청첩비 (쓴 돈)</label><input id="ext_brideExpense" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.brideExpense||'')}"></div>
+      </div>
+    </div>
+    <div class="paystatuscard" style="margin-top:8px;">
+      <div class="prow"><div class="k">총 비용</div><div class="v">${grandTotal.toLocaleString()}만원</div></div>
+      <div class="prow"><div class="k">축의금 합계</div><div class="v">- ${giftTotal.toLocaleString()}만원</div></div>
+      <div class="prow"><div class="k">청첩비 합계</div><div class="v">+ ${expenseTotal.toLocaleString()}만원</div></div>
+      <div class="prow"><div class="k">최종 비용</div><div class="v" style="font-weight:800;font-size:14px;">${finalTotal.toLocaleString()}만원</div></div>
+    </div>
   `;
+
+  ['groomGift','brideGift','groomExpense','brideExpense'].forEach(key=>{
+    document.getElementById('ext_'+key).addEventListener('change', async (e)=>{
+      budgetExtras[key] = e.target.value.trim();
+      await saveVendors();
+      renderBudgetPage();
+    });
+  });
 
   document.getElementById('exportDataBtn').onclick = exportData;
   document.getElementById('importDataFile').onchange = importDataFile;
@@ -2813,9 +2977,9 @@ document.getElementById('saveEdit').onclick = async ()=>{
     id = uid();
     vendors.push({ id, favorite:false, createdAt: Date.now(), isFinal:false, finalRef:null, payment:{}, ...data });
   }
-  if(cat === '본식' && subtype && !BONSIK_COMPARE_SUBTYPES.includes(subtype)){
+  if((cat === '본식' && subtype && !BONSIK_COMPARE_SUBTYPES.includes(subtype)) || cat === '신혼여행'){
     vendors.forEach(v2=>{
-      if(v2.category==='본식' && v2.subtype===subtype){
+      if(v2.category===cat && v2.subtype===subtype){
         v2.isFinal = (v2.id === id);
       }
     });
