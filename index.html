@@ -316,6 +316,11 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .itemrow-flex .imgpicker.small,.itemrow-flex .thumb.small{width:100%;aspect-ratio:1/1;height:auto;}
 .hint{font-size:11px;color:var(--ink-soft);margin:-3px 0 6px;}
 .todorow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);}
+.flightleg{font-size:12.5px;padding:3px 0;}
+.flightlayover{font-size:11px;color:var(--gold);padding:1px 0 3px 12px;font-weight:600;}
+.itemdatetimewrap{display:flex;flex-direction:column;gap:3px;}
+.itemdatetimewrap .itemdtlabel{font-size:10.5px;color:var(--ink-soft);font-weight:700;}
+.itemdatetimewrap input[type="datetime-local"]{border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:12.5px;font-family:inherit;background:#fff;}
 .todorow:last-child{border-bottom:none;}
 .todorow .todotext{flex:1;min-width:0;font-size:13px;word-break:break-word;}
 .todorow.done .todotext{text-decoration:line-through;color:var(--ink-soft);}
@@ -711,33 +716,34 @@ const SUBTYPE_SCHEMAS = {
   "혼주": {
     "한복": { sections: [
       { key:'main', label:'대여한복', extraFields:[
-          {key:'customPrice', label:'맞춤한복 가격', money:true},{key:'fittingLimit', label:'피팅비 / 벌수제한'},{key:'propRental', label:'소품 대여', long:true}
+          {key:'customPrice', label:'맞춤한복 가격', money:true},{key:'fittingLimit', label:'피팅비 / 벌수제한'},{key:'propRental', label:'소품 대여', long:true},
+          ...paymentFields()
         ], itemsLabel:'대여한복 가격 (라벨별)', itemFields:[
           {key:'label', label:'라벨'},{key:'price', label:'가격', money:true}
         ], itemHasPhoto:false }
     ]},
     "정장": { sections: [
       { key:'main', label:'정장', extraFields:[
-          {key:'propRental', label:'소품 대여', long:true}
+          {key:'propRental', label:'소품 대여', long:true},
+          ...paymentFields()
         ], itemsLabel:'가격 비교', itemFields:[
           {key:'name', label:'품목'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:false }
     ]},
     "헤어메이크업": { sections: [
       { key:'main', label:'헤어메이크업', hasMedia:true, extraFields:[
-          {key:'vendor', label:'업체', long:true},
           {key:'bridemomPrice', label:'신부 어머님 가격', money:true, svcKey:'bridemomSvc'},{key:'bridemomSvc', label:'신부 어머님 SVC', type:'checkbox'},
           {key:'groommomPrice', label:'신랑 어머님 가격', money:true, svcKey:'groommomSvc'},{key:'groommomSvc', label:'신랑 어머님 SVC', type:'checkbox'},
           {key:'bridedadPrice', label:'신부 아버님 가격', money:true, svcKey:'bridedadSvc'},{key:'bridedadSvc', label:'신부 아버님 SVC', type:'checkbox'},
-          {key:'groomdadPrice', label:'신랑 아버님 가격', money:true, svcKey:'groomdadSvc'},{key:'groomdadSvc', label:'신랑 아버님 SVC', type:'checkbox'}
+          {key:'groomdadPrice', label:'신랑 아버님 가격', money:true, svcKey:'groomdadSvc'},{key:'groomdadSvc', label:'신랑 아버님 SVC', type:'checkbox'},
+          ...paymentFields()
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]},
     "상견례": { sections: [
       { key:'main', label:'상견례', hasMedia:true, extraFields:[
-          {key:'vendor', label:'업체'},{key:'location', label:'위치'},
           {key:'note', label:'참고사항', long:true, type:'textarea'},
           {key:'perPersonPrice', label:'인당 가격', money:true, noBudgetSum:true},{key:'totalPrice', label:'총 금액', money:true},
-          {key:'payer', label:'결제자'}
+          ...paymentFields()
         ], itemsLabel:'기타', itemFields:[
           {key:'note', label:'기타'},{key:'amount', label:'기타금', money:true}
         ], itemHasPhoto:false, sumAllItems:true }
@@ -745,22 +751,29 @@ const SUBTYPE_SCHEMAS = {
   },
   "신혼여행": {
     "항공권": { sections: [
-      { key:'main', label:'항공권', extraFields:[
+      { key:'info', label:'항공권 정보', extraFields:[
           {key:'airline', label:'항공사'},{key:'flightNo', label:'항공기'},
-          {key:'depTime', label:'출발 일정 (가는편)', long:true},{key:'arrTime', label:'도착 일정 (가는편)', long:true},
-          {key:'depTimeRet', label:'출발 일정 (오는편)', long:true},{key:'arrTimeRet', label:'도착 일정 (오는편)', long:true},
-          {key:'layover', label:'경유 일정', long:true, type:'textarea'},
-          {key:'price', label:'왕복 비용', money:true},{key:'payer', label:'지불인'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+          {key:'price', label:'가격', money:true},{key:'payer', label:'지불인'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
+      { key:'depart', label:'출발 일정', extraFields:[], itemsLabel:'구간', itemFields:[
+          {key:'depDateTime', label:'출발', type:'datetime'},{key:'depLocation', label:'출발지'},
+          {key:'arrDateTime', label:'도착', type:'datetime'},{key:'arrLocation', label:'도착지'}
+        ], itemHasPhoto:false },
+      { key:'ret', label:'귀국 일정', extraFields:[], itemsLabel:'구간', itemFields:[
+          {key:'depDateTime', label:'출발', type:'datetime'},{key:'depLocation', label:'출발지'},
+          {key:'arrDateTime', label:'도착', type:'datetime'},{key:'arrLocation', label:'도착지'}
+        ], itemHasPhoto:false }
     ]},
     "숙소": { sections: [
-      { key:'main', label:'숙소', hasMedia:true, extraFields:[
+      { key:'main', label:'숙소', extraFields:[
           {key:'area', label:'지역'},{key:'hotelName', label:'숙소명'},
-          {key:'stayDates', label:'숙박 일정', long:true},
-          {key:'price', label:'가격', money:true},{key:'payer', label:'지불인 (or 현장결제)'},
+          {key:'checkin', label:'Check-in', type:'date'},{key:'checkout', label:'Check-out', type:'date'},
+          {key:'price', label:'가격', money:true},
+          {key:'paymentType', label:'결제 방식', type:'select', options:['선결제','현장결제']},{key:'payer', label:'지불인 (선결제시)'},
           {key:'freeCancel', label:'무료 취소 가능', type:'checkbox'},{key:'freeCancelDeadline', label:'무료 취소 기한'},
+          {key:'bookingSite', label:'예약사이트'},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true }
     ]},
     "투어": { sections: [
       { key:'main', label:'투어', extraFields:[
@@ -768,7 +781,7 @@ const SUBTYPE_SCHEMAS = {
           {key:'schedule', label:'투어 일정', long:true},
           {key:'price', label:'가격', money:true},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false, hasMedia:true }
     ]}
   }
 };
@@ -1602,6 +1615,16 @@ function formatISODateDisplay(raw){
   return `${+m[1]}/${+m[2]}/${+m[3]}(${week})`;
 }
 
+function formatDateTimeDisplay(raw){
+  if(!raw) return raw;
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(raw);
+  if(!m) return raw;
+  const dt = new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00`);
+  if(isNaN(dt.getTime())) return raw;
+  const week = ['일','월','화','수','목','금','토'][dt.getDay()];
+  return `${+m[1]}/${+m[2]}/${+m[3]}(${week}) ${m[4]}:${m[5]}`;
+}
+
 function fieldRow(f, val, full){
   if(f.type==='checkbox'){
     if(f.alwaysShow){
@@ -1616,6 +1639,7 @@ function fieldRow(f, val, full){
   if(f.money) shown = formatMoney(val);
   else if(f.dateFormat) shown = formatKoreanDateDisplay(val);
   else if(f.type==='date') shown = formatISODateDisplay(val);
+  else if(f.type==='datetime') shown = formatDateTimeDisplay(val);
   else if(f.unit && /^\d+$/.test(String(val).trim())) shown = `${val}${f.unit}`;
   const stacked = f.type==='textarea' ? ' stacked' : '';
   const nowrapCls = f.type==='date' ? ' nowrapval' : '';
@@ -1890,23 +1914,77 @@ function bindSnapReferenceHandlers(){
   }
 }
 
+function parseFlightLegs(v){
+  if(!v || !v.sections) return {depart:[], ret:[]};
+  const depart = (v.sections.depart && v.sections.depart.items) || [];
+  const ret = (v.sections.ret && v.sections.ret.items) || [];
+  return {depart, ret};
+}
+function flightLegScheduleHTML(legs){
+  if(!legs || !legs.length) return '<div class="hint">일정이 입력되지 않았어요.</div>';
+  const valid = legs.filter(l=>l.depDateTime && l.arrDateTime);
+  if(!valid.length) return '<div class="hint">일정이 입력되지 않았어요.</div>';
+  let html = '';
+  valid.forEach((leg, idx)=>{
+    html += `<div class="flightleg">${esc(formatDateTimeDisplay(leg.depDateTime))} ${esc(leg.depLocation||'')} → ${esc(formatDateTimeDisplay(leg.arrDateTime))} ${esc(leg.arrLocation||'')}</div>`;
+    if(idx < valid.length - 1){
+      const next = valid[idx+1];
+      const arrMs = new Date(leg.arrDateTime).getTime();
+      const nextDepMs = new Date(next.depDateTime).getTime();
+      if(!isNaN(arrMs) && !isNaN(nextDepMs) && nextDepMs > arrMs){
+        const diffH = (nextDepMs - arrMs) / 3600000;
+        const h = Math.floor(diffH);
+        const m = Math.round((diffH - h) * 60);
+        const durText = m>0 ? `${h}시간 ${m}분` : `${h}시간`;
+        html += `<div class="flightlayover">(${esc(leg.arrLocation||'')} ${durText} 경유)</div>`;
+      }
+    }
+  });
+  return html;
+}
 function honeymoonInfoCardHTML(){
-  const start = honeymoonInfo.startDate || '';
-  const end = honeymoonInfo.endDate || '';
-  let durationText = '';
-  if(start && end){
-    const sd = new Date(start+'T00:00:00'), ed = new Date(end+'T00:00:00');
-    const nights = Math.round((ed-sd)/86400000);
-    if(nights >= 0) durationText = `${nights}박 ${nights+1}일`;
+  const flightVendors = vendors.filter(v=>v.category==='신혼여행' && v.subtype==='항공권');
+  const finalFlight = flightVendors.find(v=>v.isFinal) || flightVendors[0];
+  const hotelVendors = vendors.filter(v=>v.category==='신혼여행' && v.subtype==='숙소');
+
+  let tripRangeText = '';
+  let flightSectionHTML = '<div class="hint">항공권을 추가해보세요.</div>';
+  if(finalFlight){
+    const {depart, ret} = parseFlightLegs(finalFlight);
+    const departValid = depart.filter(l=>l.depDateTime);
+    const retValid = ret.filter(l=>l.arrDateTime);
+    if(departValid.length && retValid.length){
+      const startMs = new Date(departValid[0].depDateTime).getTime();
+      const endMs = new Date(retValid[retValid.length-1].arrDateTime).getTime();
+      if(!isNaN(startMs) && !isNaN(endMs)){
+        const startDate = departValid[0].depDateTime.slice(0,10);
+        const endDate = retValid[retValid.length-1].arrDateTime.slice(0,10);
+        tripRangeText = `${formatISODateDisplay(startDate)} ~ ${formatISODateDisplay(endDate)}`;
+      }
+    }
+    flightSectionHTML = `
+      <div class="hint" style="margin-bottom:4px;">가는 편</div>
+      ${flightLegScheduleHTML(depart)}
+      <div class="hint" style="margin:8px 0 4px;">오는 편</div>
+      ${flightLegScheduleHTML(ret)}
+    `;
   }
-  const todos = honeymoonInfo.todos || [];
-  const todoHTML = todos.length ? todos.map((t,idx)=>`
-    <div class="todorow${t.done?' done':''}">
-      <input type="checkbox" data-todotoggle="${idx}" ${t.done?'checked':''}>
-      <span class="todotext">${esc(t.text)}</span>
-      <button type="button" class="todoDel" data-tododel="${idx}">✕</button>
-    </div>
-  `).join('') : '<div class="hint">할 일을 추가해보세요.</div>';
+
+  let hotelSequenceHTML = '<div class="hint">숙소를 추가해보세요.</div>';
+  const hotelsWithDates = hotelVendors
+    .map(v=>{
+      const ex = (v.sections && v.sections.main && v.sections.main.extra) || {};
+      return { area: ex.area||ex.hotelName||v.name, checkin: ex.checkin, checkout: ex.checkout };
+    })
+    .filter(h=>h.checkin && h.checkout)
+    .sort((a,b)=> a.checkin < b.checkin ? -1 : 1);
+  if(hotelsWithDates.length){
+    hotelSequenceHTML = hotelsWithDates.map(h=>{
+      const nights = Math.round((new Date(h.checkout) - new Date(h.checkin)) / 86400000);
+      return `${esc(h.area)}(${nights}일)`;
+    }).join(' → ');
+    hotelSequenceHTML = `<div>${hotelSequenceHTML}</div>`;
+  }
 
   return `<div class="card honeymooninfo">
     <div class="cardhead" style="cursor:default;">
@@ -1920,64 +1998,18 @@ function honeymoonInfoCardHTML(){
     <div class="cardbody"><div class="cardbody-inner">
       <div class="sectionblock">
         <div class="sectionlabel">여행 기간</div>
-        <div class="vendorrow">
-          <div class="paygrid full">
-            <div class="exfield"><label>출발일</label><input type="date" id="hm_startDate" value="${esc(start)}"></div>
-            <div class="exfield"><label>귀국일</label><input type="date" id="hm_endDate" value="${esc(end)}"></div>
-          </div>
-        </div>
-        ${durationText ? `<div class="hallsummary" style="margin-top:6px;">${esc(durationText)}</div>` : ''}
+        ${tripRangeText ? `<div class="hallsummary" style="font-size:14px;">${esc(tripRangeText)}</div>` : '<div class="hint">항공권 일정을 입력하면 자동으로 계산돼요.</div>'}
       </div>
       <div class="sectionblock">
-        <div class="sectionlabel">TO-DO List</div>
-        <div id="hm_todoList">${todoHTML}</div>
-        <div style="display:flex;gap:6px;margin-top:8px;">
-          <input id="hm_todoInput" placeholder="할 일 입력" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;">
-          <button type="button" class="btn small" id="hm_todoAdd">추가</button>
-        </div>
+        <div class="sectionlabel">항공 일정</div>
+        ${flightSectionHTML}
       </div>
       <div class="sectionblock">
-        <div class="sectionlabel">기타사항</div>
-        <textarea id="hm_note" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;min-height:70px;resize:vertical;">${esc(honeymoonInfo.note||'')}</textarea>
+        <div class="sectionlabel">숙소 일정</div>
+        ${hotelSequenceHTML}
       </div>
     </div></div>
   </div>`;
-}
-
-function bindHoneymoonInfoHandlers(){
-  const startEl = document.getElementById('hm_startDate');
-  const endEl = document.getElementById('hm_endDate');
-  const noteEl = document.getElementById('hm_note');
-  if(!startEl) return;
-  startEl.addEventListener('change', async ()=>{ honeymoonInfo.startDate = startEl.value; await saveVendors(); renderContent(); });
-  endEl.addEventListener('change', async ()=>{ honeymoonInfo.endDate = endEl.value; await saveVendors(); renderContent(); });
-  noteEl.addEventListener('change', async ()=>{ honeymoonInfo.note = noteEl.value; await saveVendors(); });
-
-  document.getElementById('hm_todoAdd').onclick = async ()=>{
-    const input = document.getElementById('hm_todoInput');
-    const text = input.value.trim();
-    if(!text) return;
-    if(!Array.isArray(honeymoonInfo.todos)) honeymoonInfo.todos = [];
-    honeymoonInfo.todos.push({ text, done:false });
-    await saveVendors();
-    renderContent();
-  };
-  document.querySelectorAll('[data-todotoggle]').forEach(cb=>{
-    cb.onchange = async ()=>{
-      const idx = +cb.dataset.todotoggle;
-      honeymoonInfo.todos[idx].done = cb.checked;
-      await saveVendors();
-      renderContent();
-    };
-  });
-  document.querySelectorAll('[data-tododel]').forEach(btn=>{
-    btn.onclick = async ()=>{
-      const idx = +btn.dataset.tododel;
-      honeymoonInfo.todos.splice(idx,1);
-      await saveVendors();
-      renderContent();
-    };
-  });
 }
 
 function placeholderCardHTML(category, subtype){
@@ -2088,9 +2120,6 @@ function renderContent(){
     cardsHTML = list.map(cardHTML).join('');
   }
   container.innerHTML = `<div class="grid">${cardsHTML}</div>`;
-  if(activeTab === '신혼여행'){
-    bindHoneymoonInfoHandlers();
-  }
   if(activeTab === '야외스냅'){
     bindSnapReferenceHandlers();
   }
@@ -2875,6 +2904,7 @@ function itemEditRowHTML(item, idx, sec){
     const placeholder = f.money ? '(단위: 만원, 소수점 가능)' : (f.unit ? `숫자만 입력 (예: 2 → 2${f.unit})` : f.label);
     const moneyAttr = f.money ? ' inputmode="decimal"' : '';
     if(f.type==='textarea') return `<textarea data-key="${f.key}" placeholder="${esc(placeholder)}"${fullStyle}>${val}</textarea>`;
+    if(f.type==='datetime') return `<div class="itemdatetimewrap"${fullStyle}><label class="itemdtlabel">${esc(f.label)}</label><input type="datetime-local" data-key="${f.key}" value="${val}"></div>`;
     return `<input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${val}"${fullStyle}${moneyAttr}>`;
   }).join('');
   if(sec.itemHasPhoto){
@@ -3142,8 +3172,10 @@ function updateFieldVisibility(){
   } else {
     subtypeBox.style.display = 'none';
   }
-  document.getElementById('basicFieldsBox').style.display = SINGLE_ENTRY_CATS.includes(cat) ? 'none' : '';
-  document.getElementById('linkLocationBox').style.display = (cat==='본식' && subtypeSel.value==='웨딩홀') ? 'none' : '';
+  const noNameSubtypes = (cat==='신혼여행' && (subtypeSel.value==='숙소' || subtypeSel.value==='투어'));
+  document.getElementById('basicFieldsBox').style.display = (SINGLE_ENTRY_CATS.includes(cat) || noNameSubtypes) ? 'none' : '';
+  const noLinkLocSubtypes = (cat==='본식' && subtypeSel.value==='웨딩홀') || (cat==='신혼여행' && subtypeSel.value==='항공권');
+  document.getElementById('linkLocationBox').style.display = noLinkLocSubtypes ? 'none' : '';
   document.getElementById('cardNoteFieldBox').style.display = SUBTYPE_OPTIONS[cat] ? '' : 'none';
   document.getElementById('datesFieldBox').style.display = (cat === '야외스냅' && subtypeSel.value === '스냅업체') ? '' : 'none';
   const hideGallery = shouldHideGallery(cat, subtypeSel.value);
@@ -3251,20 +3283,27 @@ document.getElementById('saveEdit').onclick = async ()=>{
   const cat = document.getElementById('f_category').value;
   const subtype = SUBTYPE_OPTIONS[cat] ? document.getElementById('f_subtype').value : '';
   const single = SINGLE_ENTRY_CATS.includes(cat);
-  const noLinkLoc = single || (cat==='본식' && subtype==='웨딩홀');
+  const noLinkLoc = single || (cat==='본식' && subtype==='웨딩홀') || (cat==='신혼여행' && subtype==='항공권');
+  const noName = (cat==='신혼여행' && (subtype==='숙소' || subtype==='투어'));
+  let derivedName = '';
+  if(noName){
+    if(subtype==='숙소') derivedName = (sections.main && sections.main.extra && sections.main.extra.hotelName) || '숙소';
+    if(subtype==='투어') derivedName = (sections.main && sections.main.extra && sections.main.extra.vendor) || '투어';
+  }
+  const hideVendorGallery = shouldHideGallery(cat, subtype) || cat==='신혼여행';
   const data = {
     category: cat,
     subtype,
-    name: single ? cat : document.getElementById('f_name').value.trim(),
+    name: single ? cat : (noName ? derivedName : document.getElementById('f_name').value.trim()),
     link: noLinkLoc ? '' : document.getElementById('f_link').value.trim(),
     location: noLinkLoc ? '' : document.getElementById('f_location').value.trim(),
     memo: document.getElementById('f_memo').value.trim(),
     cardNote: document.getElementById('f_cardNote').value.trim(),
     dates: (cat === '야외스냅' && subtype === '스냅업체') ? dates : [],
     sections,
-    images: shouldHideGallery(cat, subtype) ? [] : editingImages.slice(),
-    contractImages: shouldHideGallery(cat, subtype) ? [] : editingContractImages.slice(),
-    instaLinks: shouldHideGallery(cat, subtype) ? [] : editingInstaLinks.slice()
+    images: hideVendorGallery ? [] : editingImages.slice(),
+    contractImages: hideVendorGallery ? [] : editingContractImages.slice(),
+    instaLinks: hideVendorGallery ? [] : editingInstaLinks.slice()
   };
   if(!data.name){ alert('업체명을 입력해주세요.'); return; }
   if(id){
