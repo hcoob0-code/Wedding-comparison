@@ -1852,7 +1852,7 @@ function snapReferenceCardHTML(){
     }
   }
 
-  return `<div class="card snaprefcard">
+  return `<div class="card snaprefcard${photos.length?' isfinal':''}">
     <div class="cardhead ${open?'open':''}" data-toggle="snapref-card">
       <div class="cardheadtop">
         <div class="cardmain">
