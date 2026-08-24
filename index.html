@@ -103,7 +103,7 @@ select.viewsel{
 .card h3{margin:0;font-size:15.5px;font-weight:800;letter-spacing:-.01em;}
 .card h3.namerow{display:flex;align-items:baseline;justify-content:space-between;gap:6px;flex-wrap:wrap;}
 .nameloc{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
-.hallsummary{font-size:11.5px;font-weight:600;color:var(--celadon);margin-top:3px;}
+.hallsummary{font-size:11.5px;font-weight:600;color:var(--celadon);margin-top:3px;white-space:pre-wrap;}
 .shootsummary{font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap;flex:0 0 auto;}
 .availdot{width:7px;height:7px;border-radius:50%;background:var(--celadon);display:inline-block;}
 .availdot.none{background:var(--line);}
@@ -151,6 +151,7 @@ select.viewsel{
 .nodates{font-size:10px;color:var(--ink-soft);margin-top:6px;}
 
 .sectionblock{margin-top:16px;padding-top:12px;border-top:2px solid var(--line);}
+.sectionblock.noborder{margin-top:0;padding-top:0;border-top:none;}
 .groupcard{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px 14px 14px;}
 .groupcardtitle{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
 .sectionblock.incard{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);}
@@ -184,6 +185,9 @@ select.viewsel{
 .instaEmbeds{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px;}
 .gallery{display:flex;gap:8px;overflow-x:auto;margin-top:8px;}
 .snaprefcard{overflow:hidden;}
+.snapreftabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;}
+.snapreftab{flex:0 0 auto;padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.snapreftab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
 .snaprefstrip{display:flex;gap:6px;overflow-x:auto;align-items:flex-start;padding-top:8px;}
 .snaprefstrip img{flex:0 0 auto;width:60px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;}
 .snaprefstrip.snaprefstrip-collapsed img{width:52px;height:52px;}
@@ -356,7 +360,7 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .comparecol .datechip{font-size:7.5px;padding:2px 4px;}
 
 .lightboxfull{background:rgba(10,10,10,.95);flex-direction:row;align-items:center;padding:0;}
-.lightboxfullimg{max-width:100vw;max-height:100vh;object-fit:contain;}
+.lightboxfullimg{max-width:100vw;max-height:100vh;object-fit:contain;touch-action:none;transform-origin:center center;will-change:transform;}
 .lbarrow{
   position:fixed;top:50%;transform:translateY(-50%);z-index:30;
   background:none;border:none;color:rgba(255,255,255,.32);font-size:44px;line-height:1;
@@ -380,7 +384,6 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 
   <div class="toolbar">
     <button class="btn primary" id="btnAdd">+ 추가</button>
-    <button class="btn" id="btnImport">JSON 붙여넣기</button>
     <button class="btn heart" id="btnBudget" title="총 비용 보기">♥</button>
     <div class="spacer"></div>
     <select class="viewsel" id="sortSel">
@@ -412,7 +415,7 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
     </div>
     <div class="field" id="cardNoteFieldBox" style="display:none;">
       <label>카드 노트 (카드 접었을 때 바로 보여요)</label>
-      <input id="f_cardNote" placeholder="예: 베이직 패키지 · 30만원">
+      <textarea id="f_cardNote" placeholder="예: 베이직 패키지 · 30만원" style="min-height:60px;"></textarea>
     </div>
     <div id="basicFieldsBox">
       <div class="field"><label>업체명</label><input id="f_name"></div>
@@ -475,21 +478,6 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 </div>
 
 <!-- Import Modal -->
-<div class="overlay" id="importOverlay">
-  <div class="modal">
-    <div class="closebtn"><button id="closeImport">✕</button></div>
-    <h2>JSON 붙여넣기로 추가</h2>
-    <div class="sub" style="margin-bottom:10px;">제미나이가 만들어준 JSON을 그대로 붙여넣으세요. 카테고리 탭을 꾹 누르면 그 카테고리용 JSON 형식이 복사돼요.</div>
-    <textarea class="jsonarea" id="jsonInput" placeholder='[{"category":"야외스냅","name":"...", "sections":{...} }]'></textarea>
-    <div id="importMsg"></div>
-    <div id="importPreview" class="previewlist"></div>
-    <div class="modal-actions">
-      <button class="btn ghost" id="parseBtn">미리보기</button>
-      <button class="btn primary" id="confirmImport">추가하기</button>
-    </div>
-  </div>
-</div>
-
 <!-- Payment Modal -->
 <div class="overlay" id="paymentOverlay">
   <div class="modal">
@@ -519,20 +507,6 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
     </div>
     <div style="margin-top:10px;text-align:right;">
       <button class="btn small" id="unfinalizeBtn" style="color:var(--persimmon);border-color:#e8c9c0;">최종 선택 해제</button>
-    </div>
-  </div>
-</div>
-
-<!-- JSON Template Modal -->
-<div class="overlay" id="jsonTemplateOverlay">
-  <div class="modal">
-    <div class="closebtn"><button id="closeJsonTemplate">✕</button></div>
-    <h2 id="jsonTemplateTitle">JSON 형식</h2>
-    <div class="sub" style="margin-bottom:10px;">아래 내용을 길게 눌러 전체 선택하거나, "복사하기" 버튼을 눌러주세요.</div>
-    <textarea class="jsonarea" id="jsonTemplateText" readonly></textarea>
-    <div class="modal-actions">
-      <button class="btn ghost" id="closeJsonTemplate2">닫기</button>
-      <button class="btn primary" id="copyTemplateBtn">복사하기</button>
     </div>
   </div>
 </div>
@@ -599,6 +573,7 @@ const SUBTYPE_SCHEMAS = {
     "웨딩홀": { sections: [
       { key:'hallinfo', label:'홀', hasMedia:true, extraFields:[
           {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
+          {key:'affiliateLink', label:'제휴업체 리스트 (노션 링크)', long:true, isLink:true},
           {key:'note', label:'참고사항', long:true, type:'textarea'},
           ...paymentFields()
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
@@ -643,7 +618,6 @@ const SUBTYPE_SCHEMAS = {
     "헤어메이크업": { sections: [
       { key:'hairMakeup', label:'헤어메이크업', hasMedia:true, extraFields:[
           {key:'note', label:'참고사항', long:true, type:'textarea'},
-          {key:'parentsPrice', label:'양가어머님추가금', money:true},{key:'svc', label:'SVC', type:'checkbox'},
           ...paymentFields()
         ], itemsLabel:'패키지 비교', itemFields:[
           {key:'name', label:'패키지명', long:true},{key:'price', label:'가격', long:true, money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
@@ -753,6 +727,25 @@ const SUBTYPE_SCHEMAS = {
         ], itemsLabel:'가격 비교', itemFields:[
           {key:'name', label:'품목'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:false }
+    ]},
+    "헤어메이크업": { sections: [
+      { key:'main', label:'헤어메이크업', hasMedia:true, extraFields:[
+          {key:'vendor', label:'업체', long:true},
+          {key:'bridemomPrice', label:'신부 어머님 가격', money:true, svcKey:'bridemomSvc'},{key:'bridemomSvc', label:'신부 어머님 SVC', type:'checkbox'},
+          {key:'groommomPrice', label:'신랑 어머님 가격', money:true, svcKey:'groommomSvc'},{key:'groommomSvc', label:'신랑 어머님 SVC', type:'checkbox'},
+          {key:'bridedadPrice', label:'신부 아버님 가격', money:true, svcKey:'bridedadSvc'},{key:'bridedadSvc', label:'신부 아버님 SVC', type:'checkbox'},
+          {key:'groomdadPrice', label:'신랑 아버님 가격', money:true, svcKey:'groomdadSvc'},{key:'groomdadSvc', label:'신랑 아버님 SVC', type:'checkbox'}
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+    ]},
+    "상견례": { sections: [
+      { key:'main', label:'상견례', hasMedia:true, extraFields:[
+          {key:'vendor', label:'업체'},{key:'location', label:'위치'},
+          {key:'note', label:'참고사항', long:true, type:'textarea'},
+          {key:'perPersonPrice', label:'인당 가격', money:true, noBudgetSum:true},{key:'totalPrice', label:'총 금액', money:true},
+          {key:'payer', label:'결제자'}
+        ], itemsLabel:'기타', itemFields:[
+          {key:'note', label:'기타'},{key:'amount', label:'기타금', money:true}
+        ], itemHasPhoto:false, sumAllItems:true }
     ]}
   },
   "신혼여행": {
@@ -787,7 +780,7 @@ const SUBTYPE_SCHEMAS = {
 const SUBTYPE_OPTIONS = {
   "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"],
   "야외스냅": ["스냅업체","드레스","정장","헤어","메이크업","부케","기타"],
-  "혼주": ["한복","정장"],
+  "혼주": ["한복","정장","헤어메이크업","상견례"],
   "신혼여행": ["항공권","숙소","투어"]
 };
 const BONSIK_COMPARE_SUBTYPES = ["본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"];
@@ -818,7 +811,8 @@ const PHOTO_SETUP_NEEDED = CONFIG.CLOUDINARY_CLOUD_NAME === 'YOUR_CLOUDINARY_CLO
 let vendors = [];
 let budgetExtras = {};
 let honeymoonInfo = {};
-let snapRefPhotos = [];
+let snapRefPhotos = {};
+let snapRefActiveSubtype = '스냅업체';
 let snapRefSelectedIndex = 0;
 let activeTab = "본식";
 let editingSections = {};
@@ -826,7 +820,6 @@ let editingImages = [];
 let editingContractImages = [];
 let editingInstaLinks = [];
 let editingDates = [];
-let editingImportBatch = [];
 let expandedIds = new Set();
 let paymentVendorId = null;
 let showBudget = false;
@@ -1127,7 +1120,14 @@ async function loadVendors(){
     vendors = (json.record && json.record.vendors) ? json.record.vendors : [];
     budgetExtras = (json.record && json.record.budgetExtras) ? json.record.budgetExtras : {};
     honeymoonInfo = (json.record && json.record.honeymoonInfo) ? json.record.honeymoonInfo : {};
-    snapRefPhotos = (json.record && Array.isArray(json.record.snapRefPhotos)) ? json.record.snapRefPhotos : [];
+    const rawSnapRef = json.record && json.record.snapRefPhotos;
+    if(Array.isArray(rawSnapRef)){
+      snapRefPhotos = rawSnapRef.length ? { '스냅업체': rawSnapRef } : {};
+    } else if(rawSnapRef && typeof rawSnapRef === 'object'){
+      snapRefPhotos = rawSnapRef;
+    } else {
+      snapRefPhotos = {};
+    }
   }catch(e){
     vendors = [];
   }
@@ -1313,21 +1313,7 @@ function renderTabs(){
   }).join('');
   tabs.querySelectorAll('.tab').forEach(btn=>{
     const cat = btn.dataset.cat;
-    let timer=null, longPressed=false;
-    const start=()=>{
-      longPressed=false;
-      timer=setTimeout(()=>{
-        longPressed=true;
-        openJSONTemplateModal(cat);
-      }, 550);
-    };
-    const cancel=()=>{ if(timer) clearTimeout(timer); };
-    btn.addEventListener('pointerdown', start);
-    btn.addEventListener('pointerup', cancel);
-    btn.addEventListener('pointerleave', cancel);
-    btn.addEventListener('pointercancel', cancel);
-    btn.addEventListener('click', (e)=>{
-      if(longPressed){ longPressed=false; return; }
+    btn.addEventListener('click', ()=>{
       showBudget = false; activeTab = cat; renderTabs(); renderContent();
     });
   });
@@ -1335,53 +1321,6 @@ function renderTabs(){
   const sel = document.getElementById('f_category');
   sel.innerHTML = CATS.map(c=>`<option>${c}</option>`).join('');
 }
-
-function buildJSONTemplate(cat){
-  if(cat==='전체') return null;
-  const schema = getSchema(cat);
-  const sections = {};
-  schema.sections.forEach(sec=>{
-    const extra = {};
-    sec.extraFields.forEach(f=>{ extra[f.key] = ""; });
-    const itemTemplate = {};
-    sec.itemFields.forEach(f=>{ itemTemplate[f.key] = ""; });
-    if(sec.itemHasPhoto) itemTemplate.photo = "";
-    sections[sec.key] = { extra, items:[itemTemplate] };
-  });
-  const obj = { category:cat, name:"", link:"", location:"", memo:"", dates:[], sections };
-  return JSON.stringify([obj], null, 2);
-}
-
-function openJSONTemplateModal(cat){
-  const json = buildJSONTemplate(cat);
-  if(!json) return;
-  document.getElementById('jsonTemplateTitle').textContent = cat + ' JSON 형식';
-  const ta = document.getElementById('jsonTemplateText');
-  ta.value = json;
-  document.getElementById('copyTemplateBtn').textContent = '복사하기';
-  document.getElementById('jsonTemplateOverlay').classList.add('show');
-  setTimeout(()=>{ ta.focus(); ta.select(); }, 50);
-}
-function closeJSONTemplateModal(){ document.getElementById('jsonTemplateOverlay').classList.remove('show'); }
-document.getElementById('closeJsonTemplate').onclick = closeJSONTemplateModal;
-document.getElementById('closeJsonTemplate2').onclick = closeJSONTemplateModal;
-document.getElementById('copyTemplateBtn').onclick = async ()=>{
-  const ta = document.getElementById('jsonTemplateText');
-  ta.focus();
-  ta.select();
-  let ok = false;
-  try{
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      await navigator.clipboard.writeText(ta.value);
-      ok = true;
-    } else {
-      ok = document.execCommand('copy');
-    }
-  }catch(err){ ok = false; }
-  const btn = document.getElementById('copyTemplateBtn');
-  btn.textContent = ok ? '복사됨!' : '복사 실패 - 위 텍스트를 직접 길게 눌러 복사해주세요';
-  setTimeout(()=>{ btn.textContent = '복사하기'; }, ok ? 1500 : 3000);
-};
 
 let dragCardId = null;
 function normalizeVendorOrderToCurrentView(){
@@ -1542,16 +1481,24 @@ function budgetRowsForSubtypeCategory(category){
             if(data.extra.paymentMethod) payMethod = payMethod || data.extra.paymentMethod;
           }
         }
-        (v.finalRefs||[]).forEach(r=>{
-          if(r.sectionKey===sec.key){
-            const it = (data.items||[])[r.itemIndex];
-            if(it){
-              sec.itemFields.forEach(f=>{
-                if(f.money && !f.noBudgetSum) itemTotal += moneyToManwon(it[f.key]);
-              });
+        if(sec.sumAllItems){
+          (data.items||[]).forEach(it=>{
+            sec.itemFields.forEach(f=>{
+              if(f.money && !f.noBudgetSum) itemTotal += moneyToManwon(it[f.key]);
+            });
+          });
+        } else {
+          (v.finalRefs||[]).forEach(r=>{
+            if(r.sectionKey===sec.key){
+              const it = (data.items||[])[r.itemIndex];
+              if(it){
+                sec.itemFields.forEach(f=>{
+                  if(f.money && !f.noBudgetSum) itemTotal += moneyToManwon(it[f.key]);
+                });
+              }
             }
-          }
-        });
+          });
+        }
       });
       return { extraTotal, itemTotal, dep, depPayer, bal, balPayer, balDue, balPaid, payMethod };
     }
@@ -1665,6 +1612,9 @@ function fieldRow(f, val, full){
   else if(f.unit && /^\d+$/.test(String(val).trim())) shown = `${val}${f.unit}`;
   const stacked = f.type==='textarea' ? ' stacked' : '';
   const nowrapCls = f.type==='date' ? ' nowrapval' : '';
+  if(f.isLink){
+    return `<div class="prow${full?' full':''}${stacked}"><div class="k">${esc(f.label)}</div><div class="v"><a href="${esc(val)}" target="_blank" rel="noopener" class="link">${esc(val)}</a></div></div>`;
+  }
   return `<div class="prow${full?' full':''}${stacked}${nowrapCls}"><div class="k">${esc(f.label)}</div><div class="v">${esc(shown)}</div></div>`;
 }
 function quadCellHTML(f, val){
@@ -1717,13 +1667,14 @@ function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls, oneCo
 
 function vendorSectionsHTML(v, showControls, oneCol){
   const schema = getSchema(v.category, v.subtype);
+  const isSingleSection = schema.sections.length === 1;
   const cardCounts = {};
   schema.sections.forEach(sec=>{ if(sec.card) cardCounts[sec.card] = (cardCounts[sec.card]||0)+1; });
 
   let html = '';
   let currentCard = null;
   let justOpenedCard = false;
-  schema.sections.forEach(sec=>{
+  schema.sections.forEach((sec, idx)=>{
     if(sec.card !== currentCard){
       if(currentCard === '웨딩홀'){
         html += galleryHTML(v.contractImages, v.contractImages&&v.contractImages.length? '계약서 사진':'');
@@ -1737,11 +1688,12 @@ function vendorSectionsHTML(v, showControls, oneCol){
     const rows = fieldsToHTML(sec.extraFields, data.extra, oneCol);
     const extraHTML = rows ? `<div class="vendorrow">${rows}</div>` : '';
     const items = data.items || [];
-    const itemsHTML = items.length ? `<div class="products">${items.map((it,idx)=>itemBlockHTML(it,sec,v.id,sec.key,idx,showControls,oneCol)).join('')}</div>` : '';
+    const itemsHTML = items.length ? `<div class="products">${items.map((it,idx2)=>itemBlockHTML(it,sec,v.id,sec.key,idx2,showControls,oneCol)).join('')}</div>` : '';
     const mediaHTML = sec.hasMedia ? (galleryHTML(data.images, '') + instaEmbedsHTML(data.instaLinks)) : '';
-    const skipInnerLabel = sec.card && cardCounts[sec.card] === 1;
+    const skipInnerLabel = (sec.card && cardCounts[sec.card] === 1) || isSingleSection;
     const innerLabel = skipInnerLabel ? '' : `<div class="sectionlabel">${esc(sec.label)}</div>`;
-    html += `<div class="sectionblock${sec.card?' incard':''}${justOpenedCard?' firstincard':''}">${innerLabel}${extraHTML}${itemsHTML}${mediaHTML}</div>`;
+    const noBorderCls = (isSingleSection || idx===0) ? ' noborder' : '';
+    html += `<div class="sectionblock${sec.card?' incard':''}${justOpenedCard?' firstincard':''}${noBorderCls}">${innerLabel}${extraHTML}${itemsHTML}${mediaHTML}</div>`;
     justOpenedCard = false;
   });
   if(currentCard === '웨딩홀'){
@@ -1819,12 +1771,20 @@ function subtypeItemSummaryHTML(v){
   return '';
 }
 
+const SNAPREF_SUBTYPES = ["스냅업체","드레스","정장","헤어","메이크업","부케","기타"];
 function snapReferenceCardHTML(){
   const open = expandedIds.has('snapref-card');
-  const photos = snapRefPhotos || [];
+  if(!SNAPREF_SUBTYPES.includes(snapRefActiveSubtype)) snapRefActiveSubtype = SNAPREF_SUBTYPES[0];
+  const photos = snapRefPhotos[snapRefActiveSubtype] || [];
+  const hasAnyPhotos = SNAPREF_SUBTYPES.some(st => (snapRefPhotos[st]||[]).length);
   const collapsedStrip = photos.length
     ? `<div class="snaprefstrip snaprefstrip-collapsed">${photos.map(src=>`<img src="${esc(src)}">`).join('')}</div>`
     : '';
+
+  const tabsHTML = `<div class="snapreftabs">${SNAPREF_SUBTYPES.map(st=>{
+    const cnt = (snapRefPhotos[st]||[]).length;
+    return `<button type="button" class="snapreftab ${st===snapRefActiveSubtype?'active':''}" data-snapreftab="${esc(st)}">${esc(st)}${cnt?` (${cnt})`:''}</button>`;
+  }).join('')}</div>`;
 
   let body = '';
   if(open){
@@ -1838,6 +1798,7 @@ function snapReferenceCardHTML(){
         </div>
       `).join('');
       body = `<div class="cardbody"><div class="cardbody-inner">
+        ${tabsHTML}
         <div class="snaprefmainwrap">
           <img class="snaprefmain" src="${esc(mainSrc)}" data-snaprefmain>
           <button type="button" class="btn small snapreffull" id="snaprefFullscreenBtn">전체화면</button>
@@ -1846,17 +1807,18 @@ function snapReferenceCardHTML(){
       </div></div>`;
     } else {
       body = `<div class="cardbody"><div class="cardbody-inner">
+        ${tabsHTML}
         <div class="hint">아직 사진이 없어요.</div>
         <label class="imgpicker small"><input type="file" accept="image/*" id="snaprefAddInput">+</label>
       </div></div>`;
     }
   }
 
-  return `<div class="card snaprefcard${photos.length?' isfinal':''}">
+  return `<div class="card snaprefcard${hasAnyPhotos?' isfinal':''}">
     <div class="cardhead ${open?'open':''}" data-toggle="snapref-card">
       <div class="cardheadtop">
         <div class="cardmain">
-          <div class="topline"><span class="catchip"><span class="dot" style="background:${CAT_COLOR['야외스냅']}"></span>레퍼런스 사진</span></div>
+          <div class="topline"><span class="catchip"><span class="dot" style="background:${CAT_COLOR['야외스냅']}"></span>레퍼런스 사진 · ${esc(snapRefActiveSubtype)}</span></div>
           <h3 class="namerow"><span class="namemain">레퍼런스 사진</span></h3>
         </div>
         <span class="chev">▾</span>
@@ -1868,6 +1830,13 @@ function snapReferenceCardHTML(){
 }
 
 function bindSnapReferenceHandlers(){
+  document.querySelectorAll('[data-snapreftab]').forEach(btn=>{
+    btn.onclick = ()=>{
+      snapRefActiveSubtype = btn.dataset.snapreftab;
+      snapRefSelectedIndex = 0;
+      renderContent();
+    };
+  });
   const addInput = document.getElementById('snaprefAddInput');
   if(addInput){
     addInput.addEventListener('change', async (e)=>{
@@ -1875,8 +1844,9 @@ function bindSnapReferenceHandlers(){
       if(!file) return;
       try{
         const url = await uploadToCloudinary(file);
-        snapRefPhotos.push(url);
-        snapRefSelectedIndex = snapRefPhotos.length - 1;
+        if(!snapRefPhotos[snapRefActiveSubtype]) snapRefPhotos[snapRefActiveSubtype] = [];
+        snapRefPhotos[snapRefActiveSubtype].push(url);
+        snapRefSelectedIndex = snapRefPhotos[snapRefActiveSubtype].length - 1;
         await saveVendors();
         renderContent();
       }catch(err){
@@ -1894,8 +1864,9 @@ function bindSnapReferenceHandlers(){
     btn.onclick = async (e)=>{
       e.stopPropagation();
       const idx = +btn.dataset.snaprefdel;
-      snapRefPhotos.splice(idx, 1);
-      if(snapRefSelectedIndex >= snapRefPhotos.length) snapRefSelectedIndex = Math.max(0, snapRefPhotos.length - 1);
+      snapRefPhotos[snapRefActiveSubtype].splice(idx, 1);
+      const remaining = snapRefPhotos[snapRefActiveSubtype].length;
+      if(snapRefSelectedIndex >= remaining) snapRefSelectedIndex = Math.max(0, remaining - 1);
       await saveVendors();
       renderContent();
     };
@@ -1903,12 +1874,12 @@ function bindSnapReferenceHandlers(){
   const fullscreenBtn = document.getElementById('snaprefFullscreenBtn');
   if(fullscreenBtn){
     fullscreenBtn.onclick = ()=>{
-      openLightbox(snapRefPhotos.slice(), snapRefSelectedIndex);
+      openLightbox((snapRefPhotos[snapRefActiveSubtype]||[]).slice(), snapRefSelectedIndex);
     };
   }
   const mainImg = document.querySelector('[data-snaprefmain]');
   if(mainImg){
-    mainImg.onclick = ()=> openLightbox(snapRefPhotos.slice(), snapRefSelectedIndex);
+    mainImg.onclick = ()=> openLightbox((snapRefPhotos[snapRefActiveSubtype]||[]).slice(), snapRefSelectedIndex);
   }
 }
 
@@ -2176,6 +2147,7 @@ function openLightboxFromEl(imgEl){
 }
 function renderLightbox(){
   document.getElementById('lightboxImg').src = lightboxImages[lightboxIndex] || '';
+  resetLbZoom();
   const multi = lightboxImages.length > 1;
   document.getElementById('lightboxPrev').style.display = multi ? '' : 'none';
   document.getElementById('lightboxNext').style.display = multi ? '' : 'none';
@@ -2206,8 +2178,89 @@ document.getElementById('lightboxNext').onclick = (e)=>{
   renderLightbox();
 };
 document.getElementById('lightboxOverlay').addEventListener('click', ()=>{
+  if(lbJustGestured){ lbJustGestured = false; return; }
+  if(lbScale > 1.01) return;
   document.getElementById('lightboxOverlay').classList.remove('show');
 });
+
+// ---- Lightbox pinch-zoom / pan / double-tap ----
+let lbScale = 1, lbTranslateX = 0, lbTranslateY = 0;
+let lbPinchStartDist = 0, lbPinchStartScale = 1;
+let lbPanStartX = 0, lbPanStartY = 0, lbPanStartTX = 0, lbPanStartTY = 0;
+let lbIsPanning = false;
+let lbLastTapTime = 0;
+let lbJustGestured = false;
+const MAX_LB_SCALE = 5;
+
+function resetLbZoom(){
+  lbScale = 1; lbTranslateX = 0; lbTranslateY = 0;
+  applyLbTransform();
+}
+function applyLbTransform(){
+  const img = document.getElementById('lightboxImg');
+  if(!img) return;
+  img.style.transform = `translate(${lbTranslateX}px, ${lbTranslateY}px) scale(${lbScale})`;
+}
+function lbTouchDist(touches){
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+function lbClamp(){
+  if(lbScale < 1){ lbScale = 1; }
+  if(lbScale > MAX_LB_SCALE){ lbScale = MAX_LB_SCALE; }
+  if(lbScale <= 1){ lbTranslateX = 0; lbTranslateY = 0; }
+}
+
+const lbImgEl = document.getElementById('lightboxImg');
+if(lbImgEl){
+  lbImgEl.addEventListener('touchstart', (e)=>{
+    if(e.touches.length === 2){
+      lbPinchStartDist = lbTouchDist(e.touches);
+      lbPinchStartScale = lbScale;
+      lbIsPanning = false;
+    } else if(e.touches.length === 1){
+      const now = Date.now();
+      if(now - lbLastTapTime < 300){
+        lbJustGestured = true;
+        if(lbScale > 1.01){ resetLbZoom(); }
+        else { lbScale = 2.5; applyLbTransform(); }
+        lbLastTapTime = 0;
+        return;
+      }
+      lbLastTapTime = now;
+      if(lbScale > 1.01){
+        lbIsPanning = true;
+        lbPanStartX = e.touches[0].clientX;
+        lbPanStartY = e.touches[0].clientY;
+        lbPanStartTX = lbTranslateX;
+        lbPanStartTY = lbTranslateY;
+      }
+    }
+  }, {passive:true});
+  lbImgEl.addEventListener('touchmove', (e)=>{
+    if(e.touches.length === 2){
+      e.preventDefault();
+      lbJustGestured = true;
+      const dist = lbTouchDist(e.touches);
+      lbScale = lbPinchStartScale * (dist / lbPinchStartDist);
+      lbClamp();
+      applyLbTransform();
+    } else if(e.touches.length === 1 && lbIsPanning){
+      e.preventDefault();
+      lbJustGestured = true;
+      lbTranslateX = lbPanStartTX + (e.touches[0].clientX - lbPanStartX);
+      lbTranslateY = lbPanStartTY + (e.touches[0].clientY - lbPanStartY);
+      applyLbTransform();
+    }
+  }, {passive:false});
+  lbImgEl.addEventListener('touchend', (e)=>{
+    lbIsPanning = false;
+    lbClamp();
+    applyLbTransform();
+    setTimeout(()=>{ lbJustGestured = false; }, 50);
+  });
+}
 
 async function deleteVendorById(id){
   const ok = await showConfirm('이 업체를 삭제할까요?');
@@ -2680,7 +2733,9 @@ function renderThumbsGeneric(boxId, arr, onChange){
 function renderThumbs(){ renderThumbsGeneric('imgThumbs', editingImages, renderThumbs); }
 function renderContractThumbs(){ renderThumbsGeneric('contractThumbs', editingContractImages, renderContractThumbs); }
 
-async function handleImagePickerChange(e, arr, renderFn){
+async function handleImagePickerChange(e, arr, renderFn, maxDim, quality){
+  maxDim = maxDim || 1000;
+  quality = quality || 0.75;
   const files = Array.from(e.target.files || []);
   if(PHOTO_SETUP_NEEDED && files.length){
     alert('사진을 같이 보려면 먼저 Cloudinary 설정이 필요해요.');
@@ -2690,7 +2745,7 @@ async function handleImagePickerChange(e, arr, renderFn){
   for(const f of files){
     if(arr.length >= 8){ alert('사진은 최대 8장까지 올릴 수 있어요.'); break; }
     try{
-      const blob = await resizeImageToBlob(f, 1000, 0.75);
+      const blob = await resizeImageToBlob(f, maxDim, quality);
       const url = await uploadToCloudinary(blob);
       arr.push(url);
       renderFn();
@@ -2701,7 +2756,7 @@ async function handleImagePickerChange(e, arr, renderFn){
   e.target.value = '';
 }
 document.getElementById('f_images').onchange = (e)=> handleImagePickerChange(e, editingImages, renderThumbs);
-document.getElementById('f_contractImages').onchange = (e)=> handleImagePickerChange(e, editingContractImages, renderContractThumbs);
+document.getElementById('f_contractImages').onchange = (e)=> handleImagePickerChange(e, editingContractImages, renderContractThumbs, 2400, 0.92);
 
 function renderInstaLinks(){
   const box = document.getElementById('instaLinksList');
@@ -3171,7 +3226,8 @@ document.getElementById('saveEdit').onclick = async ()=>{
     id = uid();
     vendors.push({ id, favorite:false, createdAt: Date.now(), isFinal:false, finalRef:null, payment:{}, ...data });
   }
-  if((cat === '본식' && subtype && !BONSIK_COMPARE_SUBTYPES.includes(subtype)) || cat === '신혼여행'){
+  const honjuAutoFinal = (cat === '혼주' && (subtype === '헤어메이크업' || subtype === '상견례'));
+  if((cat === '본식' && subtype && !BONSIK_COMPARE_SUBTYPES.includes(subtype)) || cat === '신혼여행' || honjuAutoFinal){
     vendors.forEach(v2=>{
       if(v2.category===cat && v2.subtype===subtype){
         v2.isFinal = (v2.id === id);
@@ -3192,123 +3248,10 @@ document.getElementById('deleteEdit').onclick = async ()=>{
 };
 
 // ---- Import modal ----
-const importOverlay = document.getElementById('importOverlay');
-document.getElementById('btnImport').onclick = ()=>{
-  document.getElementById('jsonInput').value = '';
-  document.getElementById('importMsg').innerHTML = '';
-  document.getElementById('importPreview').innerHTML = '';
-  editingImportBatch = [];
-  importOverlay.classList.add('show');
-};
-document.getElementById('closeImport').onclick = ()=> importOverlay.classList.remove('show');
-
-function normalizeImportVendor(p){
-  let category = (p.category||'').toString().trim();
-  if(category === '스냅촬영') category = '야외스냅';
-  if(!CATS.includes(category)) category = '기타';
-  let subtype = (p.subtype||'').toString().trim();
-  if(SUBTYPE_OPTIONS[category] && !SUBTYPE_OPTIONS[category].includes(subtype)) subtype = SUBTYPE_OPTIONS[category][0];
-  const schema = getSchema(category, subtype);
-  const sectionsRaw = (p.sections && typeof p.sections==='object') ? p.sections : null;
-  const sections = {};
-  schema.sections.forEach(sec=>{
-    const raw = sectionsRaw ? (sectionsRaw[sec.key]||{}) : {};
-    const extra = {};
-    sec.extraFields.forEach(f=>{ extra[f.key] = ((raw.extra&&raw.extra[f.key])||'').toString().trim(); });
-    let itemsRaw = Array.isArray(raw.items) ? raw.items : [];
-    if(!sectionsRaw && sec.key==='main'){
-      if(Array.isArray(p.items)) itemsRaw = p.items;
-      else if(Array.isArray(p.products)) itemsRaw = p.products;
-    }
-    const items = itemsRaw.map(it=>{
-      const obj = {};
-      sec.itemFields.forEach(f=>{ obj[f.key] = ((it[f.key])||'').toString().trim(); });
-      if(sec.itemHasPhoto && it.photo) obj.photo = it.photo.toString().trim();
-      return obj;
-    }).filter(it => sec.itemFields.some(f=> it[f.key]) || it.photo);
-    sections[sec.key] = { extra, items };
-  });
-  return {
-    category,
-    subtype: SUBTYPE_OPTIONS[category] ? subtype : '',
-    name: (p.name||'').toString().trim(),
-    link: (p.link||'').toString().trim(),
-    location: (p.location||'').toString().trim(),
-    memo: (p.memo||'').toString().trim(),
-    dates: Array.isArray(p.dates) ? p.dates.map(d=>d.toString().trim()).filter(Boolean) : [],
-    sections
-  };
-}
-
-document.getElementById('parseBtn').onclick = ()=>{
-  const raw = document.getElementById('jsonInput').value.trim();
-  const msgEl = document.getElementById('importMsg');
-  const prevEl = document.getElementById('importPreview');
-  msgEl.innerHTML = ''; prevEl.innerHTML = '';
-  let parsed;
-  try{
-    parsed = JSON.parse(raw);
-    if(!Array.isArray(parsed)) parsed = [parsed];
-  }catch(e){
-    msgEl.innerHTML = `<div class="msg err">JSON 형식을 읽지 못했어요. 통째로 붙여넣었는지 확인해주세요.</div>`;
-    editingImportBatch = [];
-    return;
-  }
-  editingImportBatch = parsed.map(normalizeImportVendor).filter(v=>v.name);
-
-  if(editingImportBatch.length===0){
-    msgEl.innerHTML = `<div class="msg err">추가할 수 있는 항목이 없어요. 업체명(name)이 비어있지 않은지 확인해주세요.</div>`;
-    return;
-  }
-  msgEl.innerHTML = `<div class="msg ok">${editingImportBatch.length}개 업체를 찾았어요. 확인 후 추가하기를 눌러주세요.</div>`;
-  prevEl.innerHTML = editingImportBatch.map(v=>{
-    const cnt = Object.values(v.sections).reduce((a,s)=>a+s.items.length,0);
-    return `<div class="previewitem"><b>${esc(v.category)}</b> · ${esc(v.name)} · 항목 ${cnt}개</div>`;
-  }).join('');
-};
-
-document.getElementById('confirmImport').onclick = async ()=>{
-  if(editingImportBatch.length===0){
-    document.getElementById('parseBtn').click();
-    if(editingImportBatch.length===0) return;
-  }
-  const now = Date.now();
-  editingImportBatch.forEach((nv,i)=>{
-    const existing = vendors.find(v=> v.category===nv.category && v.name.trim().toLowerCase()===nv.name.trim().toLowerCase());
-    if(existing){
-      if(!existing.link && nv.link) existing.link = nv.link;
-      if(!existing.location && nv.location) existing.location = nv.location;
-      if(!existing.memo && nv.memo) existing.memo = nv.memo;
-      if(!Array.isArray(existing.dates)) existing.dates = [];
-      const existingDates = new Set(existing.dates);
-      nv.dates.forEach(d=>{ if(!existingDates.has(d)){ existing.dates.push(d); existingDates.add(d); } });
-      if(!existing.sections) existing.sections = {};
-      Object.keys(nv.sections).forEach(secKey=>{
-        if(!existing.sections[secKey]) existing.sections[secKey] = {extra:{}, items:[]};
-        Object.keys(nv.sections[secKey].extra).forEach(k=>{
-          if(!existing.sections[secKey].extra[k] && nv.sections[secKey].extra[k]) existing.sections[secKey].extra[k] = nv.sections[secKey].extra[k];
-        });
-        const existingSet = new Set(existing.sections[secKey].items.map(it=>JSON.stringify(it)));
-        nv.sections[secKey].items.forEach(it=>{
-          const s = JSON.stringify(it);
-          if(!existingSet.has(s)){ existing.sections[secKey].items.push(it); existingSet.add(s); }
-        });
-      });
-    } else {
-      vendors.push({ id: uid(), favorite:false, createdAt: now+i, images:[], isFinal:false, finalRef:null, payment:{}, ...nv });
-    }
-  });
-  await saveVendors();
-  editingImportBatch = [];
-  importOverlay.classList.remove('show');
-  renderTabs();
-  renderContent();
-};
-
 document.getElementById('sortSel').onchange = renderContent;
 document.getElementById('showHiddenChk').onchange = renderContent;
 
-[document.getElementById('editOverlay'), importOverlay, document.getElementById('paymentOverlay'), document.getElementById('jsonTemplateOverlay'), document.getElementById('payerSummaryOverlay')].forEach(ov=>{
+[document.getElementById('editOverlay'), document.getElementById('paymentOverlay'), document.getElementById('payerSummaryOverlay')].forEach(ov=>{
   ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('show'); });
 });
 
