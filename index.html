@@ -184,10 +184,13 @@ select.viewsel{
 .instaEmbeds{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px;}
 .gallery{display:flex;gap:8px;overflow-x:auto;margin-top:8px;}
 .snaprefcard{overflow:hidden;}
-.snaprefstrip{display:flex;gap:6px;overflow-x:auto;}
+.snaprefstrip{display:flex;gap:6px;overflow-x:auto;align-items:flex-start;}
 .snaprefstrip img{flex:0 0 auto;width:60px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;}
 .snaprefstrip.snaprefstrip-collapsed img{width:52px;height:52px;}
 .snaprefstrip.snaprefstrip-picker img.selected{border-color:var(--gold);}
+.snaprefthumb{position:relative;flex:0 0 auto;}
+.snaprefdel{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:9px;line-height:16px;padding:0;cursor:pointer;}
+.snaprefaddinrow{width:60px;height:60px;flex:0 0 auto;margin:0;}
 .snaprefmainwrap{position:relative;margin-bottom:10px;}
 .snaprefmain{width:100%;max-height:340px;object-fit:contain;border-radius:12px;background:#f0efe9;display:block;}
 .snapreffull{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.55);color:#fff;border:none;}
@@ -356,11 +359,18 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .lightboxfullimg{max-width:100vw;max-height:100vh;object-fit:contain;}
 .lbarrow{
   position:fixed;top:50%;transform:translateY(-50%);z-index:30;
-  background:none;border:none;color:rgba(255,255,255,.45);font-size:44px;line-height:1;
+  background:none;border:none;color:rgba(255,255,255,.32);font-size:44px;line-height:1;
   padding:14px 18px;cursor:pointer;font-family:inherit;
 }
 .lbprev{left:2px;}
 .lbnext{right:2px;}
+.lbthumbstrip{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  display:flex;gap:6px;overflow-x:auto;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top, rgba(0,0,0,.55), transparent);
+}
+.lbthumbstrip img{flex:0 0 auto;width:44px;height:44px;object-fit:cover;border-radius:6px;opacity:.55;cursor:pointer;border:2px solid transparent;}
+.lbthumbstrip img.selected{opacity:1;border-color:#fff;}
 </style>
 </head>
 <body>
@@ -553,6 +563,7 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
   <button class="lbarrow lbprev" id="lightboxPrev">‹</button>
   <img id="lightboxImg" src="" class="lightboxfullimg">
   <button class="lbarrow lbnext" id="lightboxNext">›</button>
+  <div class="lbthumbstrip" id="lightboxThumbStrip"></div>
 </div>
 
 <script>
@@ -1820,13 +1831,18 @@ function snapReferenceCardHTML(){
     if(photos.length){
       if(snapRefSelectedIndex >= photos.length) snapRefSelectedIndex = 0;
       const mainSrc = photos[snapRefSelectedIndex];
+      const thumbsHTML = photos.map((src,idx)=>`
+        <div class="snaprefthumb">
+          <img src="${esc(src)}" class="${idx===snapRefSelectedIndex?'selected':''}" data-snaprefpick="${idx}">
+          <button type="button" class="snaprefdel" data-snaprefdel="${idx}">✕</button>
+        </div>
+      `).join('');
       body = `<div class="cardbody"><div class="cardbody-inner">
         <div class="snaprefmainwrap">
           <img class="snaprefmain" src="${esc(mainSrc)}" data-snaprefmain>
           <button type="button" class="btn small snapreffull" id="snaprefFullscreenBtn">전체화면</button>
         </div>
-        <div class="snaprefstrip snaprefstrip-picker">${photos.map((src,idx)=>`<img src="${esc(src)}" class="${idx===snapRefSelectedIndex?'selected':''}" data-snaprefpick="${idx}">`).join('')}</div>
-        <label class="imgpicker small"><input type="file" accept="image/*" id="snaprefAddInput">+</label>
+        <div class="snaprefstrip snaprefstrip-picker">${thumbsHTML}<label class="imgpicker small snaprefaddinrow"><input type="file" accept="image/*" id="snaprefAddInput">+</label></div>
       </div></div>`;
     } else {
       body = `<div class="cardbody"><div class="cardbody-inner">
@@ -1871,6 +1887,16 @@ function bindSnapReferenceHandlers(){
   document.querySelectorAll('[data-snaprefpick]').forEach(img=>{
     img.onclick = ()=>{
       snapRefSelectedIndex = +img.dataset.snaprefpick;
+      renderContent();
+    };
+  });
+  document.querySelectorAll('[data-snaprefdel]').forEach(btn=>{
+    btn.onclick = async (e)=>{
+      e.stopPropagation();
+      const idx = +btn.dataset.snaprefdel;
+      snapRefPhotos.splice(idx, 1);
+      if(snapRefSelectedIndex >= snapRefPhotos.length) snapRefSelectedIndex = Math.max(0, snapRefPhotos.length - 1);
+      await saveVendors();
       renderContent();
     };
   });
@@ -2153,6 +2179,21 @@ function renderLightbox(){
   const multi = lightboxImages.length > 1;
   document.getElementById('lightboxPrev').style.display = multi ? '' : 'none';
   document.getElementById('lightboxNext').style.display = multi ? '' : 'none';
+  const strip = document.getElementById('lightboxThumbStrip');
+  if(multi){
+    strip.style.display = '';
+    strip.innerHTML = lightboxImages.map((src,idx)=>`<img src="${esc(src)}" class="${idx===lightboxIndex?'selected':''}" data-lbthumb="${idx}">`).join('');
+    strip.querySelectorAll('[data-lbthumb]').forEach(img=>{
+      img.onclick = (e)=>{
+        e.stopPropagation();
+        lightboxIndex = +img.dataset.lbthumb;
+        renderLightbox();
+      };
+    });
+  } else {
+    strip.style.display = 'none';
+    strip.innerHTML = '';
+  }
 }
 document.getElementById('lightboxPrev').onclick = (e)=>{
   e.stopPropagation();
