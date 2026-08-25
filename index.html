@@ -444,7 +444,7 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 
     <div id="sectionsBox"></div>
 
-    <div class="field"><label>기타사항</label><textarea id="f_memo" placeholder="문의 답변, 느낌, 고민되는 점 등"></textarea></div>
+    <div class="field" id="memoFieldBox"><label>기타사항</label><textarea id="f_memo" placeholder="문의 답변, 느낌, 고민되는 점 등"></textarea></div>
 
     <div id="gallerySlotBottom">
       <div id="galleryBlock">
@@ -707,6 +707,11 @@ const SUBTYPE_SCHEMAS = {
           {key:'name', label:'구성'},{key:'price', label:'추가금', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true }
     ]},
+    "헬퍼": { sections: [
+      { key:'helper', label:'헬퍼', extraFields:[], itemsLabel:'헬퍼 옵션', itemFields:[
+          {key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:true }
+    ]},
     "기타": { sections: [
       { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 항목', itemFields:[
           {key:'name', label:'항목명'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
@@ -756,12 +761,12 @@ const SUBTYPE_SCHEMAS = {
           {key:'price', label:'가격', money:true},{key:'payer', label:'지불인'}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'depart', label:'출발 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발', type:'datetime'},{key:'depLocation', label:'출발지'},
-          {key:'arrDateTime', label:'도착', type:'datetime'},{key:'arrLocation', label:'도착지'}
+          {key:'depDateTime', label:'출발', type:'datetime', long:true},{key:'depLocation', label:'출발지', long:true},
+          {key:'arrDateTime', label:'도착', type:'datetime', long:true},{key:'arrLocation', label:'도착지', long:true}
         ], itemHasPhoto:false },
       { key:'ret', label:'귀국 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발', type:'datetime'},{key:'depLocation', label:'출발지'},
-          {key:'arrDateTime', label:'도착', type:'datetime'},{key:'arrLocation', label:'도착지'}
+          {key:'depDateTime', label:'출발', type:'datetime', long:true},{key:'depLocation', label:'출발지', long:true},
+          {key:'arrDateTime', label:'도착', type:'datetime', long:true},{key:'arrLocation', label:'도착지', long:true}
         ], itemHasPhoto:false }
     ]},
     "숙소": { sections: [
@@ -787,7 +792,7 @@ const SUBTYPE_SCHEMAS = {
 };
 const SUBTYPE_OPTIONS = {
   "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"],
-  "야외스냅": ["스냅업체","드레스","정장","헤어","메이크업","부케","기타"],
+  "야외스냅": ["스냅업체","드레스","정장","헤어","메이크업","부케","헬퍼","기타"],
   "혼주": ["한복","정장","헤어메이크업","상견례"],
   "신혼여행": ["항공권","숙소","투어"]
 };
@@ -3151,7 +3156,7 @@ function syncSectionsFromDOM(schemaOverride){
 const GALLERY_TOP_CATS = ['야외스냅','혼주'];
 const SINGLE_ENTRY_CATS = [];
 function shouldHideGallery(cat, subtype){
-  return cat === '야외스냅' && subtype && subtype !== '스냅업체';
+  return (cat === '야외스냅' && subtype && subtype !== '스냅업체') || cat === '신혼여행';
 }
 function repositionGallery(){
   const cat = document.getElementById('f_category').value;
@@ -3181,6 +3186,7 @@ function updateFieldVisibility(){
   const hideGallery = shouldHideGallery(cat, subtypeSel.value);
   document.getElementById('galleryBlock').style.display = hideGallery ? 'none' : '';
   document.getElementById('contractBlock').style.display = hideGallery ? 'none' : '';
+  document.getElementById('memoFieldBox').style.display = (cat === '신혼여행') ? 'none' : '';
 }
 
 document.getElementById('f_subtype').addEventListener('change', ()=>{
@@ -3297,7 +3303,7 @@ document.getElementById('saveEdit').onclick = async ()=>{
     name: single ? cat : (noName ? derivedName : document.getElementById('f_name').value.trim()),
     link: noLinkLoc ? '' : document.getElementById('f_link').value.trim(),
     location: noLinkLoc ? '' : document.getElementById('f_location').value.trim(),
-    memo: document.getElementById('f_memo').value.trim(),
+    memo: cat === '신혼여행' ? '' : document.getElementById('f_memo').value.trim(),
     cardNote: document.getElementById('f_cardNote').value.trim(),
     dates: (cat === '야외스냅' && subtype === '스냅업체') ? dates : [],
     sections,
