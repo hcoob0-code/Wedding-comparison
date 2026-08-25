@@ -679,41 +679,48 @@ const SUBTYPE_SCHEMAS = {
         ], itemHasPhoto:false }
     ]},
     "드레스": { sections: [
-      { key:'dress', label:'드레스', extraFields:[], itemsLabel:'드레스별 추가금', itemFields:[
+      { key:'dress', label:'드레스', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
+          {key:'vendor', label:'업체명', long:true},
           {key:'price', label:'추가금', money:true},
           {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
           {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true }
     ]},
     "정장": { sections: [
-      { key:'suit', label:'정장', extraFields:[], itemsLabel:'정장별 추가금', itemFields:[
+      { key:'suit', label:'정장', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
+          {key:'vendor', label:'업체명', long:true},
           {key:'price', label:'추가금', money:true},
           {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
           {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true }
     ]},
     "헤어": { sections: [
-      { key:'hair', label:'헤어', extraFields:[], itemsLabel:'헤어 옵션', itemFields:[
+      { key:'hair', label:'헤어', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
+          {key:'vendor', label:'업체명', long:true},
           {key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true }
     ]},
     "메이크업": { sections: [
-      { key:'makeup', label:'메이크업', extraFields:[], itemsLabel:'메이크업 옵션', itemFields:[
+      { key:'makeup', label:'메이크업', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
+          {key:'vendor', label:'업체명', long:true},
           {key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true }
     ]},
     "부케": { sections: [
-      { key:'bouquet', label:'부케', extraFields:[], itemsLabel:'부케 옵션', itemFields:[
+      { key:'bouquet', label:'부케', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
+          {key:'vendor', label:'업체명', long:true},
           {key:'name', label:'구성'},{key:'price', label:'추가금', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true }
     ]},
     "헬퍼": { sections: [
-      { key:'helper', label:'헬퍼', extraFields:[], itemsLabel:'헬퍼 옵션', itemFields:[
+      { key:'helper', label:'헬퍼', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
+          {key:'vendor', label:'업체명', long:true},
           {key:'price', label:'가격', money:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true }
     ]},
     "기타": { sections: [
-      { key:'etc', label:'기타', extraFields:[], itemsLabel:'기타 항목', itemFields:[
+      { key:'etc', label:'기타', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
+          {key:'vendor', label:'업체명', long:true},
           {key:'name', label:'항목명'},{key:'price', label:'가격', money:true},{key:'desc', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true }
     ]}
@@ -1795,7 +1802,7 @@ function subtypeItemSummaryHTML(v){
     const items = data.items || [];
     const finalRef = (v.finalRefs||[]).find(r=>r.sectionKey===sec.key);
     items.forEach((it,idx)=>{
-      const name = it.brand || it.name || it.fabric || it.label || '';
+      const name = it.vendor || it.brand || it.name || it.fabric || it.label || '';
       if(!name) return;
       allNames.push(name);
       if(finalRef && finalRef.itemIndex===idx) chosenName = name;
@@ -2032,7 +2039,13 @@ function placeholderCardHTML(category, subtype){
     </div>
   </div>`;
 }
+const SINGLE_CARD_COMPARE_SUBTYPES = { "야외스냅": ["드레스","정장","헤어","메이크업","부케","헬퍼","기타"] };
 function openAddForSubtype(category, subtype){
+  const singleCardList = SINGLE_CARD_COMPARE_SUBTYPES[category];
+  if(singleCardList && singleCardList.includes(subtype)){
+    const existing = vendors.find(v=>v.category===category && v.subtype===subtype);
+    if(existing){ openEdit(existing.id); return; }
+  }
   openEdit(null);
   const catSel = document.getElementById('f_category');
   catSel.value = category;
@@ -3177,7 +3190,8 @@ function updateFieldVisibility(){
   } else {
     subtypeBox.style.display = 'none';
   }
-  const noNameSubtypes = (cat==='신혼여행' && (subtypeSel.value==='숙소' || subtypeSel.value==='투어'));
+  const noNameSubtypes = (cat==='신혼여행' && (subtypeSel.value==='숙소' || subtypeSel.value==='투어')) ||
+    (SINGLE_CARD_COMPARE_SUBTYPES[cat] && SINGLE_CARD_COMPARE_SUBTYPES[cat].includes(subtypeSel.value));
   document.getElementById('basicFieldsBox').style.display = (SINGLE_ENTRY_CATS.includes(cat) || noNameSubtypes) ? 'none' : '';
   const noLinkLocSubtypes = (cat==='본식' && subtypeSel.value==='웨딩홀') || (cat==='신혼여행' && subtypeSel.value==='항공권');
   document.getElementById('linkLocationBox').style.display = noLinkLocSubtypes ? 'none' : '';
@@ -3290,11 +3304,13 @@ document.getElementById('saveEdit').onclick = async ()=>{
   const subtype = SUBTYPE_OPTIONS[cat] ? document.getElementById('f_subtype').value : '';
   const single = SINGLE_ENTRY_CATS.includes(cat);
   const noLinkLoc = single || (cat==='본식' && subtype==='웨딩홀') || (cat==='신혼여행' && subtype==='항공권');
-  const noName = (cat==='신혼여행' && (subtype==='숙소' || subtype==='투어'));
+  const isSingleCardSubtype = SINGLE_CARD_COMPARE_SUBTYPES[cat] && SINGLE_CARD_COMPARE_SUBTYPES[cat].includes(subtype);
+  const noName = (cat==='신혼여행' && (subtype==='숙소' || subtype==='투어')) || isSingleCardSubtype;
   let derivedName = '';
   if(noName){
     if(subtype==='숙소') derivedName = (sections.main && sections.main.extra && sections.main.extra.hotelName) || '숙소';
     if(subtype==='투어') derivedName = (sections.main && sections.main.extra && sections.main.extra.vendor) || '투어';
+    if(isSingleCardSubtype) derivedName = subtype;
   }
   const hideVendorGallery = shouldHideGallery(cat, subtype) || cat==='신혼여행';
   const data = {
@@ -3316,6 +3332,17 @@ document.getElementById('saveEdit').onclick = async ()=>{
     const v = vendors.find(x=>x.id===id);
     Object.assign(v, data);
     delete v.products; delete v.extra; delete v.items;
+  } else if(isSingleCardSubtype && vendors.find(x=>x.category===cat && x.subtype===subtype)){
+    const existing = vendors.find(x=>x.category===cat && x.subtype===subtype);
+    Object.keys(data.sections).forEach(secKey=>{
+      if(!existing.sections[secKey]) existing.sections[secKey] = {extra:{}, items:[]};
+      const newItems = (data.sections[secKey].items||[]).filter(it=>{
+        const existingKeys = new Set(existing.sections[secKey].items.map(ei=>JSON.stringify(ei)));
+        return !existingKeys.has(JSON.stringify(it));
+      });
+      existing.sections[secKey].items = existing.sections[secKey].items.concat(newItems);
+    });
+    id = existing.id;
   } else {
     id = uid();
     vendors.push({ id, favorite:false, createdAt: Date.now(), isFinal:false, finalRef:null, payment:{}, ...data });
