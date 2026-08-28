@@ -152,7 +152,13 @@ select.viewsel{
 
 .sectionblock{margin-top:16px;padding-top:12px;border-top:2px solid var(--line);}
 .sectionblock.noborder{margin-top:0;padding-top:0;border-top:none;}
+.honeymooninfo .namemain{font-size:15px;}
 .honeymooninfo .sectionblock{border-top:none;margin-top:14px;padding-top:0;}
+.honeymooninfo .cardbody-inner{font-size:12px;}
+.honeymooninfo .sectionlabel{font-size:12px;}
+.honeymooninfo .flightleg{font-size:11.5px;}
+.honeymooninfo .hallsummary{font-size:12.5px;}
+.honeymooninfo .hint{font-size:10.5px;}
 .groupcard{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px 14px 14px;}
 .groupcardtitle{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
 .sectionblock.incard{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);}
@@ -768,20 +774,19 @@ const SUBTYPE_SCHEMAS = {
   "신혼여행": {
     "항공권": { sections: [
       { key:'info', label:'항공권 정보', extraFields:[
-          {key:'airline', label:'항공사'},{key:'flightNo', label:'항공기'},
+          {key:'airline', label:'항공사'},{key:'bookingSite', label:'예약사이트'},
           {key:'price', label:'가격', money:true},{key:'payer', label:'지불인'},
-          {key:'bookingSite', label:'예약사이트'},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'depart', label:'출발 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발', type:'datetime', ratioGroup:'dep', ratioWeight:3},{key:'depLocation', label:'출발지', ratioGroup:'dep', ratioWeight:1},
-          {key:'arrDateTime', label:'도착', type:'datetime', ratioGroup:'arr', ratioWeight:3},{key:'arrLocation', label:'도착지', ratioGroup:'arr', ratioWeight:1},
-          {key:'flightDuration', label:'비행 시간 (예: 3시간 20분)'}
+          {key:'depDateTime', label:'출발', type:'datetime', long:true},{key:'depLocation', label:'출발지', long:true},
+          {key:'arrDateTime', label:'도착', type:'datetime', long:true},{key:'arrLocation', label:'도착지', long:true},
+          {key:'flightDuration', label:'비행 시간 (예: 3시간 20분)', ratioGroup:'dur', ratioWeight:1},{key:'flightNo', label:'항공편명', ratioGroup:'dur', ratioWeight:1}
         ], itemHasPhoto:false },
       { key:'ret', label:'귀국 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발', type:'datetime', ratioGroup:'dep', ratioWeight:3},{key:'depLocation', label:'출발지', ratioGroup:'dep', ratioWeight:1},
-          {key:'arrDateTime', label:'도착', type:'datetime', ratioGroup:'arr', ratioWeight:3},{key:'arrLocation', label:'도착지', ratioGroup:'arr', ratioWeight:1},
-          {key:'flightDuration', label:'비행 시간 (예: 3시간 20분)'}
+          {key:'depDateTime', label:'출발', type:'datetime', long:true},{key:'depLocation', label:'출발지', long:true},
+          {key:'arrDateTime', label:'도착', type:'datetime', long:true},{key:'arrLocation', label:'도착지', long:true},
+          {key:'flightDuration', label:'비행 시간 (예: 3시간 20분)', ratioGroup:'dur', ratioWeight:1},{key:'flightNo', label:'항공편명', ratioGroup:'dur', ratioWeight:1}
         ], itemHasPhoto:false }
     ]},
     "숙소": { sections: [
@@ -1946,8 +1951,9 @@ function flightLegScheduleHTML(legs){
   if(!valid.length) return '<div class="hint">일정이 입력되지 않았어요.</div>';
   let html = '';
   valid.forEach((leg, idx)=>{
-    const durSuffix = leg.flightDuration ? ` <span class="flightdur">(${esc(leg.flightDuration)})</span>` : '';
-    html += `<div class="flightleg">${esc(formatDateTimeDisplay(leg.depDateTime))} ${esc(leg.depLocation||'')} → ${esc(formatDateTimeDisplay(leg.arrDateTime))} ${esc(leg.arrLocation||'')}${durSuffix}</div>`;
+    const durSuffix = leg.flightDuration ? ` <span class="flightdur">${esc(leg.flightDuration)} 비행</span>` : '';
+    const flightNoSuffix = leg.flightNo ? ` <span class="flightdur">· ${esc(leg.flightNo)}</span>` : '';
+    html += `<div class="flightleg">${esc(formatDateTimeDisplay(leg.depDateTime))} ${esc(leg.depLocation||'')} → ${esc(formatDateTimeDisplay(leg.arrDateTime))} ${esc(leg.arrLocation||'')}${durSuffix}${flightNoSuffix}</div>`;
     if(idx < valid.length - 1){
       const next = valid[idx+1];
       const arrMs = new Date(leg.arrDateTime).getTime();
