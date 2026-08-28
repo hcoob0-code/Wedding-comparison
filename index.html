@@ -152,6 +152,7 @@ select.viewsel{
 
 .sectionblock{margin-top:16px;padding-top:12px;border-top:2px solid var(--line);}
 .sectionblock.noborder{margin-top:0;padding-top:0;border-top:none;}
+.honeymooninfo .sectionblock{border-top:none;margin-top:14px;padding-top:0;}
 .groupcard{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px 14px 14px;}
 .groupcardtitle{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
 .sectionblock.incard{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);}
@@ -317,10 +318,13 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .hint{font-size:11px;color:var(--ink-soft);margin:-3px 0 6px;}
 .todorow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);}
 .flightleg{font-size:12.5px;padding:3px 0;}
+.flightdur{color:var(--ink-soft);font-size:11px;}
 .flightlayover{font-size:11px;color:var(--gold);padding:1px 0 3px 12px;font-weight:600;}
 .itemdatetimewrap{display:flex;flex-direction:column;gap:3px;}
+.itemratiorow{display:flex;gap:8px;margin-top:6px;align-items:flex-end;}
+.itemratiorow input{width:100%;}
 .itemdatetimewrap .itemdtlabel{font-size:10.5px;color:var(--ink-soft);font-weight:700;}
-.itemdatetimewrap input[type="datetime-local"]{border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:12.5px;font-family:inherit;background:#fff;}
+.itemdatetimewrap input[type="datetime-local"]{border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:12.5px;font-family:inherit;background:#fff;width:100%;box-sizing:border-box;}
 .todorow:last-child{border-bottom:none;}
 .todorow .todotext{flex:1;min-width:0;font-size:13px;word-break:break-word;}
 .todorow.done .todotext{text-decoration:line-through;color:var(--ink-soft);}
@@ -765,15 +769,19 @@ const SUBTYPE_SCHEMAS = {
     "항공권": { sections: [
       { key:'info', label:'항공권 정보', extraFields:[
           {key:'airline', label:'항공사'},{key:'flightNo', label:'항공기'},
-          {key:'price', label:'가격', money:true},{key:'payer', label:'지불인'}
+          {key:'price', label:'가격', money:true},{key:'payer', label:'지불인'},
+          {key:'bookingSite', label:'예약사이트'},
+          {key:'note', label:'참고사항', long:true, type:'textarea'}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'depart', label:'출발 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발', type:'datetime', long:true},{key:'depLocation', label:'출발지', long:true},
-          {key:'arrDateTime', label:'도착', type:'datetime', long:true},{key:'arrLocation', label:'도착지', long:true}
+          {key:'depDateTime', label:'출발', type:'datetime', ratioGroup:'dep', ratioWeight:3},{key:'depLocation', label:'출발지', ratioGroup:'dep', ratioWeight:1},
+          {key:'arrDateTime', label:'도착', type:'datetime', ratioGroup:'arr', ratioWeight:3},{key:'arrLocation', label:'도착지', ratioGroup:'arr', ratioWeight:1},
+          {key:'flightDuration', label:'비행 시간 (예: 3시간 20분)'}
         ], itemHasPhoto:false },
       { key:'ret', label:'귀국 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발', type:'datetime', long:true},{key:'depLocation', label:'출발지', long:true},
-          {key:'arrDateTime', label:'도착', type:'datetime', long:true},{key:'arrLocation', label:'도착지', long:true}
+          {key:'depDateTime', label:'출발', type:'datetime', ratioGroup:'dep', ratioWeight:3},{key:'depLocation', label:'출발지', ratioGroup:'dep', ratioWeight:1},
+          {key:'arrDateTime', label:'도착', type:'datetime', ratioGroup:'arr', ratioWeight:3},{key:'arrLocation', label:'도착지', ratioGroup:'arr', ratioWeight:1},
+          {key:'flightDuration', label:'비행 시간 (예: 3시간 20분)'}
         ], itemHasPhoto:false }
     ]},
     "숙소": { sections: [
@@ -1938,7 +1946,8 @@ function flightLegScheduleHTML(legs){
   if(!valid.length) return '<div class="hint">일정이 입력되지 않았어요.</div>';
   let html = '';
   valid.forEach((leg, idx)=>{
-    html += `<div class="flightleg">${esc(formatDateTimeDisplay(leg.depDateTime))} ${esc(leg.depLocation||'')} → ${esc(formatDateTimeDisplay(leg.arrDateTime))} ${esc(leg.arrLocation||'')}</div>`;
+    const durSuffix = leg.flightDuration ? ` <span class="flightdur">(${esc(leg.flightDuration)})</span>` : '';
+    html += `<div class="flightleg">${esc(formatDateTimeDisplay(leg.depDateTime))} ${esc(leg.depLocation||'')} → ${esc(formatDateTimeDisplay(leg.arrDateTime))} ${esc(leg.arrLocation||'')}${durSuffix}</div>`;
     if(idx < valid.length - 1){
       const next = valid[idx+1];
       const arrMs = new Date(leg.arrDateTime).getTime();
@@ -1995,7 +2004,7 @@ function honeymoonInfoCardHTML(){
       const nights = Math.round((new Date(h.checkout) - new Date(h.checkin)) / 86400000);
       return `${esc(h.area)}(${nights}일)`;
     }).join(' → ');
-    hotelSequenceHTML = `<div>${hotelSequenceHTML}</div>`;
+    hotelSequenceHTML = `<div class="flightleg">${hotelSequenceHTML}</div>`;
   }
 
   return `<div class="card honeymooninfo">
@@ -2890,7 +2899,9 @@ document.getElementById('addDateBtn').onclick = ()=>{
 function currentSchema(){ return getSchema(document.getElementById('f_category').value, document.getElementById('f_subtype').value); }
 
 function itemEditRowHTML(item, idx, sec){
-  const laid = computeFieldLayout(sec.itemFields, f=>f.long);
+  const ratioFields = sec.itemFields.filter(f=>f.ratioGroup);
+  const normalFields = sec.itemFields.filter(f=>!f.ratioGroup);
+  const laid = computeFieldLayout(normalFields, f=>f.long);
   const grouped = [];
   let pendingChecks = [];
   laid.forEach(entry=>{
@@ -2903,7 +2914,7 @@ function itemEditRowHTML(item, idx, sec){
   });
   if(pendingChecks.length) grouped.push({checkGroup:pendingChecks});
 
-  const fieldsHTML = grouped.map(g=>{
+  let fieldsHTML = grouped.map(g=>{
     if(g.checkGroup){
       const cells = g.checkGroup.map(({item:f})=>{
         const checked = item[f.key]==='true';
@@ -2925,6 +2936,23 @@ function itemEditRowHTML(item, idx, sec){
     if(f.type==='datetime') return `<div class="itemdatetimewrap"${fullStyle}><label class="itemdtlabel">${esc(f.label)}</label><input type="datetime-local" data-key="${f.key}" value="${val}"></div>`;
     return `<input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${val}"${fullStyle}${moneyAttr}>`;
   }).join('');
+
+  if(ratioFields.length){
+    function renderRatioField(f){
+      const val = esc(item[f.key]||'');
+      const placeholder = f.money ? '(단위: 만원, 소수점 가능)' : f.label;
+      if(f.type==='datetime') return `<div class="itemdatetimewrap"><label class="itemdtlabel">${esc(f.label)}</label><input type="datetime-local" data-key="${f.key}" value="${val}"></div>`;
+      return `<input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${val}">`;
+    }
+    const groups = {};
+    ratioFields.forEach(f=>{ (groups[f.ratioGroup] = groups[f.ratioGroup]||[]).push(f); });
+    const ratioHTML = Object.keys(groups).map(gk=>{
+      const gf = groups[gk];
+      const cells = gf.map(f=>`<div style="flex:${f.ratioWeight||1};min-width:0;">${renderRatioField(f)}</div>`).join('');
+      return `<div class="itemratiorow" style="grid-column:1/-1;">${cells}</div>`;
+    }).join('');
+    fieldsHTML += ratioHTML;
+  }
   if(sec.itemHasPhoto){
     const photoHTML = item.photo
       ? `<div class="thumb small"><img src="${esc(item.photo)}"><button type="button" class="itemphotodel" data-sec="${sec.key}" data-idx="${idx}">✕</button></div>`
@@ -3190,7 +3218,7 @@ function updateFieldVisibility(){
   } else {
     subtypeBox.style.display = 'none';
   }
-  const noNameSubtypes = (cat==='신혼여행' && (subtypeSel.value==='숙소' || subtypeSel.value==='투어')) ||
+  const noNameSubtypes = (cat==='신혼여행' && (subtypeSel.value==='숙소' || subtypeSel.value==='투어' || subtypeSel.value==='항공권')) ||
     (SINGLE_CARD_COMPARE_SUBTYPES[cat] && SINGLE_CARD_COMPARE_SUBTYPES[cat].includes(subtypeSel.value));
   document.getElementById('basicFieldsBox').style.display = (SINGLE_ENTRY_CATS.includes(cat) || noNameSubtypes) ? 'none' : '';
   const noLinkLocSubtypes = (cat==='본식' && subtypeSel.value==='웨딩홀') || (cat==='신혼여행' && subtypeSel.value==='항공권');
@@ -3305,11 +3333,12 @@ document.getElementById('saveEdit').onclick = async ()=>{
   const single = SINGLE_ENTRY_CATS.includes(cat);
   const noLinkLoc = single || (cat==='본식' && subtype==='웨딩홀') || (cat==='신혼여행' && subtype==='항공권');
   const isSingleCardSubtype = SINGLE_CARD_COMPARE_SUBTYPES[cat] && SINGLE_CARD_COMPARE_SUBTYPES[cat].includes(subtype);
-  const noName = (cat==='신혼여행' && (subtype==='숙소' || subtype==='투어')) || isSingleCardSubtype;
+  const noName = (cat==='신혼여행' && (subtype==='숙소' || subtype==='투어' || subtype==='항공권')) || isSingleCardSubtype;
   let derivedName = '';
   if(noName){
     if(subtype==='숙소') derivedName = (sections.main && sections.main.extra && sections.main.extra.hotelName) || '숙소';
     if(subtype==='투어') derivedName = (sections.main && sections.main.extra && sections.main.extra.vendor) || '투어';
+    if(subtype==='항공권') derivedName = (sections.info && sections.info.extra && sections.info.extra.airline) || '항공권';
     if(isSingleCardSubtype) derivedName = subtype;
   }
   const hideVendorGallery = shouldHideGallery(cat, subtype) || cat==='신혼여행';
