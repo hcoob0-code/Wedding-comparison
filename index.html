@@ -233,7 +233,7 @@ td.fav{text-align:center;}
 .paystatushead{font-weight:800;font-size:12.5px;margin-bottom:6px;}
 .paystatuscard .prow{margin-bottom:3px;}
 .budgettotal{font-weight:800;color:var(--ink);}
-.budgetna{color:#CFCABE;font-weight:400;}
+.budgetna{color:#CFCABE;font-weight:400;font-size:10px;}
 
 /* compare bar */
 .comparebar{
@@ -592,9 +592,9 @@ function paymentFields(){
 }
 function itemPaymentFields(){
   return [
-    {key:'depositAmount', label:'계약금', money:true, ratioGroup:'idep', ratioWeight:1},{key:'depositPayer', label:'계약금 지불자', ratioGroup:'idep', ratioWeight:1},
-    {key:'balanceAmount', label:'잔금', money:true, ratioGroup:'ibal', ratioWeight:1},{key:'balancePayer', label:'잔금 지불자', ratioGroup:'ibal', ratioWeight:1},
-    {key:'balanceDueDate', label:'잔금일', type:'date', ratioGroup:'ibal2', ratioWeight:1},{key:'paymentMethod', label:'결제 수단', type:'select', options:['현금','카드 일시불','카드 할부'], ratioGroup:'ibal2', ratioWeight:1},
+    {key:'depositAmount', label:'계약금', money:true, payGroup:1},{key:'depositPayer', label:'계약금 지불자', payGroup:1},
+    {key:'balanceAmount', label:'잔금', money:true, payGroup:2},{key:'balancePayer', label:'잔금 지불자', payGroup:2},
+    {key:'balanceDueDate', label:'잔금일', type:'date', payGroup:3},{key:'paymentMethod', label:'결제 수단', type:'select', options:['현금','카드 일시불','카드 할부'], payGroup:3},
     {key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
   ];
 }
@@ -1514,14 +1514,14 @@ function budgetRowsForSubtypeCategory(category){
     if(!v){
       if(category === '본식' && subtype === '웨딩홀'){
         return [
-          { label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 },
-          { label:'패키지', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 },
-          { label:'식대', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 },
-          { label:'식대(추가)', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 },
-          { label:'홀 부대비용', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0 }
+          { label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0, noVendor:true },
+          { label:'패키지', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0, noVendor:true },
+          { label:'식대', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0, noVendor:true },
+          { label:'식대(추가)', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0, noVendor:true },
+          { label:'홀 부대비용', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0, noVendor:true }
         ];
       }
-      return [{ label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:0 }];
+      return [{ label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:0, noVendor:true }];
     }
 
     const schema = getSchema(category, subtype);
@@ -2627,16 +2627,16 @@ function renderBudgetPage(){
       const isGrouped = !!SUBTYPE_OPTIONS[cat];
       const catCell = isGrouped ? esc(r.label) : (i===0? esc(cat) : '');
       const nameCell = isGrouped ? (esc(r.vendorName)||'-') : esc(r.label);
-      const na = '<span class="budgetna">N/A</span>';
+      const empty = r.noVendor ? '-' : '<span class="budgetna">N/A</span>';
       bodyHTML += `<tr data-cat="${esc(cat)}">
         <td style="white-space:nowrap;">${catCell}</td>
         <td class="vendornamecell">${nameCell}</td>
-        <td style="white-space:nowrap;">${r.deposit? r.deposit.toLocaleString()+'만원':na}</td>
-        <td style="white-space:nowrap;">${esc(r.depositPayer)||na}</td>
-        <td style="white-space:nowrap;">${r.balanceDue||na}</td>
-        <td style="white-space:nowrap;">${r.balance? r.balance.toLocaleString()+'만원':na}</td>
-        <td style="white-space:nowrap;">${esc(r.balancePayer)||na}</td>
-        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원':na}</td>
+        <td style="white-space:nowrap;">${r.deposit? r.deposit.toLocaleString()+'만원':empty}</td>
+        <td style="white-space:nowrap;">${esc(r.depositPayer)||empty}</td>
+        <td style="white-space:nowrap;">${r.balanceDue||empty}</td>
+        <td style="white-space:nowrap;">${r.balance? r.balance.toLocaleString()+'만원':empty}</td>
+        <td style="white-space:nowrap;">${esc(r.balancePayer)||empty}</td>
+        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원':empty}</td>
       </tr>`;
     });
     if(detailRows.length > 1){
@@ -3007,74 +3007,47 @@ document.getElementById('addDateBtn').onclick = ()=>{
 // ---- Section-based item editor ----
 function currentSchema(){ return getSchema(document.getElementById('f_category').value, document.getElementById('f_subtype').value); }
 
+function itemFieldHTML(f, val, full){
+  if(f.type==='checkbox'){
+    const checked = val==='true';
+    const checkLabel = f.trueLabel && f.falseLabel ? `${f.label} (${checked?f.trueLabel:f.falseLabel})` : f.label;
+    return `<label class="checkfield${full?' full':''}"><input type="checkbox" data-key="${f.key}" ${checked?'checked':''}> ${esc(checkLabel)}</label>`;
+  }
+  const v = esc(val||'');
+  const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
+  const placeholder = f.placeholder || (f.money ? '(단위: 만원, 소수점 가능)' : (f.unit ? `숫자만 입력 (예: 2 → 2${f.unit})` : f.label));
+  const moneyAttr = f.money ? ' inputmode="decimal"' : '';
+  if(f.type==='textarea'){
+    return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><textarea data-key="${f.key}" placeholder="${esc(placeholder)}">${v}</textarea></div>`;
+  }
+  if(f.type==='datetime'){
+    return `<div class="exfield${full?' full':''}"${fullStyle}><label>${esc(f.label)}</label><input type="datetime-local" data-key="${f.key}" value="${v}"></div>`;
+  }
+  if(f.type==='date'){
+    return `<div class="exfield${full?' full':''}"${fullStyle}><label>${esc(f.label)}</label><input type="date" data-key="${f.key}" value="${v}"></div>`;
+  }
+  if(f.type==='select'){
+    const opts = ['<option value="">선택 안 함</option>'].concat((f.options||[]).map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`));
+    return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><select data-key="${f.key}">${opts.join('')}</select></div>`;
+  }
+  return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${v}"${moneyAttr}></div>`;
+}
 function itemEditRowHTML(item, idx, sec){
-  const ratioFields = sec.itemFields.filter(f=>f.ratioGroup);
-  const normalFields = sec.itemFields.filter(f=>!f.ratioGroup);
+  const payFields = sec.itemFields.filter(f=>f.payGroup);
+  const normalFields = sec.itemFields.filter(f=>!f.payGroup);
   const laid = computeFieldLayout(normalFields, f=>f.long);
-  const grouped = [];
-  let pendingChecks = [];
-  laid.forEach(entry=>{
-    if(entry.item.type==='checkbox' && !entry.full){
-      pendingChecks.push(entry);
-    } else {
-      if(pendingChecks.length){ grouped.push({checkGroup:pendingChecks}); pendingChecks = []; }
-      grouped.push(entry);
-    }
-  });
-  if(pendingChecks.length) grouped.push({checkGroup:pendingChecks});
 
-  let fieldsHTML = grouped.map(g=>{
-    if(g.checkGroup){
-      const cells = g.checkGroup.map(({item:f})=>{
-        const checked = item[f.key]==='true';
-        return `<label class="checkfield"><input type="checkbox" data-key="${f.key}" ${checked?'checked':''}> ${esc(f.label)}</label>`;
-      }).join('');
-      return `<div class="checkrow">${cells}</div>`;
-    }
-    const {item:f, full} = g;
-    if(f.type==='checkbox'){
-      const checked = item[f.key]==='true';
-      const checkLabel = f.trueLabel && f.falseLabel ? `${f.label} (${checked?f.trueLabel:f.falseLabel})` : f.label;
-      return `<label class="checkfield${full?' full':''}"><input type="checkbox" data-key="${f.key}" ${checked?'checked':''}> ${esc(checkLabel)}</label>`;
-    }
-    const val = esc(item[f.key]||'');
-    const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
-    const placeholder = f.money ? '(단위: 만원, 소수점 가능)' : (f.unit ? `숫자만 입력 (예: 2 → 2${f.unit})` : f.label);
-    const moneyAttr = f.money ? ' inputmode="decimal"' : '';
-    if(f.type==='textarea') return `<textarea data-key="${f.key}" placeholder="${esc(placeholder)}"${fullStyle}>${val}</textarea>`;
-    if(f.type==='datetime') return `<div class="itemdatetimewrap"${fullStyle}><label class="itemdtlabel">${esc(f.label)}</label><input type="datetime-local" data-key="${f.key}" value="${val}"></div>`;
-    if(f.type==='date') return `<div class="itemdatetimewrap"${fullStyle}><label class="itemdtlabel">${esc(f.label)}</label><input type="date" data-key="${f.key}" value="${val}"></div>`;
-    if(f.type==='select'){
-      const opts = ['<option value="">선택 안 함</option>'].concat((f.options||[]).map(o=>`<option value="${esc(o)}" ${item[f.key]===o?'selected':''}>${esc(o)}</option>`));
-      return `<div class="itemdatetimewrap"${fullStyle}><label class="itemdtlabel">${esc(f.label)}</label><select data-key="${f.key}">${opts.join('')}</select></div>`;
-    }
-    return `<input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${val}"${fullStyle}${moneyAttr}>`;
-  }).join('');
+  let fieldsHTML = laid.map(({item:f, full})=> itemFieldHTML(f, item[f.key], full)).join('');
 
-  if(ratioFields.length){
-    function renderRatioField(f){
-      const val = esc(item[f.key]||'');
-      const placeholder = f.placeholder || (f.money ? '(단위: 만원, 소수점 가능)' : f.label);
-      if(f.type==='datetime') return `<div class="itemdatetimewrap"><label class="itemdtlabel">${esc(f.label)}</label><input type="datetime-local" data-key="${f.key}" value="${val}"></div>`;
-      if(f.type==='date') return `<div class="itemdatetimewrap"><label class="itemdtlabel">${esc(f.label)}</label><input type="date" data-key="${f.key}" value="${val}"></div>`;
-      if(f.type==='select'){
-        const opts = ['<option value="">선택 안 함</option>'].concat((f.options||[]).map(o=>`<option value="${esc(o)}" ${item[f.key]===o?'selected':''}>${esc(o)}</option>`));
-        return `<div class="itemdatetimewrap"><label class="itemdtlabel">${esc(f.label)}</label><select data-key="${f.key}">${opts.join('')}</select></div>`;
-      }
-      if(f.type==='checkbox'){
-        const checked = item[f.key]==='true';
-        return `<label class="checkfield"><input type="checkbox" data-key="${f.key}" ${checked?'checked':''}> ${esc(f.label)}</label>`;
-      }
-      return `<input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${val}">`;
-    }
+  if(payFields.length){
     const groups = {};
-    ratioFields.forEach(f=>{ (groups[f.ratioGroup] = groups[f.ratioGroup]||[]).push(f); });
-    const ratioHTML = Object.keys(groups).map(gk=>{
+    payFields.forEach(f=>{ (groups[f.payGroup] = groups[f.payGroup]||[]).push(f); });
+    const payHTML = Object.keys(groups).sort((a,b)=>a-b).map(gk=>{
       const gf = groups[gk];
-      const cells = gf.map(f=>`<div style="flex:${f.ratioWeight||1};min-width:0;">${renderRatioField(f)}</div>`).join('');
-      return `<div class="itemratiorow" style="grid-column:1/-1;">${cells}</div>`;
+      const cells = gf.map(f=>itemFieldHTML(f, item[f.key], false)).join('');
+      return `<div class="paygrid paygrid-${gf.length} full">${cells}</div>`;
     }).join('');
-    fieldsHTML += ratioHTML;
+    fieldsHTML += payHTML;
   }
   if(sec.itemHasPhoto){
     const photoCount = sec.itemPhotoCount || 1;
