@@ -171,8 +171,9 @@ select.viewsel{
 .product .itemphoto{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:0 0 auto;cursor:pointer;}
 .product .pfields{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;}
 .prow{display:flex;gap:8px;font-size:12.5px;line-height:1.4;min-width:0;}
-.prow .k{flex:0 0 76px;color:var(--ink-soft);font-weight:600;font-size:9.5px;padding-top:1px;white-space:normal;line-height:1.25;}
+.prow .k{flex:0 0 auto;max-width:45%;color:var(--ink-soft);font-weight:600;font-size:9.5px;padding-top:1px;white-space:nowrap;line-height:1.25;}
 .prow .v{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;}
+.prow:not(.stacked) .v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .prow.nowrapval .v{white-space:nowrap;overflow:visible;}
 .prow.full{grid-column:1/-1;}
 .prow.stacked{flex-direction:column;gap:2px;}
@@ -232,6 +233,7 @@ td.fav{text-align:center;}
 .paystatushead{font-weight:800;font-size:12.5px;margin-bottom:6px;}
 .paystatuscard .prow{margin-bottom:3px;}
 .budgettotal{font-weight:800;color:var(--ink);}
+.budgetna{color:#CFCABE;font-weight:400;}
 
 /* compare bar */
 .comparebar{
@@ -276,11 +278,11 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .groupcard .editsection{border:none;border-top:1px dashed var(--line);border-radius:0;padding:12px 0 0;margin-bottom:0;background:transparent;}
 .groupcard .editsection.firstincard{border-top:none;padding-top:0;}
 .editsection h4{margin:0 0 10px;}
-.productRow{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--paper);}
+.productRow{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--paper);box-sizing:border-box;overflow:hidden;}
 .prow-head{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
 .rowlabel{flex:1;font-size:11.5px;font-weight:700;color:var(--ink-soft);}
 .rowDel{border:none;background:none;color:var(--persimmon);font-size:15px;cursor:pointer;padding:4px 6px;}
-.itemfields{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.itemfields{display:grid;grid-template-columns:1fr 1fr;gap:6px;min-width:0;flex:1 1 auto;}
 .itemfields.onecol{grid-template-columns:1fr;}
 .itemfields input{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;}
 .itemfields textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;min-height:72px;resize:vertical;}
@@ -316,8 +318,8 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .quadcheck{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;font-size:9px;font-weight:400;color:#9C9890;cursor:pointer;}
 .quadcheck input{width:15px;height:15px;}
 .checkfield input{width:16px;height:16px;flex:0 0 auto;}
-.itemphotorow{margin-bottom:8px;}
-.itemrow-flex{display:flex;gap:10px;align-items:flex-start;}
+.itemphotorow{margin-bottom:8px;flex:0 0 auto;}
+.itemrow-flex{display:flex;gap:10px;align-items:flex-start;min-width:0;}
 .itemrow-flex .itemphotorow{margin-bottom:0;flex:1 1 0;min-width:0;}
 .itemrow-flex .itemfields{flex:1 1 0;min-width:0;}
 .itemrow-flex .imgpicker.small,.itemrow-flex .thumb.small{width:100%;aspect-ratio:1/1;height:auto;}
@@ -326,7 +328,11 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .flightleg{font-size:12.5px;padding:3px 0;}
 .flightdur{color:var(--ink-soft);font-size:11px;}
 .flightlayover{font-size:11px;color:var(--gold);padding:1px 0 3px 12px;font-weight:600;}
-.itemdatetimewrap{display:flex;flex-direction:column;gap:3px;}
+.itemdatetimewrap{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.itemdatetimewrap input,.itemdatetimewrap select{width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:12.5px;font-family:inherit;background:#fff;}
+.itemratiorow{min-width:0;}
+.itemratiorow > div{min-width:0;}
+.itemratiorow input,.itemratiorow select{width:100%;min-width:0;box-sizing:border-box;}
 .itemratiorow{display:flex;gap:8px;margin-top:6px;align-items:flex-end;}
 .itemratiorow input{width:100%;}
 .itemdatetimewrap .itemdtlabel{font-size:10.5px;color:var(--ink-soft);font-weight:700;}
@@ -1545,14 +1551,19 @@ function budgetRowsForSubtypeCategory(category){
           }
         }
         function addItemMoney(it){
-          sec.itemFields.forEach(f=>{
-            if(f.money && !f.noBudgetSum && f.key!=='depositAmount' && f.key!=='balanceAmount'){
-              itemTotal += moneyToManwon(it[f.key]);
-            }
-          });
-          if(it.depositAmount) dep += moneyToManwon(it.depositAmount);
+          const itemDep = moneyToManwon(it.depositAmount);
+          const itemBal = moneyToManwon(it.balanceAmount);
+          if(itemDep>0 || itemBal>0){
+            dep += itemDep;
+            bal += itemBal;
+          } else {
+            sec.itemFields.forEach(f=>{
+              if(f.money && f.key!=='depositAmount' && f.key!=='balanceAmount'){
+                itemTotal += moneyToManwon(it[f.key]);
+              }
+            });
+          }
           if(it.depositPayer) depPayer = depPayer || it.depositPayer;
-          if(it.balanceAmount) bal += moneyToManwon(it.balanceAmount);
           if(it.balancePayer) balPayer = balPayer || it.balancePayer;
           if(it.balanceDueDate) balDue = balDue || it.balanceDueDate;
           if(it.balancePaid === 'true') balPaid = true;
@@ -2559,12 +2570,16 @@ function renderBudgetPage(){
               if(r.sectionKey===sec.key){
                 const it = (data.items||[])[r.itemIndex];
                 if(it){
-                  sec.itemFields.forEach(f=>{
-                    if(f.money && !f.noBudgetSum && f.key!=='depositAmount' && f.key!=='balanceAmount') itemTotal += moneyToManwon(it[f.key]);
-                  });
-                  if(it.depositAmount) dep += moneyToManwon(it.depositAmount);
+                  const itemDep = moneyToManwon(it.depositAmount);
+                  const itemBal = moneyToManwon(it.balanceAmount);
+                  if(itemDep>0 || itemBal>0){
+                    dep += itemDep; bal += itemBal;
+                  } else {
+                    sec.itemFields.forEach(f=>{
+                      if(f.money && f.key!=='depositAmount' && f.key!=='balanceAmount') itemTotal += moneyToManwon(it[f.key]);
+                    });
+                  }
                   if(it.depositPayer) depPayer = depPayer || it.depositPayer;
-                  if(it.balanceAmount) bal += moneyToManwon(it.balanceAmount);
                   if(it.balancePayer) balPayer = balPayer || it.balancePayer;
                   if(it.balanceDueDate) balDue = balDue || it.balanceDueDate;
                   if(it.balancePaid === 'true') balPaid = true;
@@ -2612,15 +2627,16 @@ function renderBudgetPage(){
       const isGrouped = !!SUBTYPE_OPTIONS[cat];
       const catCell = isGrouped ? esc(r.label) : (i===0? esc(cat) : '');
       const nameCell = isGrouped ? (esc(r.vendorName)||'-') : esc(r.label);
+      const na = '<span class="budgetna">N/A</span>';
       bodyHTML += `<tr data-cat="${esc(cat)}">
         <td style="white-space:nowrap;">${catCell}</td>
         <td class="vendornamecell">${nameCell}</td>
-        <td style="white-space:nowrap;">${r.deposit? r.deposit.toLocaleString()+'만원':'-'}</td>
-        <td style="white-space:nowrap;">${esc(r.depositPayer)||'-'}</td>
-        <td style="white-space:nowrap;">${r.balanceDue||'-'}</td>
-        <td style="white-space:nowrap;">${r.balance? r.balance.toLocaleString()+'만원':'-'}</td>
-        <td style="white-space:nowrap;">${esc(r.balancePayer)||'-'}</td>
-        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원':'-'}</td>
+        <td style="white-space:nowrap;">${r.deposit? r.deposit.toLocaleString()+'만원':na}</td>
+        <td style="white-space:nowrap;">${esc(r.depositPayer)||na}</td>
+        <td style="white-space:nowrap;">${r.balanceDue||na}</td>
+        <td style="white-space:nowrap;">${r.balance? r.balance.toLocaleString()+'만원':na}</td>
+        <td style="white-space:nowrap;">${esc(r.balancePayer)||na}</td>
+        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원':na}</td>
       </tr>`;
     });
     if(detailRows.length > 1){
