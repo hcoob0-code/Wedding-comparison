@@ -233,7 +233,7 @@ td.fav{text-align:center;}
 .paystatushead{font-weight:800;font-size:12.5px;margin-bottom:6px;}
 .paystatuscard .prow{margin-bottom:3px;}
 .budgettotal{font-weight:800;color:var(--ink);}
-.budgetna{color:#CFCABE;font-weight:400;font-size:10px;}
+.budgetna{color:#CFCABE;font-weight:400;font-size:8px;}
 
 /* compare bar */
 .comparebar{
@@ -323,6 +323,8 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .itemrow-flex .itemphotorow{margin-bottom:0;flex:1 1 0;min-width:0;}
 .itemrow-flex .itemfields{flex:1 1 0;min-width:0;}
 .itemrow-flex .imgpicker.small,.itemrow-flex .thumb.small{width:100%;aspect-ratio:1/1;height:auto;}
+.itempay{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);}
+.itempay .paygrid{margin-bottom:4px;}
 .hint{font-size:11px;color:var(--ink-soft);margin:-3px 0 6px;}
 .todorow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);}
 .flightleg{font-size:12.5px;padding:3px 0;}
@@ -707,55 +709,53 @@ const SUBTYPE_SCHEMAS = {
     "드레스": { sections: [
       { key:'dress', label:'드레스', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
           {key:'vendor', label:'업체명', long:true},
-          {key:'price', label:'추가금', money:true, noBudgetSum:true},
-          {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
+          {key:'isPurchase', label:'구매', type:'checkbox', checkGroup:1},{key:'isRental', label:'대여', type:'checkbox', checkGroup:1},
           {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'},
           ...itemPaymentFields()
-        ], itemHasPhoto:true, itemPhotoCount:2 }
+        ], itemHasPhoto:true, itemPhotoCount:2, sumAllItems:true }
     ]},
     "정장": { sections: [
       { key:'suit', label:'정장', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
           {key:'vendor', label:'업체명', long:true},
-          {key:'price', label:'추가금', money:true, noBudgetSum:true},
-          {key:'isPurchase', label:'구매', type:'checkbox'},{key:'isRental', label:'대여', type:'checkbox'},
+          {key:'isPurchase', label:'구매', type:'checkbox', checkGroup:1},{key:'isRental', label:'대여', type:'checkbox', checkGroup:1},
           {key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'},
           ...itemPaymentFields()
-        ], itemHasPhoto:true, itemPhotoCount:2 }
+        ], itemHasPhoto:true, itemPhotoCount:2, sumAllItems:true }
     ]},
     "헤어": { sections: [
       { key:'hair', label:'헤어', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
           {key:'vendor', label:'업체명', long:true},
           {key:'price', label:'가격', money:true, noBudgetSum:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'},
           ...itemPaymentFields()
-        ], itemHasPhoto:true }
+        ], itemHasPhoto:true, sumAllItems:true }
     ]},
     "메이크업": { sections: [
       { key:'makeup', label:'메이크업', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
           {key:'vendor', label:'업체명', long:true},
           {key:'price', label:'가격', money:true, noBudgetSum:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'},
           ...itemPaymentFields()
-        ], itemHasPhoto:true }
+        ], itemHasPhoto:true, sumAllItems:true }
     ]},
     "부케": { sections: [
       { key:'bouquet', label:'부케', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
           {key:'vendor', label:'업체명', long:true},
           {key:'name', label:'구성'},{key:'price', label:'추가금', money:true, noBudgetSum:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'},
           ...itemPaymentFields()
-        ], itemHasPhoto:true }
+        ], itemHasPhoto:true, sumAllItems:true }
     ]},
     "헬퍼": { sections: [
       { key:'helper', label:'헬퍼', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
           {key:'vendor', label:'업체명', long:true},
           {key:'price', label:'가격', money:true, noBudgetSum:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'},
           ...itemPaymentFields()
-        ], itemHasPhoto:true }
+        ], itemHasPhoto:true, sumAllItems:true }
     ]},
     "기타": { sections: [
       { key:'etc', label:'기타', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
           {key:'vendor', label:'업체명', long:true},
           {key:'name', label:'항목명'},{key:'price', label:'가격', money:true, noBudgetSum:true},{key:'desc', label:'참고사항', long:true, type:'textarea'},
           ...itemPaymentFields()
-        ], itemHasPhoto:true }
+        ], itemHasPhoto:true, sumAllItems:true }
     ]}
   },
   "혼주": {
@@ -1558,7 +1558,7 @@ function budgetRowsForSubtypeCategory(category){
             bal += itemBal;
           } else {
             sec.itemFields.forEach(f=>{
-              if(f.money && f.key!=='depositAmount' && f.key!=='balanceAmount'){
+              if(f.money && !f.noBudgetSum && f.key!=='depositAmount' && f.key!=='balanceAmount'){
                 itemTotal += moneyToManwon(it[f.key]);
               }
             });
@@ -3032,22 +3032,61 @@ function itemFieldHTML(f, val, full){
   }
   return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${v}"${moneyAttr}></div>`;
 }
+function buildNormalFieldsHTML(fields, item){
+  // Builds the field markup for non-payment fields, pairing short fields two-per-row
+  // (like computeFieldLayout) while keeping any checkGroup fields together on one row.
+  const segments = [];
+  const seenGroups = new Set();
+  fields.forEach(f=>{
+    if(f.checkGroup){
+      if(seenGroups.has(f.checkGroup)) return;
+      seenGroups.add(f.checkGroup);
+      segments.push({ check:true, fields: fields.filter(x=>x.checkGroup===f.checkGroup) });
+    } else {
+      segments.push({ check:false, f });
+    }
+  });
+  let html = '';
+  let pending = null;
+  function renderFull(seg){
+    if(seg.check){
+      const cells = seg.fields.map(f=>itemFieldHTML(f, item[f.key], false)).join('');
+      html += `<div class="checkrow full">${cells}</div>`;
+    } else {
+      html += itemFieldHTML(seg.f, item[seg.f.key], true);
+    }
+  }
+  function renderHalf(seg){
+    html += itemFieldHTML(seg.f, item[seg.f.key], false);
+  }
+  segments.forEach(seg=>{
+    const isLongSeg = seg.check || seg.f.long;
+    if(isLongSeg){
+      if(pending){ renderFull(pending); pending=null; }
+      renderFull(seg);
+    } else {
+      if(pending){ renderHalf(pending); renderHalf(seg); pending=null; }
+      else pending = seg;
+    }
+  });
+  if(pending) renderFull(pending);
+  return html;
+}
 function itemEditRowHTML(item, idx, sec){
   const payFields = sec.itemFields.filter(f=>f.payGroup);
   const normalFields = sec.itemFields.filter(f=>!f.payGroup);
-  const laid = computeFieldLayout(normalFields, f=>f.long);
+  const fieldsHTML = buildNormalFieldsHTML(normalFields, item);
 
-  let fieldsHTML = laid.map(({item:f, full})=> itemFieldHTML(f, item[f.key], full)).join('');
-
+  let payBlock = '';
   if(payFields.length){
     const groups = {};
     payFields.forEach(f=>{ (groups[f.payGroup] = groups[f.payGroup]||[]).push(f); });
     const payHTML = Object.keys(groups).sort((a,b)=>a-b).map(gk=>{
       const gf = groups[gk];
       const cells = gf.map(f=>itemFieldHTML(f, item[f.key], false)).join('');
-      return `<div class="paygrid paygrid-${gf.length} full">${cells}</div>`;
+      return `<div class="paygrid paygrid-${gf.length}">${cells}</div>`;
     }).join('');
-    fieldsHTML += payHTML;
+    payBlock = `<div class="itempay">${payHTML}</div>`;
   }
   if(sec.itemHasPhoto){
     const photoCount = sec.itemPhotoCount || 1;
@@ -3063,11 +3102,13 @@ function itemEditRowHTML(item, idx, sec){
         <div class="itemphotorow">${photoHTML}</div>
         <div class="itemfields onecol">${fieldsHTML}</div>
       </div>
+      ${payBlock}
     </div>`;
   }
   return `<div class="productRow" data-sec="${sec.key}" data-idx="${idx}">
     <div class="prow-head"><div class="rowlabel">#${idx+1}</div><button type="button" class="rowDel" data-sec="${sec.key}" data-idx="${idx}">✕</button></div>
     <div class="itemfields">${fieldsHTML}</div>
+    ${payBlock}
   </div>`;
 }
 function extraFieldHTML(f, sec, val, full){
