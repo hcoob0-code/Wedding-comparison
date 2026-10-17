@@ -155,10 +155,11 @@ select.viewsel{
 .honeymooninfo .namemain{font-size:15px;}
 .honeymooninfo .sectionblock{border-top:none;margin-top:14px;padding-top:0;}
 .honeymooninfo .cardbody-inner{font-size:12px;}
-.honeymooninfo .sectionlabel{font-size:12px;}
-.honeymooninfo .flightleg{font-size:11.5px;}
+.honeymooninfo .sectionlabel{font-size:10.5px;}
+.honeymooninfo .flightleg{font-size:10px;}
 .honeymooninfo .hallsummary{font-size:12.5px;}
-.honeymooninfo .hint{font-size:10.5px;}
+.honeymooninfo .hint{font-size:9px;}
+.honeymooninfo .flightlayover{font-size:9px;}
 .groupcard{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px 14px 14px;}
 .groupcardtitle{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
 .sectionblock.incard{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);}
@@ -330,6 +331,9 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .itemrow-flex .itemphotorow{margin-bottom:0;flex:1 1 0;min-width:0;}
 .itemrow-flex .itemfields{flex:1 1 0;min-width:0;}
 .itemrow-flex .imgpicker.small,.itemrow-flex .thumb.small{width:100%;aspect-ratio:1/1;height:auto;}
+.irow{display:grid;gap:6px;min-width:0;grid-column:1/-1;align-items:end;}
+.irow .exfield input,.irow .exfield select{min-width:0;}
+.itembelow{margin-top:8px;}
 .itempay{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);}
 .itempay .paygrid{margin-bottom:4px;}
 .hint{font-size:11px;color:var(--ink-soft);margin:-3px 0 6px;}
@@ -581,6 +585,12 @@ const DEFAULT_SCHEMA = { sections: [
   ], itemHasPhoto:false }
 ]};
 const CATEGORY_SCHEMA = {
+  "기타": { sections: [
+    { key:'etc', label:'기타', extraFields:[
+        {key:'note', label:'내역', long:true},{key:'amount', label:'금액', money:true, fallbackSum:true},
+        ...paymentFields()
+      ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
+  ]},
   "반지": { sections: [
     { key:'main', label:'반지', extraFields:[
         {key:'leadTime', label:'예상 소요일'},{key:'timeEvent', label:'타임이벤트'},
@@ -807,34 +817,37 @@ const SUBTYPE_SCHEMAS = {
           {key:'note', label:'참고사항', long:true, type:'textarea'}
         ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
       { key:'depart', label:'출발 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발', type:'datetime', long:true},{key:'depLocation', label:'출발지', long:true},
-          {key:'arrDateTime', label:'도착', type:'datetime', long:true},{key:'arrLocation', label:'도착지', long:true},
-          {key:'flightDuration', label:'비행 시간', placeholder:'예: 3시간 20분', ratioGroup:'dur', ratioWeight:1},{key:'flightNo', label:'항공편명', ratioGroup:'dur', ratioWeight:1}
+          {key:'depDateTime', label:'출발 일시', type:'datetime', rowGroup:'dep', cols:'3fr 1fr'},{key:'depLocation', label:'출발지', rowGroup:'dep'},
+          {key:'arrDateTime', label:'도착 일시', type:'datetime', rowGroup:'arr', cols:'3fr 1fr'},{key:'arrLocation', label:'도착지', rowGroup:'arr'},
+          {key:'flightDuration', label:'비행 시간', placeholder:'예: 3시간 20분', rowGroup:'dur'},{key:'flightNo', label:'항공편명', rowGroup:'dur'}
         ], itemHasPhoto:false, noFinalize:true },
       { key:'ret', label:'귀국 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발', type:'datetime', long:true},{key:'depLocation', label:'출발지', long:true},
-          {key:'arrDateTime', label:'도착', type:'datetime', long:true},{key:'arrLocation', label:'도착지', long:true},
-          {key:'flightDuration', label:'비행 시간', placeholder:'예: 3시간 20분', ratioGroup:'dur', ratioWeight:1},{key:'flightNo', label:'항공편명', ratioGroup:'dur', ratioWeight:1}
+          {key:'depDateTime', label:'출발 일시', type:'datetime', rowGroup:'dep', cols:'3fr 1fr'},{key:'depLocation', label:'출발지', rowGroup:'dep'},
+          {key:'arrDateTime', label:'도착 일시', type:'datetime', rowGroup:'arr', cols:'3fr 1fr'},{key:'arrLocation', label:'도착지', rowGroup:'arr'},
+          {key:'flightDuration', label:'비행 시간', placeholder:'예: 3시간 20분', rowGroup:'dur'},{key:'flightNo', label:'항공편명', rowGroup:'dur'}
         ], itemHasPhoto:false, noFinalize:true }
     ]},
     "숙소": { sections: [
-      { key:'main', label:'숙소', extraFields:[], itemsLabel:'숙소', itemFields:[
-          {key:'area', label:'지역'},{key:'hotelName', label:'숙소명'},
+      { key:'main', label:'숙소', extraFields:[], itemsLabel:'숙소', sideKeys:['checkin','checkout'], itemFields:[
           {key:'checkin', label:'Check-in', type:'date'},{key:'checkout', label:'Check-out', type:'date'},
-          {key:'price', label:'가격', money:true},
-          {key:'paymentType', label:'결제 방식', type:'select', options:['선결제','현장결제']},{key:'payer', label:'지불인 (선결제시)'},
-          {key:'freeCancel', label:'무료 취소 가능', type:'checkbox'},{key:'freeCancelDeadline', label:'무료 취소 기한'},
-          {key:'bookingSite', label:'예약사이트'},
+          {key:'hotelName', label:'숙소명', rowGroup:'nm', cols:'3fr 1fr'},{key:'area', label:'지역', rowGroup:'nm'},
+          {key:'localPrice', label:'현지 금액', placeholder:'예: $200', rowGroup:'pr'},{key:'price', label:'한화 금액', money:true, rowGroup:'pr'},
+          {key:'paymentType', label:'결제 방식', type:'select', options:['선결제','현장결제'], rowGroup:'pay'},{key:'payer', label:'지불인', rowGroup:'pay'},
+          {key:'freeCancel', label:'무료 취소 가능', type:'checkbox', rowGroup:'fc'},{key:'freeCancelDeadline', label:'무료 취소 기한', rowGroup:'fc'},
+          {key:'bookingSite', label:'예약사이트', long:true},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemHasPhoto:true, noFinalize:true }
+        ], itemHasPhoto:true, noFinalize:true, sumAllItems:true }
     ]},
     "투어": { sections: [
-      { key:'main', label:'투어', extraFields:[], itemsLabel:'투어', itemFields:[
-          {key:'area', label:'지역'},{key:'vendor', label:'업체명'},
-          {key:'schedule', label:'투어 일정', long:true},
-          {key:'price', label:'가격', money:true},
+      { key:'main', label:'투어', extraFields:[], itemsLabel:'투어', sideKeys:['tourName','vendor'], itemFields:[
+          {key:'tourName', label:'투어명'},{key:'vendor', label:'업체명'},
+          {key:'startAt', label:'시작 일시', type:'datetime', rowGroup:'tm'},{key:'endAt', label:'종료 일시', type:'datetime', rowGroup:'tm'},
+          {key:'localPrice', label:'현지 금액', placeholder:'예: $200', rowGroup:'pr'},{key:'price', label:'한화 금액', money:true, rowGroup:'pr'},
+          {key:'paymentType', label:'결제 방식', type:'select', options:['선결제','현장결제'], rowGroup:'pay'},{key:'payer', label:'지불인', rowGroup:'pay'},
+          {key:'freeCancel', label:'무료 취소 가능', type:'checkbox', rowGroup:'fc'},{key:'freeCancelDeadline', label:'무료 취소 기한', rowGroup:'fc'},
+          {key:'bookingSite', label:'예약사이트', long:true},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemHasPhoto:true, noFinalize:true }
+        ], itemHasPhoto:true, noFinalize:true, sumAllItems:true }
     ]},
     "기타": { sections: [
       { key:'etc', label:'기타', extraFields:[
@@ -1218,7 +1231,32 @@ async function loadVendors(){
     });
     vendors = out;
   })();
-  vendors.forEach(v=>{ if(v.subtype==='기타' && SUBTYPE_OPTIONS[v.category]) v.isFinal = true; });
+  (function splitOldEtcTab(){
+    const out = [];
+    vendors.forEach(v=>{
+      const sec = v.sections || {};
+      const isOldEtcTab = v.category==='기타' && !sec.etc && !(sec.hallinfo||sec.ceremonyDress||sec.mainPhoto) && !v.itemName;
+      if(!isOldEtcTab){ out.push(v); return; }
+      const items = (sec.main && Array.isArray(sec.main.items)) ? sec.main.items : [];
+      if(!items.length){ out.push(Object.assign(v,{ itemName: v.name })); return; }
+      items.forEach(it=>{
+        out.push(Object.assign({}, v, {
+          id: uid(), itemName: it.name || v.name,
+          sections: { etc: { extra: { note: [it.package, it.memo].filter(Boolean).join(' / '), amount: it.price||'' }, items: [], images: [], instaLinks: [] } }
+        }));
+      });
+    });
+    vendors = out;
+  })();
+  vendors.forEach(v=>{ if((v.subtype==='기타' && SUBTYPE_OPTIONS[v.category]) || v.category==='기타') v.isFinal = true; });
+  vendors.forEach(v=>{
+    if(v.category==='신혼여행' && v.subtype==='투어' && v.sections && v.sections.main && Array.isArray(v.sections.main.items)){
+      v.sections.main.items.forEach(it=>{
+        if(it.schedule){ it.note = [it.schedule, it.note].filter(Boolean).join(' / '); delete it.schedule; }
+        if(it.area && !it.tourName){ it.tourName = it.area; delete it.area; }
+      });
+    }
+  });
   if(snapRefPhotos && snapRefPhotos['메이크업']){ snapRefPhotos['헤어메이크업'] = (snapRefPhotos['헤어메이크업']||[]).concat(snapRefPhotos['메이크업']); delete snapRefPhotos['메이크업']; }
   if(snapRefPhotos && snapRefPhotos['헤어']) delete snapRefPhotos['헤어'];
   vendors.forEach(v=>{
@@ -1547,7 +1585,7 @@ function vendorDisplayNames(vend, schema){
     if(sec.sumAllItems || sec.noFinalize) chosen = items;
     else chosen = (vend.finalRefs||[]).filter(r=>r.sectionKey===sec.key).map(r=>items[r.itemIndex]).filter(Boolean);
     chosen.forEach(it=>{
-      const n = String(it.vendor || it.hotelName || it.brand || it.label || '').trim();
+      const n = String(it.tourName || it.hotelName || it.vendor || it.brand || it.label || '').trim();
       if(n && !out.includes(n)) out.push(n);
     });
   });
@@ -1933,7 +1971,7 @@ function itemNamesOf(v, loose){
   schema.sections.forEach(sec=>{
     const items = ((v.sections && v.sections[sec.key]) || {}).items || [];
     items.forEach(it=>{
-      const n = String(loose ? (it.vendor || it.hotelName || it.brand || it.label || it.name || it.fabric || '') : (it.vendor || it.hotelName || '')).trim();
+      const n = String(loose ? (it.vendor || it.hotelName || it.brand || it.label || it.name || it.fabric || '') : (it.tourName || it.hotelName || it.vendor || '')).trim();
       if(n && !names.includes(n)) names.push(n);
     });
   });
@@ -1948,7 +1986,7 @@ function titleUsesItemNames(v){
   return v.name===v.subtype && itemNamesOf(v,true).length>0;
 }
 function cardTitleName(v){
-  if(v.subtype==='기타' && SUBTYPE_OPTIONS[v.category] && v.itemName) return v.itemName;
+  if(((v.subtype==='기타' && SUBTYPE_OPTIONS[v.category]) || v.category==='기타') && v.itemName) return v.itemName;
   if(titleUsesItemNames(v)) return itemNamesOf(v, !isSingleCardSubtype(v)).join(', ');
   return v.name;
 }
@@ -2113,7 +2151,10 @@ function flightLegScheduleHTML(legs){
   valid.forEach((leg, idx)=>{
     const durSuffix = leg.flightDuration ? ` <span class="flightdur">(${esc(parseDurationToCompact(leg.flightDuration))})</span>` : '';
     const flightNoSuffix = leg.flightNo ? ` <span class="flightdur">· ${esc(leg.flightNo)}</span>` : '';
-    html += `<div class="flightleg">${esc(formatDateTimeDisplay(leg.depDateTime))} ${esc(leg.depLocation||'')} → ${esc(formatDateTimeDisplay(leg.arrDateTime))} ${esc(leg.arrLocation||'')}${durSuffix}${flightNoSuffix}</div>`;
+    const dY = String(leg.depDateTime).slice(0,4), aY = String(leg.arrDateTime).slice(0,4);
+    const stripY = (t)=> t.replace(/^\d{4}\//,'');
+    const dTxt = formatDateTimeDisplay(leg.depDateTime), aTxt = formatDateTimeDisplay(leg.arrDateTime);
+    html += `<div class="flightleg">${esc(dY===aY ? stripY(dTxt) : dTxt)} ${esc(leg.depLocation||'')} → ${esc(dY===aY ? stripY(aTxt) : aTxt)} ${esc(leg.arrLocation||'')}${durSuffix}${flightNoSuffix}</div>`;
     if(idx < valid.length - 1){
       const next = valid[idx+1];
       const arrMs = new Date(leg.arrDateTime).getTime();
@@ -2146,7 +2187,8 @@ function honeymoonInfoCardHTML(){
       if(!isNaN(startMs) && !isNaN(endMs)){
         const startDate = departValid[0].depDateTime.slice(0,10);
         const endDate = retValid[retValid.length-1].arrDateTime.slice(0,10);
-        tripRangeText = `${formatISODateDisplay(startDate)} ~ ${formatISODateDisplay(endDate)}`;
+        const nightsN = Math.round((new Date(endDate) - new Date(startDate)) / 86400000);
+        tripRangeText = `${formatISODateDisplay(startDate)} ~ ${formatISODateDisplay(endDate)}` + (nightsN >= 0 ? ` (${nightsN}박 ${nightsN+1}일)` : '');
       }
     }
     flightSectionHTML = `
@@ -2159,9 +2201,12 @@ function honeymoonInfoCardHTML(){
 
   let hotelSequenceHTML = '<div class="hint">숙소를 추가해보세요.</div>';
   const hotelsWithDates = hotelVendors
-    .map(v=>{
-      const ex = (v.sections && v.sections.main && v.sections.main.extra) || {};
-      return { area: ex.area||ex.hotelName||v.name, checkin: ex.checkin, checkout: ex.checkout };
+    .flatMap(v=>{
+      const main = (v.sections && v.sections.main) || {};
+      const ex = main.extra || {};
+      const list = [{ area: ex.area||ex.hotelName||v.name, checkin: ex.checkin, checkout: ex.checkout }];
+      (main.items||[]).forEach(it=> list.push({ area: it.area||it.hotelName||v.name, checkin: it.checkin, checkout: it.checkout }));
+      return list;
     })
     .filter(h=>h.checkin && h.checkout)
     .sort((a,b)=> a.checkin < b.checkin ? -1 : 1);
@@ -2178,7 +2223,6 @@ function honeymoonInfoCardHTML(){
       <div class="cardheadtop">
         <div class="cardmain">
           <div class="topline"><span class="catchip"><span class="dot" style="background:${CAT_COLOR['신혼여행']}"></span>신혼여행 · 여행 정보</span></div>
-          <h3 class="namerow"><span class="namemain">여행 정보</span></h3>
         </div>
       </div>
     </div>
@@ -2266,7 +2310,7 @@ function cardHTML(v){
           <div class="topline">
             <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(catLabel)}</span>
           </div>
-          <h3 class="namerow"><span class="namemain">${esc(cardTitleName(v))||'(이름 없음)'}${(v.subtype==='기타' && v.itemName && v.name && v.name!==v.itemName)? ` <span class="nameloc">| ${esc(v.name)}</span>`:''}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
+          <h3 class="namerow"><span class="namemain">${esc(cardTitleName(v))||'(이름 없음)'}${(((v.subtype==='기타' && SUBTYPE_OPTIONS[v.category]) || v.category==='기타') && v.itemName && v.name && v.name!==v.itemName)? ` <span class="nameloc">| ${esc(v.name)}</span>`:''}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
         </div>
         <div class="headactions">
           ${needsVendorFinalize ? `<button class="headbtn ${v.isFinal?'finalon':''}" data-vendorfinal="${v.id}">${v.isFinal?'★ 최종 선택':'최종 선택'}</button>` : ''}
@@ -2600,15 +2644,21 @@ function budgetRowLabel(cat, label){
   const suffix = isPackageSubtype(cat, base) ? '(패키지)' : '';
   if(cat==='본식' && base==='헤어메이크업') return '본식 헤메'+suffix;
   if(cat==='혼주' && base==='헤어메이크업') return '혼주 헤메'+suffix;
-  if(cat==='야외스냅' && base==='스냅업체') return '야외스냅';
+  if(cat==='야외스냅' && base==='스냅업체') return '야외 스냅';
   if(cat==='야외스냅' && base==='헤어메이크업') return '스냅 헤메';
-  if(cat==='혼주' && ['한복','정장','기타'].includes(base)) return '혼주'+base;
+  if(cat==='혼주' && ['한복','정장','기타'].includes(base)) return '혼주 '+base;
   return base+suffix;
+}
+function etcVendorRow(vend){
+  const ex = (vend.sections && vend.sections.etc && vend.sections.etc.extra) || {};
+  const dep = moneyToManwon(ex.depositAmount), bal = moneyToManwon(ex.balanceAmount);
+  return { label: vend.itemName || vend.name || '기타', deposit: dep, depositPayer: ex.depositPayer||'', balanceDue: ex.balanceDueDate||'', balance: bal, balancePayer: ex.balancePayer||'', balancePaid: ex.balancePaid==='true', paymentMethod: ex.paymentMethod||'', total: (dep+bal)>0 ? dep+bal : moneyToManwon(ex.amount) };
 }
 function plainCategoryRows(cat){
   const finalVendors = vendors.filter(x=>x.category===cat && x.isFinal);
   const v = finalVendors[0];
   if(!v) return null;
+  if(cat==='기타') return finalVendors.map(etcVendorRow);
   {
         const schema = getSchema(cat);
         let sumDep=0, sumBal=0, sumTotal=0;
@@ -2671,6 +2721,46 @@ function plainCategoryRows(cat){
       }
 }
 
+let lastBudgetExport = null;
+function catCellPlain(cat, r, i, isGrouped){
+  return isGrouped ? budgetRowLabel(cat, r.label) : (i===0 ? cat : '');
+}
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+}
+function exportBudgetXlsx(){
+  const d = lastBudgetExport;
+  if(!d){ alert('먼저 총 비용 화면을 열어주세요.'); return; }
+  const today = new Date().toLocaleDateString('sv-SE');
+  const head = ['카테고리','업체명','계약금(만원)','지불인','잔금일','잔금(만원)','지불인','총액(만원)'];
+  const body = d.rows.map(r=> r.sub
+    ? [r.cat,'','','','','','',r.total]
+    : [r.cat, r.vendor, r.dep, r.depPayer, r.due, r.bal, r.balPayer, r.total === undefined ? '' : r.total]);
+  const sheet1 = [head, ...body, [], ['총 비용','','','','','','',d.grandTotal], ['축의금 합계 (-)','','','','','','',d.giftTotal], ['청첩장 모임비 합계 (+)','','','','','','',d.expenseTotal], ['최종 비용','','','','','','',d.finalTotal]];
+  const sheet2 = [['카테고리','업체','금액(만원)','잔금일','지불인'], ...d.balanceDueList.map(b=>[b.cat,b.label,b.amount,b.dueDate,b.payer||''])];
+  const sheet3 = [['지불인','계약금(만원)','잔금(만원)','총 지출(만원)'], ...d.payerRows.map(p=>[p.name,p.dep,p.bal,p.total])];
+  if(window.XLSX){
+    const wb = XLSX.utils.book_new();
+    const ws1 = XLSX.utils.aoa_to_sheet(sheet1);
+    ws1['!cols'] = [{wch:18},{wch:22},{wch:12},{wch:10},{wch:12},{wch:12},{wch:10},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws1, '총 비용');
+    const ws2 = XLSX.utils.aoa_to_sheet(sheet2);
+    ws2['!cols'] = [{wch:18},{wch:22},{wch:12},{wch:12},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, ws2, '잔금 내역');
+    const ws3 = XLSX.utils.aoa_to_sheet(sheet3);
+    ws3['!cols'] = [{wch:14},{wch:14},{wch:14},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws3, '지불인별 합계');
+    XLSX.writeFile(wb, '결혼식-총비용-' + today + '.xlsx');
+  } else {
+    const csv = sheet1.map(r=>r.map(csvEscape).join(',')).join('\r\n');
+    downloadBlob(new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'}), '결혼식-총비용-' + today + '.csv');
+    alert('엑셀 라이브러리를 불러오지 못해서 CSV로 저장했어요. 인터넷 연결을 확인하고 다시 눌러보세요.');
+  }
+}
 function renderBudgetPage(){
   const container = document.getElementById('content');
   let grandTotal = 0;
@@ -2690,6 +2780,7 @@ function renderBudgetPage(){
     balanceByPayerMethod[payer][m] = (balanceByPayerMethod[payer][m]||0) + amt;
   }
 
+  const exportRows = [];
   CATS.forEach(cat=>{
     let v = null;
     let detailRows = [];
@@ -2703,6 +2794,8 @@ function renderBudgetPage(){
     }
 
     if(!v){
+      if(cat==='기타') return;
+      exportRows.push({ cat, vendor:'아직 선택 안 함' });
       bodyHTML += `<tr><td style="white-space:nowrap;">${esc(cat)}</td><td colspan="7" style="font-size:7px;color:#9C9890;">아직 선택 안 함</td></tr>`;
       return;
     }
@@ -2726,6 +2819,7 @@ function renderBudgetPage(){
       const isGrouped = !!SUBTYPE_OPTIONS[cat];
       const catCell = isGrouped ? esc(budgetRowLabel(cat, r.label)) : (i===0? esc(cat) : '');
       const nameCell = isGrouped ? (esc(r.vendorName)||'-') : esc(r.label);
+      exportRows.push({ cat: catCellPlain(cat, r, i, isGrouped), vendor: isGrouped ? (r.vendorName||'') : r.label, dep: r.deposit||'', depPayer: r.depositPayer||'', due: r.balanceDue||'', bal: r.balance||'', balPayer: r.balancePayer||'', total: r.total || (r.pkg ? 0 : '') });
       const empty = r.noVendor ? '-' : '<span class="budgetna">N/A</span>';
       bodyHTML += `<tr data-cat="${esc(cat)}">
         <td style="white-space:nowrap;">${catCell}</td>
@@ -2739,6 +2833,7 @@ function renderBudgetPage(){
       </tr>`;
     });
     if(detailRows.length > 1){
+      exportRows.push({ sub:true, cat:'소계', total: catTotal });
       bodyHTML += `<tr class="budgetsubtotal">
         <td></td><td></td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
         <td class="budgettotal">${catTotal? catTotal.toLocaleString()+'만원':'-'}</td>
@@ -2760,11 +2855,14 @@ function renderBudgetPage(){
   const expenseTotal = moneyToManwon(budgetExtras.groomExpense) + moneyToManwon(budgetExtras.brideExpense);
   const finalTotal = grandTotal - giftTotal + expenseTotal;
 
+  lastBudgetExport = { rows: exportRows, grandTotal, balanceDueList, payerRows, giftTotal, expenseTotal, finalTotal };
+
   container.innerHTML = `
     <div class="budgetheader">
       <h2 style="margin:0;font-size:16px;">♥ 결혼식 준비 총 비용</h2>
       <div class="spacer"></div>
       <button class="btn small" id="exportDataBtn">내보내기</button>
+      <button class="btn small" id="backupDataBtn">백업저장</button>
       <label class="btn small" id="importDataLabel">불러오기<input type="file" id="importDataFile" accept=".csv,text/csv" style="display:none;"></label>
     </div>
     <div class="tablewrap budgettable"><table>
@@ -2807,21 +2905,21 @@ function renderBudgetPage(){
       }).join('')}
     </div>
 
-    <h3 style="margin:18px 0 8px;font-size:13px;">축의금 / 청첩비</h3>
+    <h3 style="margin:18px 0 8px;font-size:13px;">축의금 / 청첩장 모임비</h3>
     <div class="paystatuscard">
       <div class="paygrid">
         <div class="exfield"><label>신랑측 축의금 (받은 돈)</label><input id="ext_groomGift" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.groomGift||'')}"></div>
         <div class="exfield"><label>신부측 축의금 (받은 돈)</label><input id="ext_brideGift" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.brideGift||'')}"></div>
       </div>
       <div class="paygrid" style="margin-top:8px;">
-        <div class="exfield"><label>신랑측 청첩비 (쓴 돈)</label><input id="ext_groomExpense" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.groomExpense||'')}"></div>
-        <div class="exfield"><label>신부측 청첩비 (쓴 돈)</label><input id="ext_brideExpense" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.brideExpense||'')}"></div>
+        <div class="exfield"><label>신랑측 청첩장 모임비 (쓴 돈)</label><input id="ext_groomExpense" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.groomExpense||'')}"></div>
+        <div class="exfield"><label>신부측 청첩장 모임비 (쓴 돈)</label><input id="ext_brideExpense" inputmode="decimal" placeholder="(단위: 만원)" value="${esc(budgetExtras.brideExpense||'')}"></div>
       </div>
     </div>
     <div class="paystatuscard" style="margin-top:8px;">
       <div class="prow"><div class="k">총 비용</div><div class="v">${grandTotal.toLocaleString()}만원</div></div>
       <div class="prow"><div class="k">축의금 합계</div><div class="v">- ${giftTotal.toLocaleString()}만원</div></div>
-      <div class="prow"><div class="k">청첩비 합계</div><div class="v">+ ${expenseTotal.toLocaleString()}만원</div></div>
+      <div class="prow"><div class="k">청첩장 모임비 합계</div><div class="v">+ ${expenseTotal.toLocaleString()}만원</div></div>
       <div class="prow"><div class="k">최종 비용</div><div class="v" style="font-weight:800;font-size:14px;">${finalTotal.toLocaleString()}만원</div></div>
     </div>
   `;
@@ -2834,7 +2932,8 @@ function renderBudgetPage(){
     });
   });
 
-  document.getElementById('exportDataBtn').onclick = exportData;
+  document.getElementById('exportDataBtn').onclick = exportBudgetXlsx;
+  document.getElementById('backupDataBtn').onclick = exportData;
   document.getElementById('importDataFile').onchange = importDataFile;
 }
 
@@ -3136,8 +3235,13 @@ function buildNormalFieldsHTML(fields, item){
   // (like computeFieldLayout) while keeping any checkGroup fields together on one row.
   const segments = [];
   const seenGroups = new Set();
+  const seenRows = new Set();
   fields.forEach(f=>{
-    if(f.checkGroup){
+    if(f.rowGroup){
+      if(seenRows.has(f.rowGroup)) return;
+      seenRows.add(f.rowGroup);
+      segments.push({ check:false, row:true, fields: fields.filter(x=>x.rowGroup===f.rowGroup) });
+    } else if(f.checkGroup){
       if(seenGroups.has(f.checkGroup)) return;
       seenGroups.add(f.checkGroup);
       segments.push({ check:true, fields: fields.filter(x=>x.checkGroup===f.checkGroup) });
@@ -3148,7 +3252,11 @@ function buildNormalFieldsHTML(fields, item){
   let html = '';
   let pending = null;
   function renderFull(seg){
-    if(seg.check){
+    if(seg.row){
+      const cols = (seg.fields[0].cols || seg.fields.map(()=>'1fr').join(' ')).split(/\s+/).map(c=>`minmax(0,${c})`).join(' ');
+      const cells = seg.fields.map(f=>itemFieldHTML(f, item[f.key], false)).join('');
+      html += `<div class="irow" style="grid-template-columns:${cols}">${cells}</div>`;
+    } else if(seg.check){
       const cells = seg.fields.map(f=>itemFieldHTML(f, item[f.key], false)).join('');
       html += `<div class="checkrow full">${cells}</div>`;
     } else {
@@ -3159,7 +3267,7 @@ function buildNormalFieldsHTML(fields, item){
     html += itemFieldHTML(seg.f, item[seg.f.key], false);
   }
   segments.forEach(seg=>{
-    const isLongSeg = seg.check || seg.f.long;
+    const isLongSeg = seg.row || seg.check || seg.f.long;
     if(isLongSeg){
       if(pending){ renderFull(pending); pending=null; }
       renderFull(seg);
@@ -3174,7 +3282,11 @@ function buildNormalFieldsHTML(fields, item){
 function itemEditRowHTML(item, idx, sec){
   const payFields = sec.itemFields.filter(f=>f.payGroup);
   const normalFields = sec.itemFields.filter(f=>!f.payGroup);
-  const fieldsHTML = buildNormalFieldsHTML(normalFields, item);
+  const sideSet = sec.sideKeys || null;
+  const sideFields = sideSet ? normalFields.filter(f=>sideSet.includes(f.key)) : [];
+  const belowFields = sideSet ? normalFields.filter(f=>!sideSet.includes(f.key)) : [];
+  const fieldsHTML = buildNormalFieldsHTML(sideSet ? sideFields : normalFields, item);
+  const belowHTML = sideSet ? `<div class="itemfields onecol itembelow">${buildNormalFieldsHTML(belowFields, item)}</div>` : '';
 
   let payBlock = '';
   if(payFields.length){
@@ -3201,6 +3313,7 @@ function itemEditRowHTML(item, idx, sec){
         <div class="itemphotorow">${photoHTML}</div>
         <div class="itemfields onecol">${fieldsHTML}</div>
       </div>
+      ${belowHTML}
       ${payBlock}
     </div>`;
   }
@@ -3498,7 +3611,7 @@ function updateFieldVisibility(){
   const noLinkLocSubtypes = (cat==='본식' && subtypeSel.value==='웨딩홀') || (cat==='신혼여행' && subtypeSel.value==='항공권');
   document.getElementById('linkLocationBox').style.display = noLinkLocSubtypes ? 'none' : '';
   document.getElementById('cardNoteFieldBox').style.display = SUBTYPE_OPTIONS[cat] ? '' : 'none';
-  const isEtcSub = !!SUBTYPE_OPTIONS[cat] && subtypeSel.value==='기타';
+  const isEtcSub = (!!SUBTYPE_OPTIONS[cat] && subtypeSel.value==='기타') || cat==='기타';
   document.getElementById('itemNameBox').style.display = isEtcSub ? '' : 'none';
   document.getElementById('f_nameLabel').textContent = isEtcSub ? '업체명 (선택)' : '업체명';
   document.getElementById('datesFieldBox').style.display = (cat === '야외스냅' && subtypeSel.value === '스냅업체') ? '' : 'none';
@@ -3627,14 +3740,14 @@ document.getElementById('saveEdit').onclick = async ()=>{
     location: noLinkLoc ? '' : document.getElementById('f_location').value.trim(),
     memo: cat === '신혼여행' ? '' : document.getElementById('f_memo').value.trim(),
     cardNote: document.getElementById('f_cardNote').value.trim(),
-    itemName: (SUBTYPE_OPTIONS[cat] && subtype==='기타') ? document.getElementById('f_itemName').value.trim() : '',
+    itemName: ((SUBTYPE_OPTIONS[cat] && subtype==='기타') || cat==='기타') ? document.getElementById('f_itemName').value.trim() : '',
     dates: (cat === '야외스냅' && subtype === '스냅업체') ? dates : [],
     sections,
     images: hideVendorGallery ? [] : editingImages.slice(),
     contractImages: editingContractImages.slice(),
     instaLinks: hideVendorGallery ? [] : editingInstaLinks.slice()
   };
-  if(data.subtype==='기타' && SUBTYPE_OPTIONS[cat]){
+  if((data.subtype==='기타' && SUBTYPE_OPTIONS[cat]) || cat==='기타'){
     if(!data.itemName){ alert('항목을 입력해주세요.'); return; }
     if(!data.name) data.name = data.itemName;
   }
@@ -3659,7 +3772,7 @@ document.getElementById('saveEdit').onclick = async ()=>{
     vendors.push({ id, favorite:false, createdAt: Date.now(), isFinal:false, finalRef:null, payment:{}, ...data });
   }
   const honjuAutoFinal = (cat === '혼주' && (subtype === '헤어메이크업' || subtype === '상견례'));
-  if(SUBTYPE_OPTIONS[cat] && subtype === '기타'){
+  if((SUBTYPE_OPTIONS[cat] && subtype === '기타') || cat === '기타'){
     const ev = vendors.find(v2=>v2.id===id);
     if(ev) ev.isFinal = true;
   } else if((cat === '본식' && subtype && !BONSIK_COMPARE_SUBTYPES.includes(subtype)) || cat === '신혼여행' || honjuAutoFinal){
@@ -3699,5 +3812,6 @@ window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); }
 })();
 </script>
 <script async src="https://www.instagram.com/embed.js"></script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
