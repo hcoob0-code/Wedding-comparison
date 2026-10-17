@@ -233,7 +233,8 @@ td.fav{text-align:center;}
 .paystatushead{font-weight:800;font-size:12.5px;margin-bottom:6px;}
 .paystatuscard .prow{margin-bottom:3px;}
 .budgettotal{font-weight:800;color:var(--ink);}
-.budgetna{color:#CFCABE;font-weight:400;font-size:8px;}
+.budgetpkg{font-size:9.5px;font-weight:600;color:var(--celadon);}
+.budgetna{color:#CFCABE;font-weight:400;font-size:6px;}
 
 /* compare bar */
 .comparebar{
@@ -299,6 +300,12 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
   cursor:pointer;padding:8px 0;
 }
 .checkfield.full{grid-column:1/-1;}
+.mschips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;}
+.mschip{display:inline-flex;align-items:center;gap:4px;background:var(--paper-deep);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:600;}
+.mschip button{border:none;background:none;color:var(--persimmon);cursor:pointer;padding:0;font-size:11px;}
+.mshint{font-size:11.5px;color:#B9B5A8;}
+.msadd{display:flex;gap:6px;}
+.msadd select{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;font-family:inherit;background:#fff;}
 .checkrow{display:flex;gap:16px;align-items:center;grid-column:1/-1;}
 .checkrow .checkfield{padding:8px 0;}
 .quadrow{display:flex;gap:6px;grid-column:1/-1;}
@@ -414,7 +421,6 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
       <option value="hasdate">날짜순</option>
       <option value="manual">직접 정렬</option>
     </select>
-    <label class="hidetoggle"><input type="checkbox" id="showHiddenChk"> 숨김보기</label>
   </div>
 
   <div id="content"></div>
@@ -439,8 +445,9 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
       <label>카드 노트 (카드 접었을 때 바로 보여요)</label>
       <textarea id="f_cardNote" placeholder="예: 베이직 패키지 · 30만원" style="min-height:60px;"></textarea>
     </div>
+    <div class="field" id="itemNameBox" style="display:none;"><label>항목 (총 비용에 이 이름으로 나와요)</label><input id="f_itemName" placeholder="예: 친구 축가비, 축의대 비용"></div>
     <div id="basicFieldsBox">
-      <div class="field"><label>업체명</label><input id="f_name"></div>
+      <div class="field"><label id="f_nameLabel">업체명</label><input id="f_name"></div>
       <div id="linkLocationBox">
         <div class="field"><label>인스타 / 링크</label><input id="f_link" placeholder="https://instagram.com/..."></div>
         <div class="field"><label>주소</label><input id="f_location"></div>
@@ -563,7 +570,7 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 </div>
 
 <script>
-const CATS = ["본식","야외스냅","반지","혼주","신혼여행","기타"];
+const CATS = ["본식","야외스냅","혼주","신혼여행","기타"];
 const CAT_COLOR = {
   "본식":"#4A5568","야외스냅":"#5F8575","반지":"#B4933C","혼주":"#B6462F","신혼여행":"#3D7A8C","기타":"#8A8A82"
 };
@@ -601,6 +608,7 @@ function itemPaymentFields(){
 }
 const SUBTYPE_SCHEMAS = {
   "본식": {
+    "반지": CATEGORY_SCHEMA["반지"],
     "웨딩홀": { sections: [
       { key:'hallinfo', label:'홀', hasMedia:true, extraFields:[
           {key:'ceremonyDate', label:'예식 날짜', dateFormat:true},{key:'ceremonyTime', label:'예식 시간'},{key:'hallName', label:'홀 이름'},
@@ -837,12 +845,12 @@ const SUBTYPE_SCHEMAS = {
   }
 };
 const SUBTYPE_OPTIONS = {
-  "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"],
+  "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","반지","기타"],
   "야외스냅": ["스냅업체","드레스","정장","헤어메이크업","부케","헬퍼","기타"],
   "혼주": ["한복","정장","헤어메이크업","상견례","기타"],
   "신혼여행": ["항공권","숙소","투어","기타"]
 };
-const BONSIK_COMPARE_SUBTYPES = ["본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"];
+const BONSIK_COMPARE_SUBTYPES = ["반지","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"];
 function getSchema(category, subtype){
   if(SUBTYPE_SCHEMAS[category]){
     const opts = SUBTYPE_OPTIONS[category];
@@ -1219,7 +1227,9 @@ async function loadVendors(){
     if(v.category === '기타' && v.sections && (v.sections.hallinfo || v.sections.ceremonyDress || v.sections.mainPhoto)){
       v.category = '본식';
     }
+    if(v.category==='반지'){ v.category = '본식'; v.subtype = '반지'; }
     if(!CATS.includes(v.category)) v.category = '기타';
+    v.hidden = false;
     if(v.category==='야외스냅' && v.subtype==='메이크업') v.subtype = '헤어메이크업';
     if(!Array.isArray(v.dates)) v.dates = [];
     if(!Array.isArray(v.images)) v.images = [];
@@ -1482,10 +1492,6 @@ function minPrice(v){
 
 function filteredSorted(){
   let list = vendors.filter(v=>v.category===activeTab);
-  const showChk = document.getElementById('showHiddenChk');
-  if(!showChk || !showChk.checked){
-    list = list.filter(v=>!v.hidden);
-  }
   const sort = document.getElementById('sortSel').value;
   if(sort==='price'){
     list.sort((a,b)=> minPrice(a)-minPrice(b));
@@ -1561,6 +1567,7 @@ function budgetRowsForSubtypeCategory(category){
           { label:'홀 부대비용', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0, noVendor:true }
         ];
       }
+      if(subtype === '기타') return [];
       return [{ label:subtype, vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, total:0, noVendor:true }];
     }
 
@@ -1672,6 +1679,7 @@ function budgetRowsForSubtypeCategory(category){
       ];
     }
 
+    const isPkgRow = isPackageSubtype(category, subtype);
     if(subtype === '기타'){
       return finalVendors.map(vend=>{
         const calc = computeForSectionsOfVendor(vend, schema.sections.map(s=>s.key));
@@ -1680,7 +1688,7 @@ function budgetRowsForSubtypeCategory(category){
         const bal = calc.bal || moneyToManwon(pay.balanceAmount);
         const pt = dep + bal;
         return {
-          label: subtype, vendorName: vend.name || '',
+          label: subtype, vendorName: vend.itemName || vend.name || '',
           deposit: dep, depositPayer: calc.depPayer || pay.depositPayer || '',
           balanceDue: calc.balDue || pay.balanceDueDate || '', balance: bal,
           balancePayer: calc.balPayer || pay.balancePayer || '',
@@ -1713,6 +1721,7 @@ function budgetRowsForSubtypeCategory(category){
     });
     return [{
       label: subtype,
+      pkg: isPkgRow,
       vendorName: names.filter(Boolean).join(', '),
       deposit: sumDep, depositPayer: firstDepPayer,
       balanceDue: firstBalDue, balance: sumBal, balancePayer: firstBalPayer,
@@ -1770,7 +1779,8 @@ function fieldRow(f, val, full){
   }
   if(!val) return '';
   let shown = val;
-  if(f.money) shown = formatMoney(val);
+  if(f.type==='multiselect') shown = String(val).split('|').filter(Boolean).join(', ');
+  else if(f.money) shown = formatMoney(val);
   else if(f.dateFormat) shown = formatKoreanDateDisplay(val);
   else if(f.type==='date') shown = formatISODateDisplay(val);
   else if(f.type==='datetime') shown = formatDateTimeDisplay(val);
@@ -1938,6 +1948,7 @@ function titleUsesItemNames(v){
   return v.name===v.subtype && itemNamesOf(v,true).length>0;
 }
 function cardTitleName(v){
+  if(v.subtype==='기타' && SUBTYPE_OPTIONS[v.category] && v.itemName) return v.itemName;
   if(titleUsesItemNames(v)) return itemNamesOf(v, !isSingleCardSubtype(v)).join(', ');
   return v.name;
 }
@@ -2248,18 +2259,17 @@ function cardHTML(v){
 
   const noDeleteVendor = v.category==='신혼여행' && (v.subtype==='숙소' || v.subtype==='투어');
   const notFinalCls = (SUBTYPE_OPTIONS[v.category] && !v.isFinal) ? ' notfinal' : '';
-  return `<div class="card ${v.isFinal?'isfinal':''}${notFinalCls}${v.hidden?' vendorhidden':''}" data-id="${v.id}">
+  return `<div class="card ${v.isFinal?'isfinal':''}${notFinalCls}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
       <div class="cardheadtop">
         <div class="cardmain">
           <div class="topline">
             <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(catLabel)}</span>
           </div>
-          <h3 class="namerow"><span class="namemain">${esc(cardTitleName(v))||'(이름 없음)'}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
+          <h3 class="namerow"><span class="namemain">${esc(cardTitleName(v))||'(이름 없음)'}${(v.subtype==='기타' && v.itemName && v.name && v.name!==v.itemName)? ` <span class="nameloc">| ${esc(v.name)}</span>`:''}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
         </div>
         <div class="headactions">
           ${needsVendorFinalize ? `<button class="headbtn ${v.isFinal?'finalon':''}" data-vendorfinal="${v.id}">${v.isFinal?'★ 최종 선택':'최종 선택'}</button>` : ''}
-          ${v.category!=='본식' ? `<button class="headbtn" data-hide="${v.id}">${v.hidden?'숨김 해제':'숨기기'}</button>` : ''}
           ${noDeleteVendor ? '' : `<button class="headbtn danger" data-del="${v.id}">삭제</button>`}
           <button class="headbtn" data-edit="${v.id}">수정</button>
         </div>
@@ -2297,8 +2307,7 @@ function renderContent(){
       cardsHTML = snapReferenceCardHTML() + cardsHTML;
     }
   } else {
-    const showPlaceholder = activeTab === '반지' ? !vendors.some(v=>v.category==='반지') : true;
-    cardsHTML = list.map(cardHTML).join('') + (showPlaceholder ? placeholderCardHTML(activeTab, '', activeTab !== '반지') : '');
+    cardsHTML = list.map(cardHTML).join('') + placeholderCardHTML(activeTab, '', true);
   }
   container.innerHTML = `<div class="grid">${cardsHTML}</div>`;
   if(activeTab === '야외스냅'){
@@ -2330,16 +2339,6 @@ function renderContent(){
     btn.onclick = (e)=>{
       e.stopPropagation();
       vendorFinalClick(btn.dataset.vendorfinal);
-    };
-  });
-  container.querySelectorAll('[data-hide]').forEach(btn=>{
-    btn.onclick = async (e)=>{
-      e.stopPropagation();
-      const v = vendors.find(x=>x.id===btn.dataset.hide);
-      if(!v) return;
-      v.hidden = !v.hidden;
-      await saveVendors();
-      renderContent();
     };
   });
   container.querySelectorAll('[data-del]').forEach(btn=>{
@@ -2594,9 +2593,17 @@ document.getElementById('btnBudget').onclick = ()=>{
   renderContent();
 };
 
+const PACKAGE_SUBTYPES = { '본식': ['본식 드레스','헤어메이크업','본식 스냅'], '혼주': ['헤어메이크업'] };
+function isPackageSubtype(cat, subtype){ return !!(PACKAGE_SUBTYPES[cat] && PACKAGE_SUBTYPES[cat].includes(subtype)); }
 function budgetRowLabel(cat, label){
-  if(cat==='혼주' && ['한복','정장','헤어메이크업','기타'].includes(label)) return '혼주'+label;
-  return label;
+  const base = label;
+  const suffix = isPackageSubtype(cat, base) ? '(패키지)' : '';
+  if(cat==='본식' && base==='헤어메이크업') return '본식 헤메'+suffix;
+  if(cat==='혼주' && base==='헤어메이크업') return '혼주 헤메'+suffix;
+  if(cat==='야외스냅' && base==='스냅업체') return '야외스냅';
+  if(cat==='야외스냅' && base==='헤어메이크업') return '스냅 헤메';
+  if(cat==='혼주' && ['한복','정장','기타'].includes(base)) return '혼주'+base;
+  return base+suffix;
 }
 function plainCategoryRows(cat){
   const finalVendors = vendors.filter(x=>x.category===cat && x.isFinal);
@@ -2687,17 +2694,8 @@ function renderBudgetPage(){
     let v = null;
     let detailRows = [];
 
-    if(cat === '반지') return;
     if(SUBTYPE_OPTIONS[cat]){
       detailRows = budgetRowsForSubtypeCategory(cat);
-      if(cat === '본식'){
-        const ringRows = plainCategoryRows('반지');
-        const ringRow = ringRows
-          ? Object.assign({}, ringRows[0], { label:'반지', vendorName: ringRows[0].label })
-          : { label:'반지', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0, noVendor:true };
-        const mcIdx = detailRows.findIndex(r=>r.label==='사회자');
-        detailRows.splice(mcIdx>=0 ? mcIdx+1 : detailRows.length, 0, ringRow);
-      }
       v = detailRows.some(r=>r.vendorName) ? true : null;
     } else {
       detailRows = plainCategoryRows(cat) || [];
@@ -2709,7 +2707,10 @@ function renderBudgetPage(){
       return;
     }
     const catTotal = detailRows.reduce((a,r)=>a+r.total, 0);
+    const naClean = x => { const t = String(x==null?'':x).trim(); return /^(n\/?a|-|없음)$/i.test(t) ? '' : t; };
     detailRows.forEach((r,i)=>{
+      r.depositPayer = naClean(r.depositPayer); r.balancePayer = naClean(r.balancePayer); r.balanceDue = naClean(r.balanceDue);
+      if(!r.balance && r.balanceDue && r.total > (r.deposit||0)) r.balance = Math.round((r.total - (r.deposit||0)) * 100) / 100;
       grandTotal += r.total;
       addPayer(depositByPayer, r.depositPayer, r.deposit);
       addPayer(balanceByPayer, r.balancePayer, r.balance);
@@ -2734,7 +2735,7 @@ function renderBudgetPage(){
         <td style="white-space:nowrap;">${r.balanceDue||empty}</td>
         <td style="white-space:nowrap;">${r.balance? r.balance.toLocaleString()+'만원':empty}</td>
         <td style="white-space:nowrap;">${esc(r.balancePayer)||empty}</td>
-        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원':empty}</td>
+        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원' : (r.pkg? '0원' : empty)}</td>
       </tr>`;
     });
     if(detailRows.length > 1){
@@ -3220,6 +3221,15 @@ function extraFieldHTML(f, sec, val, full){
   if(f.type==='textarea'){
     return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><textarea data-sec="${sec.key}" data-exkey="${f.key}"${fullStyle}>${esc(val||'')}</textarea></div>`;
   }
+  if(f.type==='multiselect'){
+    const selected = String(val||'').split('|').filter(Boolean);
+    const chips = selected.map(x=>`<span class="mschip">${esc(x)}<button type="button" class="msdel" data-val="${esc(x)}">✕</button></span>`).join('');
+    const opts = ['<option value="">항목 선택</option>'].concat((f.options||[]).filter(o=>!selected.includes(o)).map(o=>`<option value="${esc(o)}">${esc(o)}</option>`));
+    return `<div class="exfield full msfield"><label>${esc(f.label)}</label>
+      <div class="mschips">${chips || '<span class="mshint">선택된 항목 없음</span>'}</div>
+      <div class="msadd"><select class="mssel">${opts.join('')}</select><button type="button" class="btn small msaddbtn">추가</button></div>
+      <input type="hidden" data-sec="${sec.key}" data-exkey="${f.key}" value="${esc(val||'')}"></div>`;
+  }
   if(f.type==='select'){
     const opts = ['<option value="">선택 안 함</option>'].concat((f.options||[]).map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`));
     return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><select data-sec="${sec.key}" data-exkey="${f.key}"${fullStyle}>${opts.join('')}</select></div>`;
@@ -3324,6 +3334,25 @@ function renderSections(){
         const short = await shortenUrl(val);
         if(short) inp.value = short;
       }
+    });
+  });
+  box.querySelectorAll('.msfield').forEach(fieldEl=>{
+    const hidden = fieldEl.querySelector('input[type="hidden"]');
+    const update = (list)=>{
+      hidden.value = list.join('|');
+      syncSectionsFromDOM();
+      renderSections();
+    };
+    const cur = ()=> hidden.value.split('|').filter(Boolean);
+    fieldEl.querySelector('.msaddbtn').onclick = ()=>{
+      const v = fieldEl.querySelector('.mssel').value;
+      if(!v) return;
+      const list = cur();
+      if(!list.includes(v)) list.push(v);
+      update(list);
+    };
+    fieldEl.querySelectorAll('.msdel').forEach(b=>{
+      b.onclick = ()=> update(cur().filter(x=>x!==b.dataset.val));
     });
   });
   box.querySelectorAll('.rowDel').forEach(btn=>{
@@ -3469,6 +3498,9 @@ function updateFieldVisibility(){
   const noLinkLocSubtypes = (cat==='본식' && subtypeSel.value==='웨딩홀') || (cat==='신혼여행' && subtypeSel.value==='항공권');
   document.getElementById('linkLocationBox').style.display = noLinkLocSubtypes ? 'none' : '';
   document.getElementById('cardNoteFieldBox').style.display = SUBTYPE_OPTIONS[cat] ? '' : 'none';
+  const isEtcSub = !!SUBTYPE_OPTIONS[cat] && subtypeSel.value==='기타';
+  document.getElementById('itemNameBox').style.display = isEtcSub ? '' : 'none';
+  document.getElementById('f_nameLabel').textContent = isEtcSub ? '업체명 (선택)' : '업체명';
   document.getElementById('datesFieldBox').style.display = (cat === '야외스냅' && subtypeSel.value === '스냅업체') ? '' : 'none';
   const hideGallery = shouldHideGallery(cat, subtypeSel.value);
   document.getElementById('galleryBlock').style.display = hideGallery ? 'none' : '';
@@ -3522,6 +3554,7 @@ function openEdit(id){
     document.getElementById('f_subtype').value = sub;
   }
   document.getElementById('f_name').value = v ? v.name : '';
+  document.getElementById('f_itemName').value = v ? (v.itemName||'') : '';
   document.getElementById('f_link').value = v ? v.link : '';
   document.getElementById('f_location').value = v ? v.location : '';
   editingDates = v ? (v.dates||[]).slice() : [];
@@ -3594,12 +3627,17 @@ document.getElementById('saveEdit').onclick = async ()=>{
     location: noLinkLoc ? '' : document.getElementById('f_location').value.trim(),
     memo: cat === '신혼여행' ? '' : document.getElementById('f_memo').value.trim(),
     cardNote: document.getElementById('f_cardNote').value.trim(),
+    itemName: (SUBTYPE_OPTIONS[cat] && subtype==='기타') ? document.getElementById('f_itemName').value.trim() : '',
     dates: (cat === '야외스냅' && subtype === '스냅업체') ? dates : [],
     sections,
     images: hideVendorGallery ? [] : editingImages.slice(),
     contractImages: editingContractImages.slice(),
     instaLinks: hideVendorGallery ? [] : editingInstaLinks.slice()
   };
+  if(data.subtype==='기타' && SUBTYPE_OPTIONS[cat]){
+    if(!data.itemName){ alert('항목을 입력해주세요.'); return; }
+    if(!data.name) data.name = data.itemName;
+  }
   if(!data.name){ alert('업체명을 입력해주세요.'); return; }
   if(id){
     const v = vendors.find(x=>x.id===id);
@@ -3646,7 +3684,6 @@ document.getElementById('deleteEdit').onclick = async ()=>{
 
 // ---- Import modal ----
 document.getElementById('sortSel').onchange = renderContent;
-document.getElementById('showHiddenChk').onchange = renderContent;
 
 [document.getElementById('editOverlay'), document.getElementById('paymentOverlay'), document.getElementById('payerSummaryOverlay')].forEach(ov=>{
   ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('show'); });
