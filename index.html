@@ -785,6 +785,12 @@ const SUBTYPE_SCHEMAS = {
         ], itemsLabel:'기타', itemFields:[
           {key:'note', label:'기타'},{key:'amount', label:'기타금', money:true}
         ], itemHasPhoto:false, sumAllItems:true }
+    ]}    ,
+    "기타": { sections: [
+      { key:'etc', label:'기타', extraFields:[
+          {key:'note', label:'내역', long:true},{key:'amount', label:'금액', money:true, noBudgetSum:true},
+          ...paymentFields()
+        ], itemsLabel:'', itemFields:[], itemHasPhoto:false }
     ]}
   },
   "신혼여행": {
@@ -829,7 +835,7 @@ const SUBTYPE_SCHEMAS = {
 const SUBTYPE_OPTIONS = {
   "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"],
   "야외스냅": ["스냅업체","드레스","정장","헤어메이크업","부케","헬퍼","기타"],
-  "혼주": ["한복","정장","헤어메이크업","상견례"],
+  "혼주": ["한복","정장","헤어메이크업","상견례","기타"],
   "신혼여행": ["항공권","숙소","투어"]
 };
 const BONSIK_COMPARE_SUBTYPES = ["본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"];
@@ -1504,6 +1510,21 @@ function moneyToManwon(raw){
   if(m) return parseFloat(m[1].replace(/,/g,''));
   return 0;
 }
+function vendorDisplayNames(vend, schema){
+  const out = [];
+  schema.sections.forEach(sec=>{
+    const data = (vend.sections && vend.sections[sec.key]) || {items:[]};
+    const items = data.items || [];
+    let chosen = [];
+    if(sec.sumAllItems || sec.noFinalize) chosen = items;
+    else chosen = (vend.finalRefs||[]).filter(r=>r.sectionKey===sec.key).map(r=>items[r.itemIndex]).filter(Boolean);
+    chosen.forEach(it=>{
+      const n = (it.vendor || it.hotelName || '').trim();
+      if(n && !out.includes(n)) out.push(n);
+    });
+  });
+  return out.join(', ');
+}
 function budgetRowsForSubtypeCategory(category){
   return SUBTYPE_OPTIONS[category].flatMap(subtype=>{
     const finalVendors = vendors.filter(x=>x.category===category && x.subtype===subtype && x.isFinal);
@@ -1647,7 +1668,7 @@ function budgetRowsForSubtypeCategory(category){
       if(!firstBalDue) firstBalDue = calc.balDue || pay.balanceDueDate || '';
       if(!firstPayMethod) firstPayMethod = calc.payMethod || pay.paymentMethod || '';
       if(calc.balPaid || pay.balancePaid === 'true') anyBalPaid = true;
-      names.push(vend.name || '');
+      names.push(vendorDisplayNames(vend, schema) || vend.name || '');
     });
     return [{
       label: subtype,
@@ -2512,36 +2533,15 @@ document.getElementById('btnBudget').onclick = ()=>{
   renderContent();
 };
 
-function renderBudgetPage(){
-  const container = document.getElementById('content');
-  let grandTotal = 0;
-  let bodyHTML = '';
-  const depositByPayer = {};
-  const balanceByPayer = {};
-  const balanceByPayerMethod = {};
-  const balanceDueList = [];
-  function addPayer(map, name, amt){
-    if(!name || !amt) return;
-    map[name] = (map[name]||0) + amt;
-  }
-  function addPayerMethod(payer, method, amt){
-    if(!payer || !amt) return;
-    const m = method || '미지정';
-    if(!balanceByPayerMethod[payer]) balanceByPayerMethod[payer] = {};
-    balanceByPayerMethod[payer][m] = (balanceByPayerMethod[payer][m]||0) + amt;
-  }
-
-  CATS.forEach(cat=>{
-    let v = null;
-    let detailRows = [];
-
-    if(SUBTYPE_OPTIONS[cat]){
-      detailRows = budgetRowsForSubtypeCategory(cat);
-      v = detailRows.some(r=>r.vendorName) ? true : null;
-    } else {
-      const finalVendors = vendors.filter(x=>x.category===cat && x.isFinal);
-      v = finalVendors[0];
-      if(v){
+function budgetRowLabel(cat, label){
+  if(cat==='혼주' && ['한복','정장','헤어메이크업','기타'].includes(label)) return '혼주'+label;
+  return label;
+}
+function plainCategoryRows(cat){
+  const finalVendors = vendors.filter(x=>x.category===cat && x.isFinal);
+  const v = finalVendors[0];
+  if(!v) return null;
+  {
         const schema = getSchema(cat);
         let sumDep=0, sumBal=0, sumTotal=0;
         let firstDepPayer='', firstBalPayer='', firstBalDue='', firstPayMethod='';
@@ -2599,8 +2599,48 @@ function renderBudgetPage(){
           if(balPaid || pay.balancePaid === 'true') anyBalPaid = true;
           names.push(vend.name || '');
         });
-        detailRows = [{ label:names.filter(Boolean).join(', ') || cat, deposit:sumDep, depositPayer:firstDepPayer, balanceDue:firstBalDue, balance:sumBal, balancePayer:firstBalPayer, balancePaid:anyBalPaid, paymentMethod:firstPayMethod, total:sumTotal }];
+        return [{ label:names.filter(Boolean).join(', ') || cat, deposit:sumDep, depositPayer:firstDepPayer, balanceDue:firstBalDue, balance:sumBal, balancePayer:firstBalPayer, balancePaid:anyBalPaid, paymentMethod:firstPayMethod, total:sumTotal }];
       }
+}
+
+function renderBudgetPage(){
+  const container = document.getElementById('content');
+  let grandTotal = 0;
+  let bodyHTML = '';
+  const depositByPayer = {};
+  const balanceByPayer = {};
+  const balanceByPayerMethod = {};
+  const balanceDueList = [];
+  function addPayer(map, name, amt){
+    if(!name || !amt) return;
+    map[name] = (map[name]||0) + amt;
+  }
+  function addPayerMethod(payer, method, amt){
+    if(!payer || !amt) return;
+    const m = method || '미지정';
+    if(!balanceByPayerMethod[payer]) balanceByPayerMethod[payer] = {};
+    balanceByPayerMethod[payer][m] = (balanceByPayerMethod[payer][m]||0) + amt;
+  }
+
+  CATS.forEach(cat=>{
+    let v = null;
+    let detailRows = [];
+
+    if(cat === '반지') return;
+    if(SUBTYPE_OPTIONS[cat]){
+      detailRows = budgetRowsForSubtypeCategory(cat);
+      if(cat === '본식'){
+        const ringRows = plainCategoryRows('반지');
+        const ringRow = ringRows
+          ? Object.assign({}, ringRows[0], { label:'반지', vendorName: ringRows[0].label })
+          : { label:'반지', vendorName:'', deposit:0, depositPayer:'', balanceDue:'', balance:0, balancePayer:'', balancePaid:false, paymentMethod:'', total:0, noVendor:true };
+        const mcIdx = detailRows.findIndex(r=>r.label==='사회자');
+        detailRows.splice(mcIdx>=0 ? mcIdx+1 : detailRows.length, 0, ringRow);
+      }
+      v = detailRows.some(r=>r.vendorName) ? true : null;
+    } else {
+      detailRows = plainCategoryRows(cat) || [];
+      v = detailRows.length ? true : null;
     }
 
     if(!v){
@@ -2616,13 +2656,13 @@ function renderBudgetPage(){
       if(r.balance > 0 && r.balanceDue && !r.balancePaid){
         const isGroupedCat = !!SUBTYPE_OPTIONS[cat];
         balanceDueList.push({
-          cat: isGroupedCat ? r.label : cat,
+          cat: isGroupedCat ? budgetRowLabel(cat, r.label) : cat,
           label: isGroupedCat ? (r.vendorName||'-') : r.label,
           amount:r.balance, dueDate:r.balanceDue, payer:r.balancePayer
         });
       }
       const isGrouped = !!SUBTYPE_OPTIONS[cat];
-      const catCell = isGrouped ? esc(r.label) : (i===0? esc(cat) : '');
+      const catCell = isGrouped ? esc(budgetRowLabel(cat, r.label)) : (i===0? esc(cat) : '');
       const nameCell = isGrouped ? (esc(r.vendorName)||'-') : esc(r.label);
       const empty = r.noVendor ? '-' : '<span class="budgetna">N/A</span>';
       bodyHTML += `<tr data-cat="${esc(cat)}">
