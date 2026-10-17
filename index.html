@@ -331,6 +331,11 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
 .itemrow-flex .itemphotorow{margin-bottom:0;flex:1 1 0;min-width:0;}
 .itemrow-flex .itemfields{flex:1 1 0;min-width:0;}
 .itemrow-flex .imgpicker.small,.itemrow-flex .thumb.small{width:100%;aspect-ratio:1/1;height:auto;}
+.segtitle{grid-column:1/-1;font-size:11.5px;font-weight:800;color:var(--gold);margin-top:6px;}
+.itemview{font-size:12px;}
+.itemviewhead{font-weight:700;margin-bottom:2px;}
+.itemview .flightleg{font-size:11.5px;}
+.itemviewmeta{font-size:11px;color:var(--ink-soft);margin-top:2px;white-space:pre-wrap;}
 .irow{display:grid;gap:6px;min-width:0;grid-column:1/-1;align-items:end;}
 .irow .exfield input,.irow .exfield select{min-width:0;}
 .itembelow{margin-top:8px;}
@@ -616,6 +621,69 @@ function itemPaymentFields(){
     {key:'balancePaid', label:'잔금 지불 완료', type:'checkbox'}
   ];
 }
+function flightSegFields(sx, title, showIf){
+  const f = (o)=> showIf ? Object.assign(o, { showIf }) : o;
+  const out = [];
+  if(title) out.push(f({key:'segTitle'+sx, label:title, type:'heading', long:true, hideInView:true}));
+  out.push(
+    f({key:'airline'+sx, label:'항공사', rowGroup:'al'+sx, cols:'1fr 1fr 1fr'}), f({key:'flightNo'+sx, label:'항공편명', rowGroup:'al'+sx}), f({key:'flightDuration'+sx, label:'비행 시간', placeholder:'3시간 20분', rowGroup:'al'+sx}),
+    f({key:'depDateTime'+sx, label:'출발 일시', type:'datetime', rowGroup:'dp'+sx, cols:'3fr 1fr'}), f({key:'depLocation'+sx, label:'출발지', rowGroup:'dp'+sx}),
+    f({key:'arrDateTime'+sx, label:'도착 일시', type:'datetime', rowGroup:'ar'+sx, cols:'3fr 1fr'}), f({key:'arrLocation'+sx, label:'도착지', rowGroup:'ar'+sx})
+  );
+  return out;
+}
+function flightSegCount(it, which){
+  const route = which==='r' ? it.routeR : it.route;
+  if(route!=='경유') return 1;
+  let st = parseInt(which==='r' ? it.stopsR : it.stops, 10);
+  if(!st && which!=='r' && it.stop2==='true') st = 2;
+  if(!st || st<1) st = 1;
+  return Math.min(st,4)+1;
+}
+function flightSegments(it, which){
+  which = which || 'o';
+  const n = flightSegCount(it, which);
+  const segs = [];
+  for(let i=1;i<=n;i++){
+    const sx = which==='r' ? 'r'+i : (i===1 ? '' : String(i));
+    segs.push({ airline: it['airline'+sx]||'', flightNo: it['flightNo'+sx]||'', flightDuration: it['flightDuration'+sx]||'',
+      depDateTime: it['depDateTime'+sx]||'', depLocation: it['depLocation'+sx]||'', arrDateTime: it['arrDateTime'+sx]||'', arrLocation: it['arrLocation'+sx]||'' });
+  }
+  return segs;
+}
+function flightSegFieldSet(which){
+  const out = [];
+  const isR = which==='r';
+  const rt = isR ? 'routeR' : 'route';
+  for(let i=1;i<=5;i++){
+    const sx = isR ? 'r'+i : (i===1 ? '' : String(i));
+    const show = it => (!isR || it.direction==='왕복') && flightSegCount(it, which) >= i;
+    const title = i===1 ? '' : '경유 구간 '+i;
+    out.push(...flightSegFields(sx, title, show));
+  }
+  return out;
+}
+function stripYearTxt(t){ return String(t||'').replace(/^\d{4}\//,''); }
+function flightItemViewHTML(it){
+  const rt = it.direction==='왕복';
+  const head = [it.direction, rt ? ('가는편 ' + (it.route||'')) : it.route].filter(Boolean).join(' · ');
+  const has = sg=>sg.depDateTime||sg.arrDateTime||sg.depLocation||sg.arrLocation||sg.airline||sg.flightNo;
+  let lines = flightSegments(it,'o').filter(has).map(sg=>flightLegLineHTML(sg)).join('');
+  if(rt){
+    const rl = flightSegments(it,'r').filter(has).map(sg=>flightLegLineHTML(sg)).join('');
+    if(rl) lines += `<div class="itemviewhead">오는편 · ${esc(it.routeR||'')}</div>` + rl;
+  }
+  const meta = [it.bookingSite ? '예약 ' + it.bookingSite : '', it.price ? formatMoney(it.price) : '', it.payer ? '지불인 ' + it.payer : ''].filter(Boolean).join(' · ');
+  return `<div class="itemview">${head ? `<div class="itemviewhead">${esc(head)}</div>` : ''}${lines}${meta ? `<div class="itemviewmeta">${esc(meta)}</div>` : ''}${it.note ? `<div class="itemviewmeta">${esc(it.note)}</div>` : ''}</div>`;
+}
+function transportItemViewHTML(it){
+  const head = [it.mode, it.vendor, it.tripNo].filter(Boolean).join(' · ');
+  const dep = [it.depDateTime ? stripYearTxt(formatDateTimeDisplay(it.depDateTime)) : '', it.depArea, it.depPlace].filter(Boolean).join(' ');
+  const arr = [it.arrDateTime ? stripYearTxt(formatDateTimeDisplay(it.arrDateTime)) : '', it.arrArea, it.arrPlace].filter(Boolean).join(' ');
+  const line = (dep || arr) ? `<div class="flightleg">${esc(dep)} → ${esc(arr)}</div>` : '';
+  const meta = [it.bookingSite ? '예약 ' + it.bookingSite : '', it.price ? formatMoney(it.price) : '', it.payer ? '지불인 ' + it.payer : ''].filter(Boolean).join(' · ');
+  return `<div class="itemview">${head ? `<div class="itemviewhead">${esc(head)}</div>` : ''}${line}${meta ? `<div class="itemviewmeta">${esc(meta)}</div>` : ''}${it.note ? `<div class="itemviewmeta">${esc(it.note)}</div>` : ''}</div>`;
+}
 const SUBTYPE_SCHEMAS = {
   "본식": {
     "반지": CATEGORY_SCHEMA["반지"],
@@ -811,21 +879,19 @@ const SUBTYPE_SCHEMAS = {
   },
   "신혼여행": {
     "항공권": { sections: [
-      { key:'info', label:'항공권 정보', extraFields:[
-          {key:'airline', label:'항공사'},{key:'bookingSite', label:'예약사이트'},
-          {key:'price', label:'가격', money:true},{key:'payer', label:'지불인'},
+      { key:'flights', label:'항공권', extraFields:[], itemsLabel:'항공권', itemFields:[
+          {key:'direction', label:'구분', type:'select', options:['출국 편도','귀국 편도','왕복'], rerender:true, rowGroup:'top'},
+          {key:'route', label:'경로', type:'select', options:['직항','경유'], rerender:true, rowGroup:'top'},
+          {key:'stops', label:'경유 횟수', type:'select', options:['1','2','3','4'], rerender:true, rowGroup:'top', showIf:it=>it.route==='경유'},
+          {key:'segTitleO', label:'✈ 가는 편', type:'heading', long:true, hideInView:true, showIf:it=>it.direction==='왕복'},
+          ...flightSegFieldSet('o'),
+          {key:'segTitleR', label:'✈ 오는 편', type:'heading', long:true, hideInView:true, showIf:it=>it.direction==='왕복'},
+          {key:'routeR', label:'오는 편 경로', type:'select', options:['직항','경유'], rerender:true, rowGroup:'topR', showIf:it=>it.direction==='왕복'},
+          {key:'stopsR', label:'경유 횟수', type:'select', options:['1','2','3','4'], rerender:true, rowGroup:'topR', showIf:it=>it.direction==='왕복' && it.routeR==='경유'},
+          ...flightSegFieldSet('r'),
+          {key:'bookingSite', label:'예약사이트', rowGroup:'bk', cols:'2fr 1fr 1fr'},{key:'price', label:'금액', money:true, rowGroup:'bk'},{key:'payer', label:'지불인', rowGroup:'bk'},
           {key:'note', label:'참고사항', long:true, type:'textarea'}
-        ], itemsLabel:'', itemFields:[], itemHasPhoto:false },
-      { key:'depart', label:'출발 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발 일시', type:'datetime', rowGroup:'dep', cols:'3fr 1fr'},{key:'depLocation', label:'출발지', rowGroup:'dep'},
-          {key:'arrDateTime', label:'도착 일시', type:'datetime', rowGroup:'arr', cols:'3fr 1fr'},{key:'arrLocation', label:'도착지', rowGroup:'arr'},
-          {key:'flightDuration', label:'비행 시간', placeholder:'예: 3시간 20분', rowGroup:'dur'},{key:'flightNo', label:'항공편명', rowGroup:'dur'}
-        ], itemHasPhoto:false, noFinalize:true },
-      { key:'ret', label:'귀국 일정', extraFields:[], itemsLabel:'구간', itemFields:[
-          {key:'depDateTime', label:'출발 일시', type:'datetime', rowGroup:'dep', cols:'3fr 1fr'},{key:'depLocation', label:'출발지', rowGroup:'dep'},
-          {key:'arrDateTime', label:'도착 일시', type:'datetime', rowGroup:'arr', cols:'3fr 1fr'},{key:'arrLocation', label:'도착지', rowGroup:'arr'},
-          {key:'flightDuration', label:'비행 시간', placeholder:'예: 3시간 20분', rowGroup:'dur'},{key:'flightNo', label:'항공편명', rowGroup:'dur'}
-        ], itemHasPhoto:false, noFinalize:true }
+        ], itemHasPhoto:false, noFinalize:true, sumAllItems:true, itemViewHTML: flightItemViewHTML }
     ]},
     "숙소": { sections: [
       { key:'main', label:'숙소', extraFields:[], itemsLabel:'숙소', sideKeys:['checkin','checkout'], itemFields:[
@@ -849,6 +915,16 @@ const SUBTYPE_SCHEMAS = {
           {key:'note', label:'참고사항', long:true, type:'textarea'}
         ], itemHasPhoto:true, noFinalize:true, sumAllItems:true }
     ]},
+    "교통": { sections: [
+      { key:'main', label:'교통', extraFields:[], itemsLabel:'교통', itemFields:[
+          {key:'mode', label:'이동수단', type:'select', options:['버스','택시','투어','기차','배','비행기'], long:true},
+          {key:'vendor', label:'업체명', rowGroup:'a', cols:'2fr 1fr'},{key:'tripNo', label:'편명', rowGroup:'a'},
+          {key:'depDateTime', label:'출발 일시', type:'datetime', rowGroup:'d', cols:'2fr 1fr 1fr'},{key:'depArea', label:'출발 지역', rowGroup:'d'},{key:'depPlace', label:'출발 위치', rowGroup:'d'},
+          {key:'arrDateTime', label:'도착 일시', type:'datetime', rowGroup:'r', cols:'2fr 1fr 1fr'},{key:'arrArea', label:'도착 지역', rowGroup:'r'},{key:'arrPlace', label:'도착 위치', rowGroup:'r'},
+          {key:'bookingSite', label:'예약사이트', rowGroup:'bk', cols:'2fr 1fr 1fr'},{key:'price', label:'금액', money:true, rowGroup:'bk'},{key:'payer', label:'지불인', rowGroup:'bk'},
+          {key:'note', label:'참고사항', long:true, type:'textarea'}
+        ], itemHasPhoto:false, noFinalize:true, sumAllItems:true, itemViewHTML: transportItemViewHTML }
+    ]},
     "기타": { sections: [
       { key:'etc', label:'기타', extraFields:[
           {key:'note', label:'내역', long:true},{key:'amount', label:'금액', money:true, fallbackSum:true},
@@ -861,7 +937,7 @@ const SUBTYPE_OPTIONS = {
   "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","반지","기타"],
   "야외스냅": ["스냅업체","드레스","정장","헤어메이크업","부케","헬퍼","기타"],
   "혼주": ["한복","정장","헤어메이크업","상견례","기타"],
-  "신혼여행": ["항공권","숙소","투어","기타"]
+  "신혼여행": ["항공권","숙소","투어","교통","기타"]
 };
 const BONSIK_COMPARE_SUBTYPES = ["반지","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"];
 function getSchema(category, subtype){
@@ -1248,8 +1324,34 @@ async function loadVendors(){
     });
     vendors = out;
   })();
+  vendors.forEach(v=>{ const fl = v.sections && v.sections.flights; if(fl && fl.items) fl.items.forEach(it=>{ if(it.direction==='출국') it.direction='출국 편도'; else if(it.direction==='귀국') it.direction='귀국 편도'; }); });
   vendors.forEach(v=>{ if((v.subtype==='기타' && SUBTYPE_OPTIONS[v.category]) || v.category==='기타') v.isFinal = true; });
   vendors.forEach(v=>{
+    if(v.category==='신혼여행' && v.subtype==='항공권' && v.sections && !(v.sections.flights && v.sections.flights.items && v.sections.flights.items.length)){
+      const info = (v.sections.info && v.sections.info.extra) || {};
+      const mk = (legs, dir)=>{
+        const L = (legs||[]).filter(l=>l.depDateTime||l.arrDateTime||l.depLocation);
+        if(!L.length) return null;
+        const it = { direction: dir, route: L.length>1 ? '경유' : '직항' };
+        if(L.length>1) it.stops = String(Math.min(L.length,5)-1);
+        L.slice(0,5).forEach((l,i)=>{
+          const sx = i===0 ? '' : String(i+1);
+          ['depDateTime','depLocation','arrDateTime','arrLocation','flightDuration','flightNo'].forEach(k=>{ if(l[k]) it[k+sx] = l[k]; });
+        });
+        return it;
+      };
+      const items = [mk(v.sections.depart && v.sections.depart.items, '출국 편도'), mk(v.sections.ret && v.sections.ret.items, '귀국 편도')].filter(Boolean);
+      if(items.length || info.airline || info.price){
+        if(!items.length) items.push({ direction:'출국 편도', route:'직항' });
+        if(info.airline) items.forEach(it=>{ it.airline = info.airline; });
+        const f0 = items[0];
+        if(info.bookingSite) f0.bookingSite = info.bookingSite;
+        if(info.price) f0.price = info.price;
+        if(info.payer) f0.payer = info.payer;
+        if(info.note) f0.note = info.note;
+        v.sections.flights = { extra:{}, items, images:[], instaLinks:[] };
+      }
+    }
     if(v.category==='신혼여행' && v.subtype==='투어' && v.sections && v.sections.main && Array.isArray(v.sections.main.items)){
       v.sections.main.items.forEach(it=>{
         if(it.schedule){ it.note = [it.schedule, it.note].filter(Boolean).join(' / '); delete it.schedule; }
@@ -1585,7 +1687,7 @@ function vendorDisplayNames(vend, schema){
     if(sec.sumAllItems || sec.noFinalize) chosen = items;
     else chosen = (vend.finalRefs||[]).filter(r=>r.sectionKey===sec.key).map(r=>items[r.itemIndex]).filter(Boolean);
     chosen.forEach(it=>{
-      const n = String(it.tourName || it.hotelName || it.vendor || it.brand || it.label || '').trim();
+      const n = String(it.tourName || it.hotelName || it.vendor || it.airline || it.brand || it.label || '').trim();
       if(n && !out.includes(n)) out.push(n);
     });
   });
@@ -1840,7 +1942,7 @@ function fieldsToHTML(fields, valuesObj, oneCol){
   const quadFields = fields.filter(f=>f.quad);
   const payFields = fields.filter(f=>f.payGroup);
   const normalFields = fields.filter(f=>!f.quad && !f.payGroup);
-  const present = normalFields.filter(f=> f.type==='checkbox' ? (f.alwaysShow || valuesObj[f.key]==='true') : !!valuesObj[f.key]);
+  const present = normalFields.filter(f=> f.hideInView ? false : f.type==='checkbox' ? (f.alwaysShow || valuesObj[f.key]==='true') : !!valuesObj[f.key]);
   const laid = oneCol ? present.map(item=>({item, full:true})) : computeFieldLayout(present, f=>f.long);
   let html = laid.map(({item,full})=> fieldRow(item, valuesObj[item.key], full)).join('');
   const anyQuadVal = quadFields.some(f=> f.type==='checkbox' ? valuesObj[f.key]==='true' : !!valuesObj[f.key]);
@@ -1864,7 +1966,7 @@ function fieldsToHTML(fields, valuesObj, oneCol){
 }
 
 function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls, oneCol){
-  const fieldsHTML = fieldsToHTML(sec.itemFields, item, oneCol);
+  const fieldsHTML = sec.itemViewHTML ? sec.itemViewHTML(item) : fieldsToHTML(sec.itemFields, item, oneCol);
   const photoKeys = sec.itemPhotoCount>1 ? Array.from({length:sec.itemPhotoCount}, (_,i)=> i===0?'photo':'photo'+(i+1)) : ['photo'];
   const photoHTML = sec.itemHasPhoto
     ? photoKeys.filter(pk=>item[pk]).map(pk=>`<img class="itemphoto" src="${esc(item[pk])}" data-lightbox-url="${esc(item[pk])}">`).join('')
@@ -1971,7 +2073,7 @@ function itemNamesOf(v, loose){
   schema.sections.forEach(sec=>{
     const items = ((v.sections && v.sections[sec.key]) || {}).items || [];
     items.forEach(it=>{
-      const n = String(loose ? (it.vendor || it.hotelName || it.brand || it.label || it.name || it.fabric || '') : (it.tourName || it.hotelName || it.vendor || '')).trim();
+      const n = String(loose ? (it.vendor || it.hotelName || it.brand || it.label || it.name || it.fabric || '') : (it.tourName || it.hotelName || it.vendor || it.airline || '')).trim();
       if(n && !names.includes(n)) names.push(n);
     });
   });
@@ -2128,8 +2230,16 @@ function bindSnapReferenceHandlers(){
 
 function parseFlightLegs(v){
   if(!v || !v.sections) return {depart:[], ret:[]};
-  const depart = (v.sections.depart && v.sections.depart.items) || [];
-  const ret = (v.sections.ret && v.sections.ret.items) || [];
+  const items = (v.sections.flights && v.sections.flights.items) || [];
+  const depart = [], ret = [];
+  items.forEach(it=>{
+    const ok = sg=>sg.depDateTime || sg.arrDateTime;
+    const legs = flightSegments(it,'o').filter(ok);
+    if(it.direction==='왕복'){ depart.push(...legs); ret.push(...flightSegments(it,'r').filter(ok)); }
+    else (String(it.direction||'').startsWith('귀국') ? ret : depart).push(...legs);
+  });
+  const byDep = (a,b)=> String(a.depDateTime||'').localeCompare(String(b.depDateTime||''));
+  depart.sort(byDep); ret.sort(byDep);
   return {depart, ret};
 }
 function parseDurationToCompact(text){
@@ -2143,6 +2253,14 @@ function parseDurationToCompact(text){
   if(m) return `${m}m`;
   return text;
 }
+function flightLegLineHTML(leg){
+  const durSuffix = leg.flightDuration ? ` <span class="flightdur">(${esc(parseDurationToCompact(leg.flightDuration))})</span>` : '';
+  const flightNoSuffix = leg.flightNo ? ` <span class="flightdur">· ${esc(leg.flightNo)}</span>` : '';
+  const dTxt = leg.depDateTime ? stripYearTxt(formatDateTimeDisplay(leg.depDateTime)) : '';
+  const aTxt = leg.arrDateTime ? stripYearTxt(formatDateTimeDisplay(leg.arrDateTime)) : '';
+  const airline = leg.airline ? `<b>${esc(leg.airline)}</b> ` : '';
+  return `<div class="flightleg">${airline}${esc(dTxt)} ${esc(leg.depLocation||'')} → ${esc(aTxt)} ${esc(leg.arrLocation||'')}${durSuffix}${flightNoSuffix}</div>`;
+}
 function flightLegScheduleHTML(legs){
   if(!legs || !legs.length) return '<div class="hint">일정이 입력되지 않았어요.</div>';
   const valid = legs.filter(l=>l.depDateTime && l.arrDateTime);
@@ -2151,10 +2269,7 @@ function flightLegScheduleHTML(legs){
   valid.forEach((leg, idx)=>{
     const durSuffix = leg.flightDuration ? ` <span class="flightdur">(${esc(parseDurationToCompact(leg.flightDuration))})</span>` : '';
     const flightNoSuffix = leg.flightNo ? ` <span class="flightdur">· ${esc(leg.flightNo)}</span>` : '';
-    const dY = String(leg.depDateTime).slice(0,4), aY = String(leg.arrDateTime).slice(0,4);
-    const stripY = (t)=> t.replace(/^\d{4}\//,'');
-    const dTxt = formatDateTimeDisplay(leg.depDateTime), aTxt = formatDateTimeDisplay(leg.arrDateTime);
-    html += `<div class="flightleg">${esc(dY===aY ? stripY(dTxt) : dTxt)} ${esc(leg.depLocation||'')} → ${esc(dY===aY ? stripY(aTxt) : aTxt)} ${esc(leg.arrLocation||'')}${durSuffix}${flightNoSuffix}</div>`;
+    html += flightLegLineHTML(leg);
     if(idx < valid.length - 1){
       const next = valid[idx+1];
       const arrMs = new Date(leg.arrDateTime).getTime();
@@ -2260,7 +2375,7 @@ function placeholderCardHTML(category, subtype, addMore){
     </div>
   </div>`;
 }
-const SINGLE_CARD_COMPARE_SUBTYPES = { "야외스냅": ["드레스","정장","헤어메이크업","부케","헬퍼"], "신혼여행": ["숙소","투어"] };
+const SINGLE_CARD_COMPARE_SUBTYPES = { "야외스냅": ["드레스","정장","헤어메이크업","부케","헬퍼"], "신혼여행": ["항공권","숙소","투어","교통"] };
 function openAddForSubtype(category, subtype){
   const singleCardList = SINGLE_CARD_COMPARE_SUBTYPES[category];
   if(singleCardList && singleCardList.includes(subtype)){
@@ -2301,7 +2416,7 @@ function cardHTML(v){
       ${v.memo? `<div class="vendorrow"><div class="prow full"><div class="k">기타사항</div><div class="v">${esc(v.memo)}</div></div></div>`:''}
     </div></div>` : '';
 
-  const noDeleteVendor = v.category==='신혼여행' && (v.subtype==='숙소' || v.subtype==='투어');
+  const noDeleteVendor = v.category==='신혼여행' && (v.subtype==='숙소' || v.subtype==='투어' || v.subtype==='교통');
   const notFinalCls = (SUBTYPE_OPTIONS[v.category] && !v.isFinal) ? ' notfinal' : '';
   return `<div class="card ${v.isFinal?'isfinal':''}${notFinalCls}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
@@ -3206,10 +3321,14 @@ document.getElementById('addDateBtn').onclick = ()=>{
 function currentSchema(){ return getSchema(document.getElementById('f_category').value, document.getElementById('f_subtype').value); }
 
 function itemFieldHTML(f, val, full){
+  const rr = f.rerender ? ' data-rerender="1"' : '';
+  if(f.type==='heading'){
+    return `<div class="segtitle">${esc(f.label)}</div>`;
+  }
   if(f.type==='checkbox'){
     const checked = val==='true';
     const checkLabel = f.trueLabel && f.falseLabel ? `${f.label} (${checked?f.trueLabel:f.falseLabel})` : f.label;
-    return `<label class="checkfield${full?' full':''}"><input type="checkbox" data-key="${f.key}" ${checked?'checked':''}> ${esc(checkLabel)}</label>`;
+    return `<label class="checkfield${full?' full':''}"><input type="checkbox" data-key="${f.key}"${rr} ${checked?'checked':''}> ${esc(checkLabel)}</label>`;
   }
   const v = esc(val||'');
   const fullStyle = full ? ' style="grid-column:1/-1;"' : '';
@@ -3226,7 +3345,7 @@ function itemFieldHTML(f, val, full){
   }
   if(f.type==='select'){
     const opts = ['<option value="">선택 안 함</option>'].concat((f.options||[]).map(o=>`<option value="${esc(o)}" ${val===o?'selected':''}>${esc(o)}</option>`));
-    return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><select data-key="${f.key}">${opts.join('')}</select></div>`;
+    return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><select data-key="${f.key}"${rr}>${opts.join('')}</select></div>`;
   }
   return `<div class="exfield${full?' full':''}"><label>${esc(f.label)}</label><input data-key="${f.key}" placeholder="${esc(placeholder)}" value="${v}"${moneyAttr}></div>`;
 }
@@ -3281,7 +3400,7 @@ function buildNormalFieldsHTML(fields, item){
 }
 function itemEditRowHTML(item, idx, sec){
   const payFields = sec.itemFields.filter(f=>f.payGroup);
-  const normalFields = sec.itemFields.filter(f=>!f.payGroup);
+  const normalFields = sec.itemFields.filter(f=>!f.payGroup && (!f.showIf || f.showIf(item)));
   const sideSet = sec.sideKeys || null;
   const sideFields = sideSet ? normalFields.filter(f=>sideSet.includes(f.key)) : [];
   const belowFields = sideSet ? normalFields.filter(f=>!sideSet.includes(f.key)) : [];
@@ -3449,6 +3568,9 @@ function renderSections(){
       }
     });
   });
+  box.querySelectorAll('[data-rerender]').forEach(el=>{
+    el.addEventListener('change', ()=>{ syncSectionsFromDOM(); renderSections(); });
+  });
   box.querySelectorAll('.msfield').forEach(fieldEl=>{
     const hidden = fieldEl.querySelector('input[type="hidden"]');
     const update = (list)=>{
@@ -3568,7 +3690,7 @@ function syncSectionsFromDOM(schemaOverride){
       const obj = {};
       if(existing){
         Object.keys(existing).forEach(k=>{
-          if(k==='photo' || /^photo\d+$/.test(k)) obj[k] = existing[k];
+          obj[k] = existing[k];
         });
       }
       row.querySelectorAll('[data-key]').forEach(el=>{
