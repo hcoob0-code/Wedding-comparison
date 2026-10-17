@@ -722,15 +722,8 @@ const SUBTYPE_SCHEMAS = {
           ...itemPaymentFields()
         ], itemHasPhoto:true, itemPhotoCount:2, sumAllItems:true }
     ]},
-    "헤어": { sections: [
-      { key:'hair', label:'헤어', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
-          {key:'vendor', label:'업체명', long:true},
-          {key:'price', label:'가격', money:true, noBudgetSum:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'},
-          ...itemPaymentFields()
-        ], itemHasPhoto:true, sumAllItems:true }
-    ]},
-    "메이크업": { sections: [
-      { key:'makeup', label:'메이크업', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
+    "헤어메이크업": { sections: [
+      { key:'makeup', label:'헤어메이크업', extraFields:[], itemsLabel:'업체별 비교', itemFields:[
           {key:'vendor', label:'업체명', long:true},
           {key:'price', label:'가격', money:true, noBudgetSum:true},{key:'location', label:'위치'},{key:'desc', label:'참고사항', long:true, type:'textarea'},
           ...itemPaymentFields()
@@ -835,7 +828,7 @@ const SUBTYPE_SCHEMAS = {
 };
 const SUBTYPE_OPTIONS = {
   "본식": ["웨딩홀","본식 드레스","본식 정장","헤어메이크업","본식 스냅","아이폰스냅","DVD촬영","부케","사회자","기타"],
-  "야외스냅": ["스냅업체","드레스","정장","헤어","메이크업","부케","헬퍼","기타"],
+  "야외스냅": ["스냅업체","드레스","정장","헤어메이크업","부케","헬퍼","기타"],
   "혼주": ["한복","정장","헤어메이크업","상견례"],
   "신혼여행": ["항공권","숙소","투어"]
 };
@@ -1189,6 +1182,9 @@ async function loadVendors(){
   }
   vendors = migrateOldBonsikVendors(vendors);
   vendors = migrateSnapAndHonjuVendors(vendors);
+  vendors = vendors.filter(v=>!((v.category==='야외스냅'||v.category==='스냅촬영'||v.category==='스냅준비') && v.subtype==='헤어'));
+  if(snapRefPhotos && snapRefPhotos['메이크업']){ snapRefPhotos['헤어메이크업'] = (snapRefPhotos['헤어메이크업']||[]).concat(snapRefPhotos['메이크업']); delete snapRefPhotos['메이크업']; }
+  if(snapRefPhotos && snapRefPhotos['헤어']) delete snapRefPhotos['헤어'];
   vendors.forEach(v=>{
     if(v.category === '스냅촬영') v.category = '야외스냅';
     if(v.category === '웨딩홀') v.category = '본식';
@@ -1196,6 +1192,7 @@ async function loadVendors(){
       v.category = '본식';
     }
     if(!CATS.includes(v.category)) v.category = '기타';
+    if(v.category==='야외스냅' && v.subtype==='메이크업') v.subtype = '헤어메이크업';
     if(!Array.isArray(v.dates)) v.dates = [];
     if(!Array.isArray(v.images)) v.images = [];
     if(!Array.isArray(v.contractImages)) v.contractImages = [];
@@ -1884,7 +1881,7 @@ function subtypeItemSummaryHTML(v){
   return '';
 }
 
-const SNAPREF_SUBTYPES = ["스냅업체","드레스","정장","헤어","메이크업","부케","기타"];
+const SNAPREF_SUBTYPES = ["스냅업체","드레스","정장","헤어메이크업","부케","기타"];
 function snapReferenceCardHTML(){
   const open = expandedIds.has('snapref-card');
   if(!SNAPREF_SUBTYPES.includes(snapRefActiveSubtype)) snapRefActiveSubtype = SNAPREF_SUBTYPES[0];
@@ -2122,7 +2119,7 @@ function placeholderCardHTML(category, subtype){
     </div>
   </div>`;
 }
-const SINGLE_CARD_COMPARE_SUBTYPES = { "야외스냅": ["드레스","정장","헤어","메이크업","부케","헬퍼","기타"], "신혼여행": ["숙소","투어"] };
+const SINGLE_CARD_COMPARE_SUBTYPES = { "야외스냅": ["드레스","정장","헤어메이크업","부케","헬퍼","기타"], "신혼여행": ["숙소","투어"] };
 function openAddForSubtype(category, subtype){
   const singleCardList = SINGLE_CARD_COMPARE_SUBTYPES[category];
   if(singleCardList && singleCardList.includes(subtype)){
