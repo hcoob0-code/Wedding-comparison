@@ -2478,7 +2478,7 @@ function cardHTML(v){
 
   const noDeleteVendor = v.category==='신혼여행' && (v.subtype==='숙소' || v.subtype==='투어' || v.subtype==='교통');
   const notFinalCls = '';
-  return `<div class="card ${v.isFinal?'isfinal':''}${notFinalCls}" data-id="${v.id}">
+  return `<div class="card ${(v.isFinal && !v.noName)?'isfinal':''}${notFinalCls}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
       <div class="cardheadtop">
         <div class="cardmain">
@@ -3936,7 +3936,8 @@ document.getElementById('saveEdit').onclick = async ()=>{
     if(!data.itemName){ alert('항목을 입력해주세요.'); return; }
     if(!data.name) data.name = data.itemName;
   }
-  if(!data.name){ alert('업체명을 입력해주세요.'); return; }
+  data.noName = !data.name;
+  if(!data.name) data.name = data.subtype || cat;
   if(id){
     const v = vendors.find(x=>x.id===id);
     Object.assign(v, data);
