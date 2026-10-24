@@ -1749,7 +1749,8 @@ function vendorDisplayNames(vend, schema){
 }
 function fieldsHaveActual(obj, fields){
   obj = obj || {};
-  return (fields||[]).some(f=>f.money && f.key!=='estimateAmount' && !f.noBudgetSum && moneyToManwon(obj[f.key])>0);
+  if(obj.svc === 'true') return false;
+  return (fields||[]).some(f=>f.money && f.key!=='estimateAmount' && !f.noBudgetSum && !(f.svcKey && obj[f.svcKey]==='true') && moneyToManwon(obj[f.key])>0);
 }
 function budgetRowsForSubtypeCategory(category){
   return SUBTYPE_OPTIONS[category].flatMap(subtype=>{
