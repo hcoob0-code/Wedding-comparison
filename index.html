@@ -235,6 +235,7 @@ td.fav{text-align:center;}
 .paystatuscard .prow{margin-bottom:3px;}
 .budgettotal{font-weight:800;color:var(--ink);}
 .budgetpkg{font-size:9.5px;font-weight:600;color:var(--celadon);}
+.budgetest{color:#A8A398;font-weight:400;}
 .budgetna{color:#CFCABE;font-weight:400;font-size:6px;}
 
 /* compare bar */
@@ -543,9 +544,6 @@ input::placeholder,textarea::placeholder{color:#CFC9BB;opacity:1;}
       <button class="btn ghost" id="cancelPayment">취소</button>
       <button class="btn primary" id="savePayment">저장</button>
     </div>
-    <div style="margin-top:10px;text-align:right;">
-      <button class="btn small" id="unfinalizeBtn" style="color:var(--persimmon);border-color:#e8c9c0;">최종 선택 해제</button>
-    </div>
   </div>
 </div>
 
@@ -608,6 +606,7 @@ const CATEGORY_SCHEMA = {
 };
 function paymentFields(){
   return [
+    {key:'estimateAmount', label:'예상 금액', money:true, noBudgetSum:true, payGroup:0},
     {key:'depositAmount', label:'계약금', money:true, payGroup:1},{key:'depositPayer', label:'계약금 지불자', payGroup:1},
     {key:'balanceAmount', label:'잔금', money:true, payGroup:2},{key:'balancePayer', label:'잔금 지불자', payGroup:2},
     {key:'balanceDueDate', label:'잔금일', type:'date', payGroup:3},{key:'paymentMethod', label:'결제 수단', type:'select', options:['현금','카드 일시불','카드 할부'], payGroup:3},{key:'balancePaid', label:'잔금 지불 완료', type:'checkbox', payGroup:3}
@@ -615,6 +614,7 @@ function paymentFields(){
 }
 function itemPaymentFields(){
   return [
+    {key:'estimateAmount', label:'예상 금액', money:true, noBudgetSum:true, payGroup:0},
     {key:'depositAmount', label:'계약금', money:true, payGroup:1},{key:'depositPayer', label:'계약금 지불자', payGroup:1},
     {key:'balanceAmount', label:'잔금', money:true, payGroup:2},{key:'balancePayer', label:'잔금 지불자', payGroup:2},
     {key:'balanceDueDate', label:'잔금일', type:'date', payGroup:3},{key:'paymentMethod', label:'결제 수단', type:'select', options:['현금','카드 일시불','카드 할부'], payGroup:3},
@@ -968,6 +968,11 @@ let vendors = [];
 let budgetExtras = {};
 let honeymoonInfo = {};
 let snapRefPhotos = {};
+let rawLoadedIds = [], loadOK = false, deletedIds = [], syncBase = null;
+function snapshotBase(){
+  const m = {}; vendors.forEach(v=>{ m[v.id] = JSON.stringify(v); });
+  syncBase = { v:m, b:JSON.stringify(budgetExtras), h:JSON.stringify(honeymoonInfo), s:JSON.stringify(snapRefPhotos) };
+}
 let snapRefActiveSubtype = '스냅업체';
 let snapRefSelectedIndex = 0;
 let activeTab = "본식";
@@ -1264,16 +1269,26 @@ function migrateOldBonsikVendors(list){
   });
   return out;
 }
+function fetchTO(url,opts,ms){
+  const c = new AbortController(); const t = setTimeout(()=>c.abort(), ms||15000);
+  return fetch(url, Object.assign({}, opts||{}, {signal:c.signal})).finally(()=>clearTimeout(t));
+}
 async function loadVendors(){
   if(SETUP_NEEDED){ vendors = []; showSetupBanner(); return; }
   if(!CONFIG.BIN_ID){ vendors = []; return; }
   try{
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, {
-      headers: { 'X-Master-Key': CONFIG.MASTER_KEY }
-    });
-    if(!res.ok) throw new Error('load failed');
+    let res = null, lastErr = null;
+    for(let t=0;t<3 && !(res && res.ok);t++){
+      try{ res = await fetchTO(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY } }, 10000); }catch(e){ lastErr = e; res = null; }
+      if(!(res && res.ok) && t<2) await new Promise(r=>setTimeout(r,1500));
+    }
+    if(!res || !res.ok) throw (lastErr || new Error('load failed'));
     const json = await res.json();
-    vendors = (json.record && json.record.vendors) ? json.record.vendors : [];
+    if(!json || !json.record) throw new Error('bad record');
+    loadOK = true;
+    deletedIds = Array.isArray(json.record.deletedIds) ? json.record.deletedIds : [];
+    vendors = (json.record && Array.isArray(json.record.vendors)) ? json.record.vendors.filter(v=>v && typeof v==='object') : [];
+    rawLoadedIds = vendors.map(v=>v.id);
     budgetExtras = (json.record && json.record.budgetExtras) ? json.record.budgetExtras : {};
     honeymoonInfo = (json.record && json.record.honeymoonInfo) ? json.record.honeymoonInfo : {};
     const rawSnapRef = json.record && json.record.snapRefPhotos;
@@ -1286,6 +1301,7 @@ async function loadVendors(){
     }
   }catch(e){
     vendors = [];
+    loadOK = false;
   }
   vendors = migrateOldBonsikVendors(vendors);
   vendors = migrateSnapAndHonjuVendors(vendors);
@@ -1325,7 +1341,7 @@ async function loadVendors(){
     vendors = out;
   })();
   vendors.forEach(v=>{ const fl = v.sections && v.sections.flights; if(fl && fl.items) fl.items.forEach(it=>{ if(it.direction==='출국') it.direction='출국 편도'; else if(it.direction==='귀국') it.direction='귀국 편도'; }); });
-  vendors.forEach(v=>{ if((v.subtype==='기타' && SUBTYPE_OPTIONS[v.category]) || v.category==='기타') v.isFinal = true; });
+  vendors.forEach(v=>{ v.isFinal = true; });
   vendors.forEach(v=>{
     if(v.category==='신혼여행' && v.subtype==='항공권' && v.sections && !(v.sections.flights && v.sections.flights.items && v.sections.flights.items.length)){
       const info = (v.sections.info && v.sections.info.extra) || {};
@@ -1395,15 +1411,45 @@ async function loadVendors(){
     if(!Array.isArray(v.finalRefs)) v.finalRefs = v.finalRef ? [v.finalRef] : [];
     if(!v.payment || typeof v.payment!=='object') v.payment = {depositAmount:'',depositDate:'',depositPayer:'',balanceAmount:'',balanceDueDate:'',balancePayer:'',note:''};
   });
+  snapshotBase();
+}
+function showLoadFailBanner(){
+  const el = document.getElementById('content');
+  if(el) el.innerHTML = `<div class="empty"><div class="mark">◌</div>저장된 데이터를 불러오지 못했어요.<br>(데이터는 안전해요. 저장을 막아뒀어요)<br>인터넷 연결 확인 후 아래 버튼을 눌러주세요.<br><br><button class="btn" onclick="location.reload()">다시 불러오기</button></div>`;
+}
+async function fetchRemoteRecord(){
+  const res = await fetchTO(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}/latest`, { headers: { 'X-Master-Key': CONFIG.MASTER_KEY } }, 20000);
+  if(!res.ok) throw new Error('remote load failed');
+  const j = await res.json();
+  if(!j || !j.record) throw new Error('bad record');
+  return j.record;
+}
+function mergeWithRemote(rec){
+  const base = syncBase || { v:{}, b:'', h:'', s:'' };
+  const rv = Array.isArray(rec.vendors) ? rec.vendors : [];
+  const dels = new Set([...(deletedIds||[]), ...(Array.isArray(rec.deletedIds)?rec.deletedIds:[])]);
+  deletedIds = [...dels];
+  const remoteById = {}; rv.forEach(v=>{ remoteById[v.id] = v; });
+  for(let i=0;i<vendors.length;i++){
+    const l = vendors[i], r = remoteById[l.id];
+    if(r && JSON.stringify(l) === base.v[l.id] && JSON.stringify(r) !== base.v[l.id]) vendors[i] = r;
+  }
+  const have = new Set(vendors.map(v=>v.id));
+  const known = new Set(rawLoadedIds);
+  rv.forEach(r=>{ if(!have.has(r.id) && !dels.has(r.id) && !known.has(r.id)) vendors.push(r); });
+  if(JSON.stringify(budgetExtras) === base.b && rec.budgetExtras) budgetExtras = rec.budgetExtras;
+  if(JSON.stringify(honeymoonInfo) === base.h && rec.honeymoonInfo) honeymoonInfo = rec.honeymoonInfo;
+  if(JSON.stringify(snapRefPhotos) === base.s && rec.snapRefPhotos && !Array.isArray(rec.snapRefPhotos)) snapRefPhotos = rec.snapRefPhotos;
 }
 async function saveVendors(){
   if(SETUP_NEEDED){ showSetupBanner(); return; }
+  if(CONFIG.BIN_ID && !loadOK){ alert('저장된 데이터를 아직 불러오지 못해서 저장을 막았어요. 페이지를 새로고침해주세요. (기존 데이터 보호)'); return; }
   try{
     if(!CONFIG.BIN_ID){
       const res = await fetch('https://api.jsonbin.io/v3/b', {
         method:'POST',
         headers:{ 'Content-Type':'application/json', 'X-Master-Key':CONFIG.MASTER_KEY, 'X-Bin-Name':'wedding-vendor-compare' },
-        body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo, snapRefPhotos })
+        body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo, snapRefPhotos, deletedIds })
       });
       if(!res.ok) throw new Error('create failed');
       const json = await res.json();
@@ -1411,12 +1457,17 @@ async function saveVendors(){
       alert('공유 저장소가 새로 만들어졌어요!\n\nBIN_ID: ' + CONFIG.BIN_ID + '\n\n이 값을 코드의 CONFIG.BIN_ID 자리에 붙여넣고 다시 배포해야 계속 같은 데이터를 같이 볼 수 있어요.');
       return;
     }
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}`, {
+    let rec;
+    try{ rec = await fetchRemoteRecord(); }catch(e){ alert('저장 전 최신 데이터를 확인하지 못했어요. 인터넷 연결을 확인하고 다시 시도해주세요.'); return; }
+    mergeWithRemote(rec);
+    const res = await fetchTO(`https://api.jsonbin.io/v3/b/${CONFIG.BIN_ID}`, {
       method:'PUT',
       headers:{ 'Content-Type':'application/json', 'X-Master-Key':CONFIG.MASTER_KEY },
-      body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo, snapRefPhotos })
-    });
+      body: JSON.stringify({ vendors, budgetExtras, honeymoonInfo, snapRefPhotos, deletedIds })
+    }, 60000);
     if(!res.ok) throw new Error('save failed');
+    vendors.forEach(v=>{ if(!rawLoadedIds.includes(v.id)) rawLoadedIds.push(v.id); });
+    snapshotBase();
   }catch(e){
     alert('저장 중 문제가 발생했어요. 인터넷 연결이나 설정을 확인해주세요.');
   }
@@ -1684,14 +1735,17 @@ function vendorDisplayNames(vend, schema){
     const data = (vend.sections && vend.sections[sec.key]) || {items:[]};
     const items = data.items || [];
     let chosen = [];
-    if(sec.sumAllItems || sec.noFinalize) chosen = items;
-    else chosen = (vend.finalRefs||[]).filter(r=>r.sectionKey===sec.key).map(r=>items[r.itemIndex]).filter(Boolean);
+    chosen = items;
     chosen.forEach(it=>{
       const n = String(it.tourName || it.hotelName || it.vendor || it.airline || it.brand || it.label || '').trim();
       if(n && !out.includes(n)) out.push(n);
     });
   });
   return out.join(', ');
+}
+function fieldsHaveActual(obj, fields){
+  obj = obj || {};
+  return (fields||[]).some(f=>f.money && f.key!=='estimateAmount' && !f.noBudgetSum && moneyToManwon(obj[f.key])>0);
 }
 function budgetRowsForSubtypeCategory(category){
   return SUBTYPE_OPTIONS[category].flatMap(subtype=>{
@@ -1715,7 +1769,7 @@ function budgetRowsForSubtypeCategory(category){
 
     function computeForSectionsOfVendor(vend, sectionKeys){
       let extraTotal = 0, itemTotal = 0, fallbackTotal = 0;
-      let dep=0, depPayer='', balDue='', bal=0, balPayer='', balPaid=false, payMethod='';
+      let dep=0, depPayer='', balDue='', bal=0, balPayer='', balPaid=false, payMethod='', est=0;
       schema.sections.forEach(sec=>{
         if(!sectionKeys.includes(sec.key)) return;
         const data = (vend.sections && vend.sections[sec.key]) || {extra:{}, items:[]};
@@ -1736,9 +1790,11 @@ function budgetRowsForSubtypeCategory(category){
             if(data.extra.balanceDueDate) balDue = balDue || data.extra.balanceDueDate;
             if(data.extra.balancePaid === 'true') balPaid = true;
             if(data.extra.paymentMethod) payMethod = payMethod || data.extra.paymentMethod;
+            if(!fieldsHaveActual(data.extra, sec.extraFields)) est += moneyToManwon(data.extra.estimateAmount);
           }
         }
         function addItemMoney(it){
+          if(!fieldsHaveActual(it, sec.itemFields)) est += moneyToManwon(it.estimateAmount);
           const itemDep = moneyToManwon(it.depositAmount);
           const itemBal = moneyToManwon(it.balanceAmount);
           if(itemDep>0 || itemBal>0){
@@ -1757,7 +1813,7 @@ function budgetRowsForSubtypeCategory(category){
           if(it.balancePaid === 'true') balPaid = true;
           if(it.paymentMethod) payMethod = payMethod || it.paymentMethod;
         }
-        if(sec.sumAllItems){
+        if(sec.sumAllItems || true){
           (data.items||[]).forEach(it=> addItemMoney(it));
         } else {
           (vend.finalRefs||[]).forEach(r=>{
@@ -1768,7 +1824,7 @@ function budgetRowsForSubtypeCategory(category){
           });
         }
       });
-      return { extraTotal, itemTotal, fallbackTotal, dep, depPayer, bal, balPayer, balDue, balPaid, payMethod };
+      return { extraTotal, itemTotal, fallbackTotal, dep, depPayer, bal, balPayer, balDue, balPaid, payMethod, est };
     }
     function computeForSections(sectionKeys){ return computeForSectionsOfVendor(v, sectionKeys); }
 
@@ -1782,21 +1838,21 @@ function budgetRowsForSubtypeCategory(category){
       const extraBalPayer = cateringExtra.extraBalancePayer || '';
       return [
         {
-          label: subtype, vendorName: v.name || '',
+          label: subtype, vendorName: v.name || '', estimate: hallCalc.est,
           deposit: hallCalc.dep, depositPayer: hallCalc.depPayer,
           balanceDue: hallCalc.balDue, balance: hallCalc.bal, balancePayer: hallCalc.balPayer,
           balancePaid: hallCalc.balPaid, paymentMethod: hallCalc.payMethod,
           total: hallCalc.extraTotal + hallCalc.itemTotal + hallCalc.dep + hallCalc.bal
         },
         {
-          label: '패키지', vendorName: v.name || '',
+          label: '패키지', vendorName: v.name || '', estimate: packageCalc.est,
           deposit: packageCalc.dep, depositPayer: packageCalc.depPayer,
           balanceDue: packageCalc.balDue, balance: packageCalc.bal, balancePayer: packageCalc.balPayer,
           balancePaid: packageCalc.balPaid, paymentMethod: packageCalc.payMethod,
           total: packageCalc.extraTotal + packageCalc.itemTotal + packageCalc.dep + packageCalc.bal
         },
         {
-          label: '식대', vendorName: v.name || '',
+          label: '식대', vendorName: v.name || '', estimate: cateringCalc.est,
           deposit: cateringCalc.dep, depositPayer: cateringCalc.depPayer,
           balanceDue: cateringCalc.balDue, balance: cateringCalc.bal, balancePayer: cateringCalc.balPayer,
           balancePaid: cateringCalc.balPaid, paymentMethod: cateringCalc.payMethod,
@@ -1810,7 +1866,7 @@ function budgetRowsForSubtypeCategory(category){
           total: extraBal
         },
         {
-          label: '홀 부대비용', vendorName: v.name || '',
+          label: '홀 부대비용', vendorName: v.name || '', estimate: extrasCalc.est,
           deposit: extrasCalc.dep, depositPayer: extrasCalc.depPayer,
           balanceDue: extrasCalc.balDue, balance: extrasCalc.bal, balancePayer: extrasCalc.balPayer,
           balancePaid: extrasCalc.balPaid, paymentMethod: extrasCalc.payMethod,
@@ -1828,7 +1884,7 @@ function budgetRowsForSubtypeCategory(category){
         const bal = calc.bal || moneyToManwon(pay.balanceAmount);
         const pt = dep + bal;
         return {
-          label: subtype, vendorName: vend.itemName || vend.name || '',
+          label: subtype, vendorName: vend.itemName || vend.name || '', estimate: calc.est,
           deposit: dep, depositPayer: calc.depPayer || pay.depositPayer || '',
           balanceDue: calc.balDue || pay.balanceDueDate || '', balance: bal,
           balancePayer: calc.balPayer || pay.balancePayer || '',
@@ -1839,12 +1895,13 @@ function budgetRowsForSubtypeCategory(category){
       });
     }
     const allKeys = schema.sections.map(s=>s.key);
-    let sumDep=0, sumBal=0, sumTotal=0;
+    let sumDep=0, sumBal=0, sumTotal=0, sumEst=0;
     let firstDepPayer='', firstBalPayer='', firstBalDue='', firstPayMethod='';
     let anyBalPaid=false;
     const names = [];
     finalVendors.forEach(vend=>{
       const calc = computeForSectionsOfVendor(vend, allKeys);
+      sumEst += calc.est;
       const pay = vend.payment || {};
       const dep = calc.dep || moneyToManwon(pay.depositAmount);
       const bal = calc.bal || moneyToManwon(pay.balanceAmount);
@@ -1861,7 +1918,7 @@ function budgetRowsForSubtypeCategory(category){
     });
     return [{
       label: subtype,
-      pkg: isPkgRow,
+      pkg: isPkgRow, estimate: sumEst,
       vendorName: names.filter(Boolean).join(', '),
       deposit: sumDep, depositPayer: firstDepPayer,
       balanceDue: firstBalDue, balance: sumBal, balancePayer: firstBalPayer,
@@ -1972,7 +2029,7 @@ function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls, oneCo
     ? photoKeys.filter(pk=>item[pk]).map(pk=>`<img class="itemphoto" src="${esc(item[pk])}" data-lightbox-url="${esc(item[pk])}">`).join('')
     : '';
   let controls = '';
-  if(showControls && !sec.noFinalize){
+  if(false){
     const key = `${vendorId}::${sectionKey}::${idx}`;
     const v = vendors.find(x=>x.id===vendorId);
     const isThisFinal = !!(v && v.finalRefs && v.finalRefs.some(r=>r.sectionKey===sectionKey && r.itemIndex===idx));
@@ -2417,7 +2474,7 @@ function cardHTML(v){
     </div></div>` : '';
 
   const noDeleteVendor = v.category==='신혼여행' && (v.subtype==='숙소' || v.subtype==='투어' || v.subtype==='교통');
-  const notFinalCls = (SUBTYPE_OPTIONS[v.category] && !v.isFinal) ? ' notfinal' : '';
+  const notFinalCls = '';
   return `<div class="card ${v.isFinal?'isfinal':''}${notFinalCls}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
       <div class="cardheadtop">
@@ -2428,7 +2485,6 @@ function cardHTML(v){
           <h3 class="namerow"><span class="namemain">${esc(cardTitleName(v))||'(이름 없음)'}${(((v.subtype==='기타' && SUBTYPE_OPTIONS[v.category]) || v.category==='기타') && v.itemName && v.name && v.name!==v.itemName)? ` <span class="nameloc">| ${esc(v.name)}</span>`:''}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
         </div>
         <div class="headactions">
-          ${needsVendorFinalize ? `<button class="headbtn ${v.isFinal?'finalon':''}" data-vendorfinal="${v.id}">${v.isFinal?'★ 최종 선택':'최종 선택'}</button>` : ''}
           ${noDeleteVendor ? '' : `<button class="headbtn danger" data-del="${v.id}">삭제</button>`}
           <button class="headbtn" data-edit="${v.id}">수정</button>
         </div>
@@ -2652,6 +2708,7 @@ async function deleteVendorById(id){
   const ok = await showConfirm('이 업체를 삭제할까요?');
   if(!ok) return;
   vendors = vendors.filter(x=>x.id!==id);
+  if(!deletedIds.includes(id)) deletedIds.push(id);
   expandedIds.delete(id);
   await saveVendors();
   renderContent();
@@ -2736,15 +2793,7 @@ document.getElementById('savePayment').onclick = async ()=>{
 };
 document.getElementById('cancelPayment').onclick = ()=> document.getElementById('paymentOverlay').classList.remove('show');
 document.getElementById('closePayment').onclick = ()=> document.getElementById('paymentOverlay').classList.remove('show');
-document.getElementById('unfinalizeBtn').onclick = async ()=>{
-  const v = vendors.find(x=>x.id===paymentVendorId);
-  if(!v) return;
-  v.isFinal = false;
-  v.finalRef = null;
-  await saveVendors();
-  document.getElementById('paymentOverlay').classList.remove('show');
-  renderContent();
-};
+
 
 // ---- Budget page ----
 document.getElementById('btnBudget').onclick = ()=>{
@@ -2767,7 +2816,7 @@ function budgetRowLabel(cat, label){
 function etcVendorRow(vend){
   const ex = (vend.sections && vend.sections.etc && vend.sections.etc.extra) || {};
   const dep = moneyToManwon(ex.depositAmount), bal = moneyToManwon(ex.balanceAmount);
-  return { label: vend.itemName || vend.name || '기타', deposit: dep, depositPayer: ex.depositPayer||'', balanceDue: ex.balanceDueDate||'', balance: bal, balancePayer: ex.balancePayer||'', balancePaid: ex.balancePaid==='true', paymentMethod: ex.paymentMethod||'', total: (dep+bal)>0 ? dep+bal : moneyToManwon(ex.amount) };
+  return { label: vend.itemName || vend.name || '기타', estimate: ((dep+bal)>0 || moneyToManwon(ex.amount)>0) ? 0 : moneyToManwon(ex.estimateAmount), deposit: dep, depositPayer: ex.depositPayer||'', balanceDue: ex.balanceDueDate||'', balance: bal, balancePayer: ex.balancePayer||'', balancePaid: ex.balancePaid==='true', paymentMethod: ex.paymentMethod||'', total: (dep+bal)>0 ? dep+bal : moneyToManwon(ex.amount) };
 }
 function plainCategoryRows(cat){
   const finalVendors = vendors.filter(x=>x.category===cat && x.isFinal);
@@ -2776,7 +2825,7 @@ function plainCategoryRows(cat){
   if(cat==='기타') return finalVendors.map(etcVendorRow);
   {
         const schema = getSchema(cat);
-        let sumDep=0, sumBal=0, sumTotal=0;
+        let sumDep=0, sumBal=0, sumTotal=0, sumEst=0;
         let firstDepPayer='', firstBalPayer='', firstBalDue='', firstPayMethod='';
         let anyBalPaid=false;
         const names = [];
@@ -2788,6 +2837,7 @@ function plainCategoryRows(cat){
               if(f.money && !f.noBudgetSum && f.key!=='depositAmount' && f.key!=='balanceAmount') extraTotal += moneyToManwon(data.extra[f.key]);
             });
             if(data.extra){
+              if(!fieldsHaveActual(data.extra, sec.extraFields)) sumEst += moneyToManwon(data.extra.estimateAmount);
               if(data.extra.depositAmount) dep += moneyToManwon(data.extra.depositAmount);
               if(data.extra.depositPayer) depPayer = depPayer || data.extra.depositPayer;
               if(data.extra.balanceAmount) bal += moneyToManwon(data.extra.balanceAmount);
@@ -2796,17 +2846,17 @@ function plainCategoryRows(cat){
               if(data.extra.balancePaid === 'true') balPaid = true;
               if(data.extra.paymentMethod) payMethod = payMethod || data.extra.paymentMethod;
             }
-            (vend.finalRefs||[]).forEach(r=>{
-              if(r.sectionKey===sec.key){
-                const it = (data.items||[])[r.itemIndex];
+            (data.items||[]).forEach(it=>{
+              if(true){
                 if(it){
+                  if(!fieldsHaveActual(it, sec.itemFields)) sumEst += moneyToManwon(it.estimateAmount);
                   const itemDep = moneyToManwon(it.depositAmount);
                   const itemBal = moneyToManwon(it.balanceAmount);
                   if(itemDep>0 || itemBal>0){
                     dep += itemDep; bal += itemBal;
                   } else {
                     sec.itemFields.forEach(f=>{
-                      if(f.money && f.key!=='depositAmount' && f.key!=='balanceAmount') itemTotal += moneyToManwon(it[f.key]);
+                      if(f.money && f.key!=='depositAmount' && f.key!=='balanceAmount' && f.key!=='estimateAmount') itemTotal += moneyToManwon(it[f.key]);
                     });
                   }
                   if(it.depositPayer) depPayer = depPayer || it.depositPayer;
@@ -2832,7 +2882,7 @@ function plainCategoryRows(cat){
           if(balPaid || pay.balancePaid === 'true') anyBalPaid = true;
           names.push(vend.name || '');
         });
-        return [{ label:names.filter(Boolean).join(', ') || cat, deposit:sumDep, depositPayer:firstDepPayer, balanceDue:firstBalDue, balance:sumBal, balancePayer:firstBalPayer, balancePaid:anyBalPaid, paymentMethod:firstPayMethod, total:sumTotal }];
+        return [{ label:names.filter(Boolean).join(', ') || cat, estimate:sumEst, deposit:sumDep, depositPayer:firstDepPayer, balanceDue:firstBalDue, balance:sumBal, balancePayer:firstBalPayer, balancePaid:anyBalPaid, paymentMethod:firstPayMethod, total:sumTotal }];
       }
 }
 
@@ -2851,12 +2901,12 @@ function exportBudgetXlsx(){
   const d = lastBudgetExport;
   if(!d){ alert('먼저 총 비용 화면을 열어주세요.'); return; }
   const today = new Date().toLocaleDateString('sv-SE');
-  const head = ['카테고리','업체명','계약금(만원)','지불인','잔금일','잔금(만원)','지불인','총액(만원)'];
+  const head = ['카테고리','업체명','계약금(만원)','지불인','잔금일','잔금(만원)','지불인','총액(만원)','예상 금액(만원)'];
   const body = d.rows.map(r=> r.sub
-    ? [r.cat,'','','','','','',r.total]
-    : [r.cat, r.vendor, r.dep, r.depPayer, r.due, r.bal, r.balPayer, r.total === undefined ? '' : r.total]);
-  const sheet1 = [head, ...body, [], ['총 비용','','','','','','',d.grandTotal], ['축의금 합계 (-)','','','','','','',d.giftTotal], ['청첩장 모임비 합계 (+)','','','','','','',d.expenseTotal], ['최종 비용','','','','','','',d.finalTotal]];
-  const sheet2 = [['카테고리','업체','금액(만원)','잔금일','지불인'], ...d.balanceDueList.map(b=>[b.cat,b.label,b.amount,b.dueDate,b.payer||''])];
+    ? [r.cat,'','','','','','',r.total, r.est===undefined?'':r.est]
+    : [r.cat, r.vendor, r.dep, r.depPayer, r.due, r.bal, r.balPayer, r.total === undefined ? '' : r.total, r.est===undefined?'':r.est]);
+  const sheet1 = [head, ...body, [], ['총 비용','','','','','','',d.grandTotal],['예상 포함 총 비용','','','','','','',d.estGrand], ['축의금 합계 (-)','','','','','','',d.giftTotal], ['청첩장 모임비 합계 (+)','','','','','','',d.expenseTotal], ['최종 비용','','','','','','',d.finalTotal],['예상 포함 최종 비용','','','','','','',d.estFinal]];
+  const sheet2 = [['카테고리','업체','금액(만원)','잔금일','지불인'], ...d.balanceDueList.map(b=>[b.cat,b.label,b.amount,b.dueDate,b.payer||'']), [], ['잔금 총액','',d.dueTotal], ['예상 포함 잔금 총액','',d.estDueTotal]];
   const sheet3 = [['지불인','계약금(만원)','잔금(만원)','총 지출(만원)'], ...d.payerRows.map(p=>[p.name,p.dep,p.bal,p.total])];
   if(window.XLSX){
     const wb = XLSX.utils.book_new();
@@ -2878,7 +2928,7 @@ function exportBudgetXlsx(){
 }
 function renderBudgetPage(){
   const container = document.getElementById('content');
-  let grandTotal = 0;
+  let grandTotal = 0, estGrand = 0;
   let bodyHTML = '';
   const depositByPayer = {};
   const balanceByPayer = {};
@@ -2895,6 +2945,7 @@ function renderBudgetPage(){
     balanceByPayerMethod[payer][m] = (balanceByPayerMethod[payer][m]||0) + amt;
   }
 
+  let unpaidBal = 0, estBalExtra = 0;
   const exportRows = [];
   CATS.forEach(cat=>{
     let v = null;
@@ -2915,11 +2966,18 @@ function renderBudgetPage(){
       return;
     }
     const catTotal = detailRows.reduce((a,r)=>a+r.total, 0);
+    const estOf = r => (r.total||0) + (r.estimate||0);
+    const catEst = detailRows.reduce((a,r)=>a+estOf(r), 0);
     const naClean = x => { const t = String(x==null?'':x).trim(); return /^(n\/?a|-|없음)$/i.test(t) ? '' : t; };
     detailRows.forEach((r,i)=>{
       r.depositPayer = naClean(r.depositPayer); r.balancePayer = naClean(r.balancePayer); r.balanceDue = naClean(r.balanceDue);
       if(!r.balance && r.balanceDue && r.total > (r.deposit||0)) r.balance = Math.round((r.total - (r.deposit||0)) * 100) / 100;
       grandTotal += r.total;
+      const rowEst = estOf(r); estGrand += rowEst;
+      const estOnly = !(r.total>0) && r.estimate>0;
+      const estPlus = r.total>0 && r.estimate>0;
+      if(r.balance > 0 && !r.balancePaid) unpaidBal += r.balance;
+      if(r.estimate>0) estBalExtra += r.estimate;
       addPayer(depositByPayer, r.depositPayer, r.deposit);
       addPayer(balanceByPayer, r.balancePayer, r.balance);
       addPayerMethod(r.balancePayer, r.paymentMethod, r.balance);
@@ -2934,7 +2992,7 @@ function renderBudgetPage(){
       const isGrouped = !!SUBTYPE_OPTIONS[cat];
       const catCell = isGrouped ? esc(budgetRowLabel(cat, r.label)) : (i===0? esc(cat) : '');
       const nameCell = isGrouped ? (esc(r.vendorName)||'-') : esc(r.label);
-      exportRows.push({ cat: catCellPlain(cat, r, i, isGrouped), vendor: isGrouped ? (r.vendorName||'') : r.label, dep: r.deposit||'', depPayer: r.depositPayer||'', due: r.balanceDue||'', bal: r.balance||'', balPayer: r.balancePayer||'', total: r.total || (r.pkg ? 0 : '') });
+      exportRows.push({ cat: catCellPlain(cat, r, i, isGrouped), vendor: isGrouped ? (r.vendorName||'') : r.label, dep: r.deposit||'', depPayer: r.depositPayer||'', due: r.balanceDue||'', bal: r.balance||'', balPayer: r.balancePayer||'', total: r.total || (r.pkg ? 0 : ''), est: estOnly ? r.estimate : '' });
       const empty = r.noVendor ? '-' : '<span class="budgetna">N/A</span>';
       bodyHTML += `<tr data-cat="${esc(cat)}">
         <td style="white-space:nowrap;">${catCell}</td>
@@ -2944,19 +3002,22 @@ function renderBudgetPage(){
         <td style="white-space:nowrap;">${r.balanceDue||empty}</td>
         <td style="white-space:nowrap;">${r.balance? r.balance.toLocaleString()+'만원':empty}</td>
         <td style="white-space:nowrap;">${esc(r.balancePayer)||empty}</td>
-        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원' : (r.pkg? '0원' : empty)}</td>
+        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원' : (r.pkg? '0원' : (estOnly ? '<span class="budgetest">'+r.estimate.toLocaleString()+'만원 (예상)</span>' : empty))}${estPlus ? '<div class="budgetest">+ '+r.estimate.toLocaleString()+'만원 (예상)</div>' : ''}</td>
       </tr>`;
     });
     if(detailRows.length > 1){
-      exportRows.push({ sub:true, cat:'소계', total: catTotal });
+      exportRows.push({ sub:true, cat:'소계', total: catTotal, est: catEst>catTotal ? catEst : '' });
       bodyHTML += `<tr class="budgetsubtotal">
         <td></td><td></td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-        <td class="budgettotal">${catTotal? catTotal.toLocaleString()+'만원':'-'}</td>
+        <td class="budgettotal">${catTotal? catTotal.toLocaleString()+'만원':'-'}${catEst>catTotal ? `<div class="budgetest">예상 포함 ${catEst.toLocaleString()}만원</div>` : ''}</td>
       </tr>`;
     }
   });
 
   balanceDueList.sort((a,b)=> (a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
+  const dueTotal = balanceDueList.reduce((a,b)=>a+b.amount,0);
+  const round2 = x => Math.round(x*100)/100;
+  const estDueTotal = round2(dueTotal + estBalExtra);
 
   const payerNames = new Set([...Object.keys(depositByPayer), ...Object.keys(balanceByPayer)]);
   const payerRows = [...payerNames].map(name=>{
@@ -2969,8 +3030,11 @@ function renderBudgetPage(){
   const giftTotal = moneyToManwon(budgetExtras.groomGift) + moneyToManwon(budgetExtras.brideGift);
   const expenseTotal = moneyToManwon(budgetExtras.groomExpense) + moneyToManwon(budgetExtras.brideExpense);
   const finalTotal = grandTotal - giftTotal + expenseTotal;
+  estGrand = round2(estGrand);
+  const estFinal = round2(estGrand - giftTotal + expenseTotal);
+  const hasEst = estGrand > grandTotal + 0.001;
 
-  lastBudgetExport = { rows: exportRows, grandTotal, balanceDueList, payerRows, giftTotal, expenseTotal, finalTotal };
+  lastBudgetExport = { rows: exportRows, grandTotal, balanceDueList, payerRows, giftTotal, expenseTotal, finalTotal, estGrand, estFinal, dueTotal, estDueTotal };
 
   container.innerHTML = `
     <div class="budgetheader">
@@ -2985,6 +3049,7 @@ function renderBudgetPage(){
       <tbody>${bodyHTML}</tbody>
     </table></div>
     <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${grandTotal.toLocaleString()}만원</div>
+    ${hasEst ? `<div class="budgetest" style="margin-top:3px;font-size:13px;">예상 포함 총액: ${estGrand.toLocaleString()}만원</div>` : ''}
 
     <h3 style="margin:18px 0 8px;font-size:13px;">잔금 내역 (빠른 순)</h3>
     <div class="tablewrap duetable">
@@ -2999,6 +3064,10 @@ function renderBudgetPage(){
           </tr>`).join('')}
         </tbody>
       </table>`}
+    </div>
+    <div class="paystatuscard" style="margin-top:8px;">
+      <div class="prow"><div class="k">잔금 총액</div><div class="v" style="font-weight:800;">${dueTotal.toLocaleString()}만원</div></div>
+      ${estBalExtra>0 ? `<div class="prow"><div class="k budgetest">예상 포함 잔금 총액</div><div class="v budgetest">${estDueTotal.toLocaleString()}만원</div></div>` : ''}
     </div>
 
     <h3 style="margin:18px 0 8px;font-size:13px;">지불인별 합계</h3>
@@ -3036,6 +3105,7 @@ function renderBudgetPage(){
       <div class="prow"><div class="k">축의금 합계</div><div class="v">- ${giftTotal.toLocaleString()}만원</div></div>
       <div class="prow"><div class="k">청첩장 모임비 합계</div><div class="v">+ ${expenseTotal.toLocaleString()}만원</div></div>
       <div class="prow"><div class="k">최종 비용</div><div class="v" style="font-weight:800;font-size:14px;">${finalTotal.toLocaleString()}만원</div></div>
+      ${hasEst ? `<div class="prow"><div class="k budgetest">예상 포함 최종 비용</div><div class="v budgetest">${estFinal.toLocaleString()}만원</div></div>` : ''}
     </div>
   `;
 
@@ -3891,19 +3961,9 @@ document.getElementById('saveEdit').onclick = async ()=>{
     id = existing.id;
   } else {
     id = uid();
-    vendors.push({ id, favorite:false, createdAt: Date.now(), isFinal:false, finalRef:null, payment:{}, ...data });
+    vendors.push({ id, favorite:false, createdAt: Date.now(), isFinal:true, finalRef:null, payment:{}, ...data });
   }
-  const honjuAutoFinal = (cat === '혼주' && (subtype === '헤어메이크업' || subtype === '상견례'));
-  if((SUBTYPE_OPTIONS[cat] && subtype === '기타') || cat === '기타'){
-    const ev = vendors.find(v2=>v2.id===id);
-    if(ev) ev.isFinal = true;
-  } else if((cat === '본식' && subtype && !BONSIK_COMPARE_SUBTYPES.includes(subtype)) || cat === '신혼여행' || honjuAutoFinal){
-    vendors.forEach(v2=>{
-      if(v2.category===cat && v2.subtype===subtype){
-        v2.isFinal = (v2.id === id);
-      }
-    });
-  }
+  { const ev = vendors.find(v2=>v2.id===id); if(ev) ev.isFinal = true; }
   await saveVendors();
   closeEdit();
   renderTabs();
@@ -3928,8 +3988,10 @@ window.addEventListener('error', function(e){ e.preventDefault(); });
 window.addEventListener('unhandledrejection', function(e){ e.preventDefault(); });
 
 (async function init(){
-  try{ await loadVendors(); }catch(e){}
+  try{ const el=document.getElementById('content'); if(el && CONFIG.BIN_ID) el.innerHTML='<div class="empty"><div class="mark">◌</div>불러오는 중…</div>'; }catch(e){}
+  try{ await loadVendors(); }catch(e){ console.error(e); }
   renderTabs();
+  if(CONFIG.BIN_ID && !loadOK && !SETUP_NEEDED){ showLoadFailBanner(); return; }
   renderContent();
 })();
 </script>
