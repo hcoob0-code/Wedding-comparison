@@ -3020,7 +3020,7 @@ function renderBudgetPage(){
         <td style="white-space:nowrap;">${r.balanceDue||empty}</td>
         <td style="white-space:nowrap;">${r.balance? r.balance.toLocaleString()+'만원':empty}</td>
         <td style="white-space:nowrap;">${esc(r.balancePayer)||empty}</td>
-        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원' : (r.pkg? '0원' : (estOnly ? '<span class="budgetest">'+r.estimate.toLocaleString()+'만원 (예상)</span>' : empty))}${estPlus ? '<div class="budgetest">+ '+r.estimate.toLocaleString()+'만원 (예상)</div>' : ''}</td>
+        <td class="budgettotal" style="white-space:nowrap;">${r.total? r.total.toLocaleString()+'만원' : (estOnly ? '<span class="budgetest">'+r.estimate.toLocaleString()+'만원 (예상)</span>' : (r.pkg? '0원' : empty))}${estPlus ? '<div class="budgetest">+ '+r.estimate.toLocaleString()+'만원 (예상)</div>' : ''}</td>
       </tr>`;
     });
     if(detailRows.length > 1){
