@@ -135,8 +135,9 @@ select.viewsel{
 .headbtn.danger{color:var(--persimmon);border-color:#EAD3CC;background:#FBF3F0;}
 .headbtn.finalon{color:#fff;background:var(--gold);border-color:var(--gold);}
 
-.cardbody{padding:0 16px 16px;border-top:1px solid var(--line);}
-.cardbody-inner{padding-top:12px;}
+.cardbody{padding:0 16px 10px;border-top:1px solid var(--line);}
+.cardbody-inner{padding-top:8px;}
+.sectionblock.noborder>.vendorrow:first-child{margin-top:0;}
 .card a.link{font-size:12px;color:var(--celadon);text-decoration:none;font-weight:600;word-break:break-all;}
 .card a.link:hover{text-decoration:underline;}
 .vendorrow{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;}
@@ -2037,7 +2038,8 @@ function itemBlockHTML(item, sec, vendorId, sectionKey, idx, showControls, oneCo
       <button class="itemfinal ${isThisFinal?'on':''}" data-itemfinal="${key}">${isThisFinal?'★ 최종 선택':'최종 선택'}</button>
     </div>`;
   }
-  return `<div class="product">${photoHTML}<div class="pfields">${fieldsHTML || '<div class="hint" style="margin:0;">입력된 내용이 없어요</div>'}${controls}</div></div>`;
+  if(!fieldsHTML && !photoHTML) return '';
+  return `<div class="product">${photoHTML}<div class="pfields">${fieldsHTML}${controls}</div></div>`;
 }
 
 function vendorSectionsHTML(v, showControls, oneCol){
@@ -2063,7 +2065,8 @@ function vendorSectionsHTML(v, showControls, oneCol){
     const rows = fieldsToHTML(sec.extraFields, data.extra, oneCol);
     const extraHTML = rows ? `<div class="vendorrow">${rows}</div>` : '';
     const items = data.items || [];
-    const itemsHTML = items.length ? `<div class="products">${items.map((it,idx2)=>itemBlockHTML(it,sec,v.id,sec.key,idx2,showControls,oneCol)).join('')}</div>` : '';
+    const itemsInner = items.map((it,idx2)=>itemBlockHTML(it,sec,v.id,sec.key,idx2,showControls,oneCol)).join('');
+    const itemsHTML = itemsInner ? `<div class="products">${itemsInner}</div>` : '';
     const mediaHTML = sec.hasMedia ? (galleryHTML(data.images, '') + instaEmbedsHTML(data.instaLinks)) : '';
     const skipInnerLabel = (sec.card && cardCounts[sec.card] === 1) || isSingleSection;
     let labelSuffix = '';
@@ -3038,20 +3041,16 @@ function renderBudgetPage(){
 
   container.innerHTML = `
     <div class="budgetheader">
-      <h2 style="margin:0;font-size:16px;">♥ 결혼식 준비 총 비용</h2>
+      <h2 style="margin:0;font-size:16px;">♥ 총액 ${grandTotal.toLocaleString()}만원${hasEst ? ` <span class="budgetest" style="font-size:13px;">(예상 ${estGrand.toLocaleString()}만원)</span>` : ''}</h2>
       <div class="spacer"></div>
       <button class="btn small" id="exportDataBtn">내보내기</button>
-      <button class="btn small" id="backupDataBtn">백업저장</button>
-      <label class="btn small" id="importDataLabel">불러오기<input type="file" id="importDataFile" accept=".csv,text/csv" style="display:none;"></label>
     </div>
     <div class="tablewrap budgettable"><table>
       <thead><tr><th>카테고리</th><th>업체명</th><th>계약금</th><th>지불인</th><th>잔금일</th><th>잔금</th><th>지불인</th><th>총액</th></tr></thead>
       <tbody>${bodyHTML}</tbody>
     </table></div>
-    <div style="margin-top:14px;font-weight:800;font-size:15px;">총액: ${grandTotal.toLocaleString()}만원</div>
-    ${hasEst ? `<div class="budgetest" style="margin-top:3px;font-size:13px;">예상 포함 총액: ${estGrand.toLocaleString()}만원</div>` : ''}
 
-    <h3 style="margin:18px 0 8px;font-size:13px;">잔금 내역 (빠른 순)</h3>
+    <h3 style="margin:18px 0 8px;font-size:13px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><span>잔금 내역 (빠른 순)</span><span>${dueTotal.toLocaleString()}만원${estBalExtra>0 ? ` <span class="budgetest" style="font-weight:400;">(예상 ${estDueTotal.toLocaleString()}만원)</span>` : ''}</span></h3>
     <div class="tablewrap duetable">
       ${balanceDueList.length===0 ? '<div class="hint">낼 잔금이 없거나 전부 지불 완료됐어요.</div>' : `<table>
         <thead><tr><th>카테고리</th><th>업체</th><th>금액</th><th>잔금일</th></tr></thead>
@@ -3064,10 +3063,6 @@ function renderBudgetPage(){
           </tr>`).join('')}
         </tbody>
       </table>`}
-    </div>
-    <div class="paystatuscard" style="margin-top:8px;">
-      <div class="prow"><div class="k">잔금 총액</div><div class="v" style="font-weight:800;">${dueTotal.toLocaleString()}만원</div></div>
-      ${estBalExtra>0 ? `<div class="prow"><div class="k budgetest">예상 포함 잔금 총액</div><div class="v budgetest">${estDueTotal.toLocaleString()}만원</div></div>` : ''}
     </div>
 
     <h3 style="margin:18px 0 8px;font-size:13px;">지불인별 합계</h3>
@@ -3118,8 +3113,6 @@ function renderBudgetPage(){
   });
 
   document.getElementById('exportDataBtn').onclick = exportBudgetXlsx;
-  document.getElementById('backupDataBtn').onclick = exportData;
-  document.getElementById('importDataFile').onchange = importDataFile;
 }
 
 function csvEscape(val){
