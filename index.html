@@ -83,6 +83,9 @@ select.viewsel{
 .card.notfinal .namemain, .card.notfinal .nameloc{color:#B8B4AA;}
 .placeholdercard{background:transparent;border-style:dashed;}
 .placeholdercard .cardhead{cursor:default;}
+.card.estcard{background:transparent;border-style:dashed;border-color:#E4E0D6;}
+.card.estcard .namemain{color:#C9C5B9;font-weight:600;}
+.card.estcard .catchip{opacity:.7;}
 .card.vendorhidden{opacity:.5;}
 .cardhead{padding:11px 14px;cursor:pointer;}
 .cardheadtop{display:flex;align-items:flex-start;gap:8px;}
@@ -2418,6 +2421,16 @@ function honeymoonInfoCardHTML(){
   </div>`;
 }
 
+function vendorEstimateTotal(v){
+  let t = 0;
+  const sections = (v && v.sections) || {};
+  Object.keys(sections).forEach(k=>{
+    const d = sections[k] || {};
+    if(d.extra) t += moneyToManwon(d.extra.estimateAmount);
+    (d.items||[]).forEach(it=>{ t += moneyToManwon(it && it.estimateAmount); });
+  });
+  return Math.round(t*100)/100;
+}
 function placeholderCardHTML(category, subtype, addMore){
   const catText = subtype ? `${category} · ${subtype}` : category;
   const msg = addMore ? '새로 추가하기' : '아직 추가 안 함';
@@ -2477,7 +2490,9 @@ function cardHTML(v){
     </div></div>` : '';
 
   const noDeleteVendor = v.category==='신혼여행' && (v.subtype==='숙소' || v.subtype==='투어' || v.subtype==='교통');
-  const notFinalCls = '';
+  const estOnlyCard = !!v.noName;
+  const estCardTotal = estOnlyCard ? vendorEstimateTotal(v) : 0;
+  const notFinalCls = estOnlyCard ? ' notfinal estcard' : '';
   return `<div class="card ${(v.isFinal && !v.noName)?'isfinal':''}${notFinalCls}" data-id="${v.id}">
     <div class="cardhead ${open?'open':''}" data-toggle="${v.id}">
       <div class="cardheadtop">
@@ -2485,7 +2500,7 @@ function cardHTML(v){
           <div class="topline">
             <span class="catchip"><span class="dot" style="background:${CAT_COLOR[v.category]||'#8A8A82'}"></span>${esc(catLabel)}</span>
           </div>
-          <h3 class="namerow"><span class="namemain">${esc(cardTitleName(v))||'(이름 없음)'}${(((v.subtype==='기타' && SUBTYPE_OPTIONS[v.category]) || v.category==='기타') && v.itemName && v.name && v.name!==v.itemName)? ` <span class="nameloc">| ${esc(v.name)}</span>`:''}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
+          <h3 class="namerow"><span class="namemain">${(estOnlyCard && estCardTotal>0) ? '예상 금액 '+estCardTotal.toLocaleString()+'만원' : (esc(cardTitleName(v))||'(이름 없음)')}${(((v.subtype==='기타' && SUBTYPE_OPTIONS[v.category]) || v.category==='기타') && v.itemName && v.name && v.name!==v.itemName)? ` <span class="nameloc">| ${esc(v.name)}</span>`:''}${(!isSingle && v.location)? ` <span class="nameloc">| ${esc(v.location)}</span>`:''}</span>${shootSummary}</h3>
         </div>
         <div class="headactions">
           ${noDeleteVendor ? '' : `<button class="headbtn danger" data-del="${v.id}">삭제</button>`}
